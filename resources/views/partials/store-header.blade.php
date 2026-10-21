@@ -23,7 +23,7 @@
         <nav class="hidden items-center gap-7 text-sm lg:flex" aria-label="Main">
             @foreach ($navCategories as $cat)
                 <div class="group relative">
-                    <a href="{{ route('catalog.category', $cat) }}" class="flex items-center gap-1 py-2 hover:text-accent {{ request()->is('categories/'.$cat->slug) ? 'text-accent' : '' }}">
+                    <a href="{{ route('catalog.category', $cat) }}" class="flex items-center gap-1 whitespace-nowrap py-2 hover:text-accent {{ request()->is('categories/'.$cat->slug) ? 'text-accent' : '' }}">
                         {{ $cat->name }}@if ($cat->children->isNotEmpty())<x-icon name="chevron-down" class="h-3.5 w-3.5"/>@endif
                     </a>
                     @if ($cat->children->isNotEmpty())
@@ -35,7 +35,6 @@
                     @endif
                 </div>
             @endforeach
-            <a href="{{ route('pages.show', 'custom-manufacturing') }}" class="py-2 hover:text-accent">Private label</a>
         </nav>
 
         <div class="flex items-center gap-1">
@@ -60,7 +59,7 @@
                     </div>
                 </div>
             @else
-                <a href="{{ route('login') }}" class="btn btn-ghost btn-sm hidden sm:inline-flex">Sign in</a>
+                <a href="{{ route('login') }}" class="btn btn-ghost btn-sm hidden whitespace-nowrap sm:inline-flex">Sign in</a>
             @endauth
             <livewire:quote-basket-count/>
         </div>

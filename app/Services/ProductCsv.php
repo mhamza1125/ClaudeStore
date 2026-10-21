@@ -187,7 +187,7 @@ class ProductCsv
         if (filled($row['category_slug'] ?? null)) {
             $attributes['category_id'] = Category::query()->where('slug', $row['category_slug'])->value('id');
         }
-        if (array_key_exists('base_price', $row)) {
+        if (filled($row['base_price'] ?? null)) {
             $attributes['base_price_cents'] = Money::parse($row['base_price']);
         }
         foreach (['moq', 'order_multiple', 'stock_quantity'] as $f) {

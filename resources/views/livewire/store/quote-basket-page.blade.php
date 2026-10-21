@@ -31,7 +31,7 @@
                         <form wire:submit="save({{ $item->id }})" class="mt-4 grid gap-3 sm:grid-cols-[120px_1fr]">
                             <div>
                                 <label for="qty-{{ $item->id }}" class="field-label text-xs">Quantity</label>
-                                <input id="qty-{{ $item->id }}" type="number" min="1" step="{{ $price->orderMultiple }}" wire:model="edits.{{ $item->id }}.quantity" class="input">
+                                <input id="qty-{{ $item->id }}" type="number" min="{{ $price->orderMultiple }}" step="{{ $price->orderMultiple }}" wire:model="edits.{{ $item->id }}.quantity" class="input">
                                 <p class="field-help">MOQ {{ $price->moq }}@if ($price->orderMultiple > 1) · ×{{ $price->orderMultiple }}@endif</p>
                             </div>
                             <div class="grid gap-3 sm:grid-cols-2">

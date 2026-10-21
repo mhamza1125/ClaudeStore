@@ -89,6 +89,12 @@ class Settings
     public function flush(): void
     {
         Cache::forget(self::CACHE_KEY);
+        $this->forgetLoaded();
+    }
+
+    /** Drop the in-memory copy only (long-running workers call this between jobs). */
+    public function forgetLoaded(): void
+    {
         $this->loaded = null;
     }
 }

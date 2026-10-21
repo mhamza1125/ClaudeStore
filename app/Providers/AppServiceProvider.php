@@ -41,14 +41,17 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('quote-response', fn (Request $request) => Limit::perMinute(10)->by('qr:'.$request->ip()));
         RateLimiter::for('sensitive', fn (Request $request) => Limit::perMinute(30)->by('s:'.($request->user()?->id ?: $request->ip())));
 
+        Event::listen(\Illuminate\Queue\Events\JobProcessing::class, fn () => app(Settings::class)->forgetLoaded());
+
         Event::listen(Login::class, function (Login $event) {
             $event->user->forceFill(['last_login_at' => now()])->saveQuietly();
             app(\App\Services\QuoteBasketService::class)->mergeGuestBasketInto($event->user);
         });
 
+        // Settings are memoised per request by the Settings singleton; no static cache here
+        // so admin changes show immediately (and long-running workers stay correct).
         View::composer('*', function ($view) {
-            static $brand;
-            $brand ??= [
+            $brand = [
                 'name' => setting('brand.name'),
                 'tagline' => setting('brand.tagline'),
                 'logo' => setting('brand.logo_path') ? \Illuminate\Support\Facades\Storage::disk('public')->url(setting('brand.logo_path')) : null,

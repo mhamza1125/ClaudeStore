@@ -125,7 +125,7 @@
                                 <td>{{ $product->moq }}@if ($product->order_multiple > 1)<span class="block text-xs text-muted">× {{ $product->order_multiple }}</span>@endif</td>
                                 <td>
                                     <label class="sr-only" for="q-{{ $product->id }}">Quantity for {{ $product->name }}</label>
-                                    <input id="q-{{ $product->id }}" type="number" min="1" step="{{ $product->order_multiple }}" wire:model="quantities.{{ $product->id }}" placeholder="{{ $product->moq }}" class="input py-1.5" @disabled(! $product->quote_enabled)>
+                                    <input id="q-{{ $product->id }}" type="number" min="{{ $product->order_multiple }}" step="{{ $product->order_multiple }}" wire:model="quantities.{{ $product->id }}" placeholder="{{ $product->moq }}" class="input py-1.5" @disabled(! $product->quote_enabled)>
                                 </td>
                                 <td class="whitespace-nowrap">@if ($price['cents'] !== null){{ $price['label'] }} {{ money($price['cents']) }}@else{{ $price['label'] }}@endif</td>
                             </tr>

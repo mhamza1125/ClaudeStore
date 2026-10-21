@@ -23,7 +23,8 @@ class StaffManager extends Component
             'form.role' => ['required', Rule::in(User::STAFF_ROLES)],
         ]);
         $password = Str::password(16, symbols: false);
-        $user = User::create(['name' => $this->form['name'], 'email' => strtolower($this->form['email']), 'password' => $password, 'email_verified_at' => now()]);
+        $user = User::create(['name' => $this->form['name'], 'email' => strtolower($this->form['email']), 'password' => $password]);
+        $user->forceFill(['email_verified_at' => now()])->save();
         $user->assignRole($this->form['role']);
         AuditLogger::log('staff.created', $user, "Staff account {$user->email} created as {$this->form['role']}.");
         $this->createdPassword = $password;

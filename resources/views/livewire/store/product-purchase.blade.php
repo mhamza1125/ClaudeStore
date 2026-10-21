@@ -102,7 +102,7 @@
                     <label for="qty" class="field-label">Quantity <span class="font-normal text-muted">· MOQ {{ $price->moq }}@if ($price->orderMultiple > 1), multiples of {{ $price->orderMultiple }}@endif</span></label>
                     <div class="flex items-stretch gap-2">
                         <button type="button" wire:click="increment(-1)" class="btn btn-secondary !px-3" aria-label="Decrease quantity"><x-icon name="minus" class="h-4 w-4"/></button>
-                        <input id="qty" type="number" inputmode="numeric" min="1" step="{{ $price->orderMultiple }}" wire:model.live.debounce.300ms="quantity" class="input w-28 text-center text-base" aria-describedby="qty-help">
+                        <input id="qty" type="number" inputmode="numeric" min="{{ $price->orderMultiple }}" step="{{ $price->orderMultiple }}" wire:model.live.debounce.300ms="quantity" class="input w-28 text-center text-base" aria-describedby="qty-help">
                         <button type="button" wire:click="increment(1)" class="btn btn-secondary !px-3" aria-label="Increase quantity"><x-icon name="plus" class="h-4 w-4"/></button>
                     </div>
                     <p id="qty-help" class="sr-only">Prices update automatically when the quantity changes.</p>
