@@ -42,7 +42,7 @@ php artisan test                                        # SQLite in-memory (phpu
 DB_CONNECTION=mysql DB_DATABASE=claudestore_test php vendor/bin/phpunit   # against MySQL
 ```
 
-112 tests cover the pricing precedence and tier boundaries, integer money maths, the
+139 tests cover the pricing precedence and tier boundaries, integer money maths, the
 basket, RFQ submission (validation, spam protection, rate limits, attachments, price
 snapshots), the full quote lifecycle (pricing, versions, secure links, expiry, acceptance,
 conversion), authorisation boundaries, the portal, product/category/CSV/image administration.
@@ -88,4 +88,5 @@ conversion), authorisation boundaries, the portal, product/category/CSV/image ad
 - [docs/ENV.md](docs/ENV.md) — every environment variable
 - [docs/PRICING.md](docs/PRICING.md) — pricing precedence and maths
 - [docs/IMAGES.md](docs/IMAGES.md) — image workflow and provider integration
+- [docs/CHATBOT.md](docs/CHATBOT.md) — AI chatbot setup, privacy and costs
 - [docs/STATUS.md](docs/STATUS.md) — implemented features, pending integrations, known limitations

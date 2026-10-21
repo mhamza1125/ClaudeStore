@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Admin;
 
+use App\Assistant\BusinessContext;
+use App\Assistant\Contracts\ChatProvider;
 use App\Services\AuditLogger;
 use App\Services\Settings;
 use App\Support\Money;
@@ -41,6 +43,12 @@ class SettingsForm extends Component
             'whatsapp_phone' => (string) $all['whatsapp.phone'],
             'whatsapp_preset' => (string) $all['whatsapp.message_preset'],
             'whatsapp_custom' => (string) $all['whatsapp.custom_message'],
+            'chatbot_enabled' => (bool) $all['chatbot.enabled'],
+            'chatbot_name' => (string) $all['chatbot.assistant_name'],
+            'chatbot_intro' => (string) $all['chatbot.intro_message'],
+            'chatbot_teaser' => (bool) $all['chatbot.show_teaser'],
+            'chatbot_teaser_delay' => (int) $all['chatbot.teaser_delay_seconds'],
+            'chatbot_knowledge' => (string) $all['chatbot.knowledge'],
             'policy_terms' => (string) $all['policies.terms'], 'policy_privacy' => (string) $all['policies.privacy'],
             'policy_shipping' => (string) $all['policies.shipping'], 'policy_returns' => (string) $all['policies.returns'],
         ];
@@ -68,6 +76,12 @@ class SettingsForm extends Component
                 fn ($attr, $value, $fail) => filled($value) && ! WhatsApp::isValidPhone($value)
                     ? $fail('Enter the full international number with country code, e.g. +92 311 0012233.') : null],
             's.whatsapp_preset' => ['required', Rule::in([...array_keys(WhatsApp::presets()), 'custom'])],
+            's.chatbot_enabled' => ['boolean'],
+            's.chatbot_name' => ['nullable', 'string', 'max:60'],
+            's.chatbot_intro' => ['required', 'string', 'max:300'],
+            's.chatbot_teaser' => ['boolean'],
+            's.chatbot_teaser_delay' => ['required', 'integer', 'min:0', 'max:120'],
+            's.chatbot_knowledge' => ['nullable', 'string', 'max:6000'],
             's.whatsapp_custom' => [$this->s['whatsapp_preset'] === 'custom' ? 'required' : 'nullable', 'string', 'max:500'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
         ], ['s.tax_rate.regex' => 'Enter a percentage such as 8.25.', 's.shipping_flat.regex' => 'Enter an amount such as 25.00.', 's.min_order.regex' => 'Enter an amount such as 500.00.']);
@@ -88,6 +102,12 @@ class SettingsForm extends Component
             'whatsapp.phone' => WhatsApp::normalizePhone($s['whatsapp_phone']) ?: null,
             'whatsapp.message_preset' => $s['whatsapp_preset'],
             'whatsapp.custom_message' => trim((string) $s['whatsapp_custom']) ?: null,
+            'chatbot.enabled' => (bool) $s['chatbot_enabled'],
+            'chatbot.assistant_name' => trim((string) $s['chatbot_name']) ?: null,
+            'chatbot.intro_message' => trim((string) $s['chatbot_intro']),
+            'chatbot.show_teaser' => (bool) $s['chatbot_teaser'],
+            'chatbot.teaser_delay_seconds' => (int) $s['chatbot_teaser_delay'],
+            'chatbot.knowledge' => trim((string) $s['chatbot_knowledge']) ?: null,
             'policies.terms' => $s['policy_terms'] ?: null, 'policies.privacy' => $s['policy_privacy'] ?: null,
             'policies.shipping' => $s['policy_shipping'] ?: null, 'policies.returns' => $s['policy_returns'] ?: null,
             'homepage.testimonials' => collect(preg_split('/\R/', $this->testimonials))->map('trim')->filter()->map(function ($line) {
@@ -104,6 +124,7 @@ class SettingsForm extends Component
         $changed = collect($values)->filter(fn ($v, $k) => ($before[$k] ?? null) !== $v)->map(fn ($v, $k) => ['from' => $before[$k] ?? null, 'to' => $v])
             ->except(['policies.terms', 'policies.privacy', 'policies.shipping', 'policies.returns'])->all();
         $settings->set($values);
+        BusinessContext::forget(); // the chatbot's business information is rebuilt from the new settings
         AuditLogger::log('settings.updated', null, 'Store settings updated.', $changed);
         $this->reset('logo');
         session()->flash('status', 'Settings saved.');
@@ -123,6 +144,7 @@ class SettingsForm extends Component
 
         return view('livewire.admin.settings-form', [
             'logoPath' => $settings->get('brand.logo_path'),
+            'chatProvider' => app(ChatProvider::class),
             'whatsappPresets' => WhatsApp::presets() + ['custom' => 'Custom message…'],
             // Live preview of the link the button will open (from the unsaved form values).
             'whatsappPreview' => WhatsApp::isValidPhone($this->s['whatsapp_phone']) && $message !== '' ? WhatsApp::link($this->s['whatsapp_phone'], $message) : null,

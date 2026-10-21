@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account;
 use App\Http\Controllers\Admin;
+use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AttachmentController;
 use App\Http\Controllers\CustomerQuoteController;
 use App\Http\Controllers\HomeController;
@@ -22,6 +23,8 @@ Route::get('/categories/{category:slug}', Livewire\Store\Catalog::class)->name('
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{product:slug}/spec-sheet', [ProductController::class, 'specSheet'])->name('products.spec-sheet');
 Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show');
+Route::post('/assistant/messages', [AssistantController::class, 'send'])->middleware('throttle:assistant')->name('assistant.send');
+Route::post('/assistant/reset', [AssistantController::class, 'reset'])->name('assistant.reset');
 Route::post('/newsletter', [NewsletterController::class, 'store'])->middleware('throttle:newsletter')->name('newsletter.subscribe');
 
 // Quote basket and RFQ submission (guests allowed; rate limited + honeypot)

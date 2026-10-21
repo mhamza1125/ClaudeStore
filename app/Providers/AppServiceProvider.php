@@ -24,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(Settings::class);
         $this->app->singleton(PriceResolver::class);
         $this->app->singleton(ImageProvider::class, fn () => ImageProviderManager::make(config('store.images.provider')));
+        $this->app->singleton(\App\Assistant\Contracts\ChatProvider::class, fn () => \App\Assistant\AssistantManager::make(config('store.assistant.provider')));
     }
 
     public function boot(): void
@@ -39,6 +40,11 @@ class AppServiceProvider extends ServiceProvider
         ]);
         RateLimiter::for('newsletter', fn (Request $request) => Limit::perHour(5)->by('nl:'.$request->ip()));
         RateLimiter::for('quote-response', fn (Request $request) => Limit::perMinute(10)->by('qr:'.$request->ip()));
+        // Chatbot: each message is a paid AI call, so cap requests per IP per minute and per day.
+        RateLimiter::for('assistant', fn (Request $request) => [
+            Limit::perMinute((int) config('store.assistant.rate_per_minute', 8))->by('as-m:'.$request->ip()),
+            Limit::perDay((int) config('store.assistant.rate_per_day', 80))->by('as-d:'.$request->ip()),
+        ]);
         RateLimiter::for('sensitive', fn (Request $request) => Limit::perMinute(30)->by('s:'.($request->user()?->id ?: $request->ip())));
 
         Event::listen(\Illuminate\Queue\Events\JobProcessing::class, fn () => app(Settings::class)->forgetLoaded());

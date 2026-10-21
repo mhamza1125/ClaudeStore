@@ -28,6 +28,21 @@ return [
         'samples' => 'Hello! Is it possible to order product samples before placing a wholesale order?',
     ],
 
+    // Website chatbot (Admin → Settings → Chatbot). The API key is read from the
+    // environment only and is never sent to the browser.
+    'assistant' => [
+        'provider' => env('ASSISTANT_PROVIDER', 'anthropic'), // "anthropic" or "null" (offline)
+        'model' => env('ASSISTANT_MODEL', 'claude-opus-5-5'),
+        'effort' => env('ASSISTANT_EFFORT', 'low'), // low suits short chat replies; raise for harder questions
+        'max_tokens' => (int) env('ASSISTANT_MAX_TOKENS', 2048),
+        'timeout' => (float) env('ASSISTANT_TIMEOUT', 30),
+        'history_messages' => 20, // kept in the visitor's session
+        'max_message_length' => 1000,
+        'max_products_in_context' => 150,
+        'rate_per_minute' => (int) env('ASSISTANT_RATE_PER_MINUTE', 8),
+        'rate_per_day' => (int) env('ASSISTANT_RATE_PER_DAY', 80),
+    ],
+
     'images' => [
         // Name of the image provider binding: "null" (manual workflow only) or "removebg".
         'provider' => env('IMAGE_PROVIDER', 'null'),

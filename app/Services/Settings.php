@@ -46,6 +46,12 @@ class Settings
             'whatsapp.phone' => '923110012233', // international format, digits only
             'whatsapp.message_preset' => 'services', // a key of store.whatsapp_presets, or "custom"
             'whatsapp.custom_message' => null,
+            'chatbot.enabled' => false, // needs ANTHROPIC_API_KEY to answer; offline contact panel otherwise
+            'chatbot.assistant_name' => null, // defaults to "<brand> assistant"
+            'chatbot.intro_message' => 'Hi! Ask me about our leather goods, minimum orders or custom work — or I can help you request a quote.',
+            'chatbot.show_teaser' => true,
+            'chatbot.teaser_delay_seconds' => 5,
+            'chatbot.knowledge' => null, // extra facts/FAQ the assistant may use
             'policies.terms' => null,
             'policies.privacy' => null,
             'policies.shipping' => null,

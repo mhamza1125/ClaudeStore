@@ -14,6 +14,7 @@
 </main>
 @include('partials.store-footer')
 <x-whatsapp-button/>
+<x-chat-widget/>
 @livewireScriptConfig
 @stack('scripts')
 </body>

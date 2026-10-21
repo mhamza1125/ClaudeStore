@@ -71,6 +71,19 @@ runtime in Admin → Settings, which takes precedence over the env default.
 | `IMAGE_PROVIDER` | null | `null` (manual workflow) or `removebg` |
 | `REMOVEBG_API_KEY` | — | Required for `removebg` |
 
+## Website chatbot
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | — | Required for live chatbot answers; server-side only. See CHATBOT.md |
+| `ASSISTANT_PROVIDER` | anthropic | `null` forces the offline contact panel |
+| `ASSISTANT_MODEL` | claude-opus-5-5 | Claude model ID |
+| `ASSISTANT_EFFORT` | low | low / medium / high |
+| `ASSISTANT_MAX_TOKENS` / `ASSISTANT_TIMEOUT` | 2048 / 30 | Per reply |
+| `ASSISTANT_RATE_PER_MINUTE` / `ASSISTANT_RATE_PER_DAY` | 8 / 80 | Per IP |
+
+WhatsApp button settings (number, message) are managed in Admin → Settings, not `.env`.
+
 ## Seeding
 
 | Variable | Notes |

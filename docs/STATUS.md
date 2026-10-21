@@ -1,6 +1,6 @@
 # Status: implemented, pending, limitations
 
-Last verified: `php artisan test`, 112 tests and 561 assertions, passing on SQLite in-memory and on
+Last verified: `php artisan test`, 139 tests and 712 assertions, passing on SQLite in-memory and on
 MariaDB 10.11. `npm run build` succeeds. A browser walkthrough (Chromium/Playwright, demo data)
 covered: tier pricing at 10/50/150/300 units, MOQ/multiple messages, a guest RFQ, admin pricing
 and send, the secure link from the mail log, explicit acceptance, conversion to a sales order,
@@ -54,10 +54,16 @@ cannot sign in. Private attachments and originals; secure links stored as SHA-25
 escaping throughout; Eloquent/parameterised queries; LIKE wildcards escaped in searches.
 Audit log for product, price, settings, customer, staff and order changes.
 
+**Engagement.** Homepage hero carousel of featured products (crossfade, pause on hover/focus,
+reduced-motion aware, configurable interval). Configurable floating WhatsApp button (number,
+preset or custom message, server-built link). Optional AI chatbot with a server-side Anthropic
+integration, public-data-only business context, and an honest offline mode (docs/CHATBOT.md).
+
 ## Needs credentials or external setup
 
 | Item | What's needed |
 | --- | --- |
+| AI chatbot | `ANTHROPIC_API_KEY` in `.env`, then enable it in Admin → Settings → Chatbot. Not tested against the live API yet |
 | Production email | SMTP credentials and a verified sending domain (`MAIL_*`) |
 | S3 storage | Bucket and keys (`MEDIA_DISK_DRIVER`/`PRIVATE_DISK_DRIVER=s3`, `AWS_*`) |
 | Background removal | `IMAGE_PROVIDER=removebg` + `REMOVEBG_API_KEY`. Only tested with faked HTTP |

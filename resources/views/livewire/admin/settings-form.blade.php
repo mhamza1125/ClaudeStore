@@ -52,6 +52,25 @@
                 @endif
             </div>
         </section>
+        <section class="panel space-y-4" aria-labelledby="chat-h">
+            <h2 id="chat-h" class="text-2xl">Chatbot</h2>
+            <p class="text-sm text-muted">A floating AI assistant in the bottom-right corner. It answers from your public catalogue, settings and the notes below, and guides visitors toward a quote request. It never sees trade-only or negotiated prices.</p>
+            <div class="rounded-sm border px-3 py-2 text-sm {{ $chatProvider->isConfigured() ? 'border-success/40 badge-success' : 'border-warning/40 badge-warning' }}" data-testid="chat-provider-status">
+                @if ($chatProvider->isConfigured())
+                    AI provider connected: <strong>{{ $chatProvider->name() }}</strong> · model <code>{{ config('store.assistant.model') }}</code>
+                @else
+                    AI provider not configured (<code>{{ config('store.assistant.provider') }}</code>). Set <code>ANTHROPIC_API_KEY</code> in the server's .env (see docs/CHATBOT.md). Until then, visitors who open the chat see an “offline” panel with your quote, email and WhatsApp links.
+                @endif
+            </div>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" wire:model.live="s.chatbot_enabled"> Show the chatbot</label>
+            <x-field name="s.chatbot_name" model="s.chatbot_name" label="Assistant name" :placeholder="$s['brand_name'].' assistant'"/>
+            <x-textarea-field name="s.chatbot_intro" model="s.chatbot_intro" label="Introductory message" rows="2" required help="Shown in the teaser bubble and at the top of the chat."/>
+            <div class="grid gap-4 sm:grid-cols-2">
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" wire:model="s.chatbot_teaser"> Pop up the introductory message</label>
+                <x-field name="s.chatbot_teaser_delay" model="s.chatbot_teaser_delay" type="number" min="0" max="120" label="Pop-up delay (seconds)"/>
+            </div>
+            <x-textarea-field name="s.chatbot_knowledge" model="s.chatbot_knowledge" label="Additional knowledge for the assistant" rows="5" help="Optional facts and FAQs (e.g. shipping regions, sampling fees, certifications). The assistant only states facts it is given; keep this accurate."/>
+        </section>
         <section class="panel space-y-4 xl:col-span-2">
             <h2 class="text-2xl">Homepage</h2>
             <x-field name="s.hero_autoplay" model="s.hero_autoplay" type="number" min="0" max="60" label="Hero carousel: seconds per slide" help="0 turns autoplay off (visitors use the arrows and dots). Slides are the products marked “Featured” (then bestsellers), up to five." class="max-w-sm"/>
