@@ -17,16 +17,7 @@
                 </dl>
             </div>
             <div class="lg:col-span-6">
-                @php $heroImage = $hero?->approvedImages->firstWhere('view_type.value', 'lifestyle') ?? $hero?->approvedImages->first(); @endphp
-                <div class="relative mx-auto max-w-md lg:ml-auto">
-                    <div class="absolute -inset-3 -z-10 translate-x-6 translate-y-6 rounded-sm border border-accent/40"></div>
-                    @if ($heroImage)
-                        <a href="{{ route('products.show', $hero) }}" class="block overflow-hidden rounded-sm bg-elevated">
-                            <img src="{{ $heroImage->url() }}" alt="{{ $heroImage->alt }}" class="aspect-[4/5] w-full object-cover" fetchpriority="high" width="800" height="1000">
-                        </a>
-                        <p class="mt-3 text-xs text-muted">{{ $hero->name }} — placeholder illustration. Replace with product photography in Admin → Products.</p>
-                    @endif
-                </div>
+                @include('store.partials.hero-carousel', ['slides' => $heroSlides, 'autoplay' => $heroAutoplaySeconds])
             </div>
         </div>
     </section>

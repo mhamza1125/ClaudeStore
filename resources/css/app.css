@@ -40,6 +40,7 @@
     --color-danger-soft: #f6dcd6;
     --color-focus: #9c7426;
     --color-overlay: rgb(28 20 14 / 0.55);
+    --color-on-overlay: #fbf6ec;  /* text over image overlays; light in both themes */
     --color-transparent: transparent;
     --color-current: currentColor;
 

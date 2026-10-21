@@ -35,7 +35,9 @@
             <x-textarea-field name="s.acceptance" model="s.acceptance" label="Acceptance instructions" rows="3" class="sm:col-span-2"/>
         </section>
         <section class="panel space-y-4 xl:col-span-2">
-            <h2 class="text-2xl">Homepage testimonials</h2>
+            <h2 class="text-2xl">Homepage</h2>
+            <x-field name="s.hero_autoplay" model="s.hero_autoplay" type="number" min="0" max="60" label="Hero carousel: seconds per slide" help="0 turns autoplay off (visitors use the arrows and dots). Slides are the products marked “Featured” (then bestsellers), up to five." class="max-w-sm"/>
+            <h3 class="pt-2 font-serif text-xl">Testimonials</h3>
             <p class="text-sm text-muted">Only add genuine testimonials you have permission to publish. One per line: <code>Quote | Name | Company</code>. Leave empty to hide the section.</p>
             <x-textarea-field name="testimonials" model="testimonials" rows="4"/>
         </section>

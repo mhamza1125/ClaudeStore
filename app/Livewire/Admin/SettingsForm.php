@@ -34,6 +34,7 @@ class SettingsForm extends Component
             'payment_terms' => (string) $all['quote.payment_terms'], 'delivery_terms' => (string) $all['quote.delivery_terms'],
             'acceptance' => (string) $all['quote.acceptance_instructions'],
             'newsletter' => (bool) $all['newsletter.enabled'],
+            'hero_autoplay' => (int) $all['homepage.hero_autoplay_seconds'],
             'policy_terms' => (string) $all['policies.terms'], 'policy_privacy' => (string) $all['policies.privacy'],
             'policy_shipping' => (string) $all['policies.shipping'], 'policy_returns' => (string) $all['policies.returns'],
         ];
@@ -55,6 +56,7 @@ class SettingsForm extends Component
             's.policy_terms' => ['nullable', 'string', 'max:50000'], 's.policy_privacy' => ['nullable', 'string', 'max:50000'],
             's.policy_shipping' => ['nullable', 'string', 'max:50000'], 's.policy_returns' => ['nullable', 'string', 'max:50000'],
             'testimonials' => ['nullable', 'string', 'max:10000'],
+            's.hero_autoplay' => ['required', 'integer', 'min:0', 'max:60'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
         ], ['s.tax_rate.regex' => 'Enter a percentage such as 8.25.', 's.shipping_flat.regex' => 'Enter an amount such as 25.00.', 's.min_order.regex' => 'Enter an amount such as 500.00.']);
 
@@ -69,6 +71,7 @@ class SettingsForm extends Component
             'quote.validity_days' => (int) $s['validity_days'],
             'quote.payment_terms' => $s['payment_terms'], 'quote.delivery_terms' => $s['delivery_terms'], 'quote.acceptance_instructions' => $s['acceptance'],
             'newsletter.enabled' => (bool) $s['newsletter'],
+            'homepage.hero_autoplay_seconds' => (int) $s['hero_autoplay'],
             'policies.terms' => $s['policy_terms'] ?: null, 'policies.privacy' => $s['policy_privacy'] ?: null,
             'policies.shipping' => $s['policy_shipping'] ?: null, 'policies.returns' => $s['policy_returns'] ?: null,
             'homepage.testimonials' => collect(preg_split('/\R/', $this->testimonials))->map('trim')->filter()->map(function ($line) {
