@@ -1,0 +1,594 @@
+MASTER PROMPT: Build a Premium B2B Leather Goods E-Commerce & Wholesale Quotation Platform
+
+0. Project context and confirmed decisions (read first)
+
+Current repository state:
+- This repository already contains a fresh Laravel 12 scaffold at the repository root (no application code yet). Build on it; do not re-create the project or nest it in a subfolder.
+- vendor/ and node_modules/ are not committed. Run "composer install" and "npm install" first.
+- .env is not committed. Copy .env.example to .env and run "php artisan key:generate".
+
+Confirmed business and technical decisions (do not ask again):
+- Brand name: "Atelier Hide" (a demo placeholder, configurable from admin settings and config/brand.php).
+- Base currency: USD. Store all money as integer minor units (cents). Other currencies are informational only for now.
+- Database: MySQL 8 in local and production use (DB name "claudestore"; local dev uses root with no password). Keep migrations database-agnostic so the test suite can also run on SQLite in-memory when MySQL is not available (for example in a cloud sandbox).
+- Admin panel: a custom Livewire 3 + Blade + Tailwind admin. Do NOT use Filament (too slow for this project).
+- Stack: Laravel 12, Livewire 3, Alpine.js, Tailwind CSS v4 (Vite), Laravel Fortify for authentication, spatie/laravel-permission for roles, barryvdh/laravel-dompdf for PDFs, intervention/image for image optimisation, the database queue driver, the local/public disks with S3 configurable through env.
+- Roles: super-admin, admin, sales-rep, customer.
+- No payment gateway. Accepted quotes are converted to sales orders and handled offline.
+- Mail uses the "log" driver in development; SMTP is documented for production.
+- Tax and shipping are flat rates from admin settings, overridable per quote.
+- Seed a development admin account (admin@atelierhide.test) and print its password in the seeder output (development only).
+- Pricing precedence: (1) company-specific negotiated price (variant, then product), (2) customer-group tier price, (3) product/variant quantity tiers (variant tiers override product tiers), (4) variant base price, then product base price. Document this in docs/PRICING.md.
+- Quote reference format: AH-Q-YYYY-000123.
+
+Git workflow:
+- Commit after each completed phase with clear messages, so progress is never lost.
+- Run "php artisan test" before each commit and report real results only.
+
+Act as a senior full-stack software architect, Laravel engineer, UI/UX designer, e-commerce specialist, and B2B commerce consultant.
+
+I want you to design and build a complete, production-oriented e-commerce website for a leather goods manufacturer, wholesaler, or supplier selling:
+
+Leather bags, handbags, backpacks, laptop bags, duffel bags, and travel bags
+Leather wallets, cardholders, and money clips
+Leather belts
+Leather accessories and small leather goods
+Custom-manufactured and private-label leather products
+
+The website must combine the premium appearance of a luxury Shopify storefront with the functionality of a professional B2B wholesale portal.
+
+This is not just a landing page or visual prototype. Build a functioning application with a real database, admin panel, product management, B2B pricing rules, quote requests, customer accounts, and a complete quotation management workflow.
+
+1. First, choose the right technology stack
+
+Evaluate the requirements and choose the best architecture.
+
+My preferred stack is:
+
+Backend: Laravel with PHP
+Database: MySQL
+Frontend: Blade with Livewire and Alpine.js, or another well-justified Laravel-compatible approach
+Styling: Tailwind CSS
+Authentication: secure Laravel authentication
+Product images: cloud storage compatible with S3, with local storage support for development
+Background processing: Laravel queues for image processing, notifications, and other long-running jobs
+API integrations: REST APIs where required
+Deployment: production-ready configuration suitable for a VPS or managed Laravel hosting
+
+Build a responsive storefront that looks and feels like a premium Shopify theme, but with a custom B2B backend.
+
+Use a maintainable architecture, reusable components, database migrations, seeders, validation, policies, tests, and clear documentation.
+
+Do not build an unnecessary microservices architecture. Prefer a well-structured Laravel monolith unless there is a compelling reason to do otherwise.
+
+If a Shopify implementation would genuinely be a better fit, explain the trade-offs before committing to an alternative. Do not force a Shopify architecture into a custom Laravel project.
+
+2. Brand identity and visual design
+
+Create a sophisticated, premium leather goods brand aesthetic.
+
+Visual direction:
+
+Warm cream and ivory backgrounds
+Espresso brown, dark chocolate, and black accents
+Muted brass or gold details used sparingly
+Elegant serif headings paired with clean sans-serif body typography
+High-quality product photography
+Generous whitespace and refined spacing
+Premium editorial layouts
+Subtle transitions and polished interactions
+Clear calls to action and excellent mobile usability
+
+The store should feel trustworthy, established, international, and suitable for wholesale buyers.
+
+Avoid generic templates, excessive gradients, excessive rounded cards, cluttered layouts, oversized animations, and unnecessary decorative elements.
+
+Use a consistent design system with reusable buttons, form fields, cards, tables, modals, navigation, badges, and spacing tokens.
+
+Create a logo placeholder and a configurable brand identity system so the business name, logo, colors, contact details, and social links can be updated easily.
+
+Light and dark theme (required)
+
+Support both a light theme and a dark theme across the storefront, customer portal, and admin panel.
+
+- Light theme: warm cream/ivory backgrounds, espresso and chocolate text, brass accents.
+- Dark theme: deep espresso/near-black backgrounds (not pure #000), warm ivory text, slightly brighter brass accents. It should still feel like premium leather, not a generic dark UI.
+- Define every color as a semantic design token (for example --color-bg, --color-surface, --color-text, --color-muted, --color-border, --color-accent) using CSS custom properties with Tailwind v4 @theme, and switch the token values with a "dark" class on <html> (Tailwind's class-based dark variant). Components must use tokens, not hardcoded colors.
+- Add a theme toggle in the storefront header, customer portal, and admin top bar with three options: Light, Dark, System. Default to System (prefers-color-scheme).
+- Remember the choice in localStorage (wrapped in try/catch). For logged-in users, also save it on the user record (a "theme" column) so it follows them across devices.
+- Prevent the flash of the wrong theme: apply the theme class with a small inline script in <head> before CSS loads.
+- Check color contrast in both themes (WCAG AA for text), and check that product images, form fields, tables, badges, modals, and focus states look correct in both.
+- Emails and PDF quotations stay in the light brand theme.
+
+3. Public storefront
+
+Build the following pages.
+
+Homepage
+
+Include:
+
+Premium hero section with leather goods photography
+Clear headline for wholesale leather goods
+Primary CTA: “Explore Products”
+Secondary CTA: “Request a Wholesale Quote”
+Featured product categories
+Bestselling products
+New arrivals
+Wholesale and bulk-order benefits
+Custom manufacturing and private-label services
+Leather quality and craftsmanship section
+Manufacturing or company introduction
+Customer testimonials, if genuine content is provided
+Inquiry CTA for large-volume buyers
+Newsletter signup, if configured
+Professional footer with contact information and policies
+Product catalog
+
+Create a searchable, filterable catalog with:
+
+Bags
+Wallets
+Belts
+Accessories
+Custom products
+
+Support:
+
+Category and subcategory navigation
+Search by product name, SKU, or product code
+Filtering by category, material, color, availability, and price where appropriate
+Sorting by newest, product name, and price where permitted
+Pagination
+Grid and list views where useful
+Bulk selection and quick quantity entry for wholesale customers
+Product detail pages
+
+Each product should support:
+
+Product name and SKU
+Multiple images and a gallery with thumbnails
+Front, back, side, detail, and lifestyle photographs
+Product description
+Leather type and material
+Color options
+Size or dimensions
+Hardware and finishing options where relevant
+Available variants
+Packaging details
+Production or lead-time information
+Minimum order quantity
+Quantity-based price breaks
+Stock or availability status
+Quantity selector
+Live unit-price and line-total updates
+“Add to Quote” button
+“Request Customization” option where applicable
+Related products
+Downloadable specifications where available
+
+Do not invent product specifications or claim products are genuine leather unless that information is provided or verified.
+
+4. Core requirement: B2B quantity-based pricing
+
+This is one of the most important features.
+
+Build a configurable wholesale pricing engine.
+
+Example pricing for a hypothetical leather wallet:
+
+Order quantity	Unit price
+1–24 units	$18.00
+25–99 units	$15.00
+100–249 units	$12.50
+250+ units	$10.00
+
+These are illustrative seed-data values only. All prices and thresholds must be editable through the admin panel.
+
+When the customer changes the quantity, update the applicable unit price, subtotal, and total immediately.
+
+Example:
+
+Quantity: 10 → unit price $18.00
+Quantity: 50 → unit price $15.00
+Quantity: 150 → unit price $12.50
+Quantity: 300 → unit price $10.00
+
+The frontend can calculate a preliminary display, but the server must always recalculate and validate prices before saving a quote or order.
+
+Support:
+
+Minimum order quantity (MOQ)
+Minimum order value, if configured
+Quantity-based price tiers
+Product-specific pricing
+Variant-specific pricing
+Customer-group pricing
+Negotiated customer-specific pricing
+Optional volume discounts
+Optional price-on-request products
+Optional case-pack or order-multiple rules
+Currency configuration
+Configurable tax treatment
+Configurable shipping charges
+
+Define clear pricing precedence, for example:
+
+Customer-specific negotiated price
+Customer-group price
+Product quantity-tier price
+Default product price
+
+Document the final precedence rules and make them consistent throughout the application.
+
+When a buyer changes the quantity, show the applicable price tier clearly. If the new quantity crosses a price threshold, update the display without requiring a page reload.
+
+Support mixed-product quotations. Each product line should use its own applicable price rules unless a separately configured cart-wide discount applies.
+
+Keep money calculations precise. Do not use floating-point arithmetic for financial calculations.
+
+5. Request a Quote system
+
+The website must support a complete RFQ (Request for Quotation) workflow.
+
+Every eligible product must have an “Add to Quote” button.
+
+When a visitor adds a product to the quote list:
+
+Add the selected product and variant
+Store the requested quantity
+Calculate an indicative price if permitted
+Show the applicable price tier
+Allow the buyer to edit quantities
+Allow the buyer to remove items
+Preserve the quote list across navigation
+Display a quote-list count in the header
+
+Create a dedicated quote basket page containing:
+
+Product thumbnail
+Product name and SKU
+Selected variant
+Requested quantity
+Indicative unit price, if permitted
+Line subtotal, if permitted
+Requested customization
+Notes for each product
+Remove and update controls
+
+The customer should be able to submit a quote request even if final pricing is unavailable.
+
+Quote submission form
+
+Include:
+
+Company name
+Contact person's name
+Business email
+Phone number with country code
+Country
+Delivery destination
+Company website, optional
+Business type or buyer category
+Expected order volume
+Target delivery date
+Preferred currency, if supported
+Required product specifications
+General message
+File attachments for artwork, reference photos, or specifications, subject to secure upload validation
+
+Allow guest quote requests, with spam protection and reasonable rate limits. Offer registered accounts for buyers who want to save quotations and track their history.
+
+After submission:
+
+Generate a unique quote reference number
+Save the request and its line items to the database
+Show a confirmation page
+Send a confirmation email to the buyer
+Notify the relevant administrator or sales team
+Show the quote in the admin dashboard
+
+Do not treat a submitted quote as a confirmed order.
+
+6. Quote management and negotiation
+
+Build a professional admin quotation workspace.
+
+Administrators and authorized sales staff should be able to:
+
+View and search all quote requests
+Filter by status, date, company, country, and sales representative
+Open each request and view its products
+Review requested quantities and options
+Add internal notes
+Assign quotes to sales staff
+Set negotiated unit prices
+Apply approved discounts
+Set shipping, taxes, and additional charges
+Set quote validity and expiration
+Revise quantities and prices
+Generate a branded quotation document in PDF
+Send the quotation by email
+Record when a quote was sent
+Track quote versions and changes
+Mark quotes as pending, under review, quoted, awaiting customer response, accepted, rejected, expired, or converted to an order
+
+Maintain an audit trail of price changes and important actions.
+
+The buyer should receive a secure link to review the quotation.
+
+The customer-facing quotation should clearly show:
+
+Quote reference
+Company details
+Products and SKUs
+Quantities
+Unit prices
+Discounts
+Shipping and taxes, where applicable
+Grand total
+Currency
+Validity date
+Payment and delivery terms
+Instructions for acceptance
+
+Allow customers to accept or reject the final quote. Require an explicit confirmation before acceptance.
+
+When a quote is accepted, allow the authorized workflow to convert it into a sales order. Preserve the agreed prices and terms.
+
+If the quotation has expired, require revalidation or an authorized extension before it can be accepted.
+
+7. B2B customer accounts
+
+Build a secure customer portal.
+
+Customers should be able to:
+
+Register and log in
+Create a company profile
+Manage company contact details
+Add billing and shipping addresses
+Request access to wholesale pricing, if approval is required
+View their account-specific pricing
+View past quote requests
+Track quote statuses
+View and download quotations
+Accept or reject quotations
+Reorder previous products
+Save favorite products
+Manage authorized team members if multi-user company accounts are implemented
+
+Support configurable customer groups, such as:
+
+Retail buyer
+Wholesale buyer
+Distributor
+VIP or negotiated-price customer
+
+Allow administrators to approve wholesale accounts and assign customer groups.
+
+Do not expose private customer prices or unpublished quotations to other customers.
+
+8. Product and inventory administration
+
+Build a comprehensive product management interface.
+
+Administrators must be able to:
+
+Create, edit, duplicate, archive, and publish products
+Manage categories and subcategories
+Set product SKUs and variant SKUs
+Upload multiple product images
+Assign images to specific variants
+Add descriptions, specifications, and product attributes
+Configure colors, sizes, materials, and finishes
+Set MOQ and quantity-price tiers
+Set customer-group and negotiated prices
+Enable or disable quote requests for each product
+Enable or disable public pricing for each product
+Mark products as custom-made or made-to-order
+Manage stock or availability
+Import products from CSV
+Export product data to CSV
+
+Implement proper validation, SKU uniqueness, and image handling.
+
+9. AI product image workflow
+
+Design the system to support professional product photography for leather goods.
+
+The intended workflow is:
+
+An administrator uploads original product photographs.
+The system stores the originals securely.
+An image-processing service removes backgrounds and improves image presentation.
+Optional AI image-generation services create approved lifestyle and model images.
+The administrator reviews generated images.
+Approved images are attached to the correct product and variant.
+The storefront displays optimized images.
+
+Support image categories such as:
+
+Front view
+Back view
+Side view
+Detail view
+Lifestyle photograph
+Model photograph
+Packaging photograph
+
+Use a provider-independent image-service interface where practical, so an image API can be replaced without rewriting the product management system.
+
+Do not pretend that an image was generated if no image provider is configured.
+
+Preserve original product photographs and allow administrators to approve, reject, replace, or delete generated versions.
+
+Prioritize product accuracy. AI must not silently change logos, hardware, stitching, leather texture, color, or other product-defining features. Treat generated alternate views as drafts requiring review, especially when reference photos are incomplete.
+
+If API credentials are not available, build the integration interface, configuration instructions, and a usable manual-upload fallback.
+
+10. Optional B2B capabilities
+
+Design for future expansion into:
+
+Custom logo embossing
+Private-label manufacturing
+Custom colors and materials
+Bulk order inquiries
+Sample requests
+Custom manufacturing specifications
+Purchase-order references
+Pro forma invoices
+Reorder workflows
+Sales representative assignments
+Customer-specific catalogs
+Negotiated payment terms
+Multiple currencies
+International shipping and export documentation
+
+Prioritize the core storefront, pricing, quote submission, and quote administration before implementing advanced features.
+
+11. Security and production readiness
+
+Implement:
+
+Server-side validation for all critical inputs
+Authorization policies and role-based permissions
+CSRF protection
+Secure authentication and password reset
+Rate limiting for login, quote submission, and sensitive actions
+Safe file-upload validation
+Protection against SQL injection and cross-site scripting
+Secure storage of uploaded files
+Private access to customer quotations and attachments
+Audit logs for sensitive administrative changes
+Secure configuration through environment variables
+Database backups and documented recovery procedures
+Email failure handling
+Queue failure handling
+Logging and error monitoring
+Accessibility and responsive design
+Search-engine-friendly product pages
+Performance optimization and image compression
+
+Do not expose secret keys, passwords, or private customer information in source control or logs.
+
+Do not claim the application is production-ready until its important workflows have been tested.
+
+12. Database design
+
+Design a normalized database appropriate to the selected architecture.
+
+Consider entities such as:
+
+Users
+Companies
+Company memberships
+Customer groups
+Addresses
+Roles and permissions
+Products
+Categories
+Product variants
+Product images
+Price tiers
+Customer-specific prices
+Carts or quote baskets
+Quote requests
+Quote line items
+Quote versions
+Quote attachments
+Quote activity logs
+Sales orders
+Order line items
+Payments, if implemented
+Inventory records
+Email notifications
+Site settings
+
+Use foreign keys, appropriate indexes, decimal or integer-minor-unit monetary storage, and database transactions where necessary.
+
+Preserve price and product snapshots on submitted quotes and converted orders. Historical quotes must not change when a product's current price or description is edited later.
+
+13. Required deliverables
+
+Create the actual application, not just a proposal.
+
+Deliver:
+
+A working responsive storefront
+Light, dark, and system theme switching across storefront, portal, and admin
+A functioning product catalog
+Product detail pages
+A working quote basket
+Quantity-based pricing
+Quote submission and confirmation
+An administrative quote-management workspace
+Product and variant administration
+B2B customer accounts and access controls
+PDF quotation generation
+Email notifications
+Database migrations and seeders
+Automated tests for critical pricing, quote, and permission workflows
+Example products and illustrative price tiers
+Installation and deployment documentation
+Environment variable documentation
+Instructions for configuring email, storage, and optional AI image services
+A clear list of implemented features, pending integrations, and known limitations
+
+Use realistic sample leather goods and professional placeholder imagery where final brand assets are unavailable. Clearly distinguish demonstration data from actual business data.
+
+14. How you must work
+
+Work incrementally and verify your work.
+
+Phase 1: Inspect and plan
+Inspect the current project and its existing files.
+Identify the framework, dependencies, and current state.
+Present the proposed architecture, database entities, user roles, pricing rules, and key workflows.
+Identify essential unanswered business questions.
+State any assumptions rather than inventing business-specific facts.
+Phase 2: Build the foundation
+Set up the application and design system.
+Implement authentication and authorization.
+Create database migrations and seeders.
+Build categories, products, variants, and pricing.
+Phase 3: Build the storefront
+Implement the homepage, catalog, filters, and product pages.
+Implement responsive navigation and the product image gallery.
+Add quantity-based pricing with server-side validation.
+Phase 4: Build B2B quotations
+Implement the quote basket.
+Implement quote submission.
+Build the admin quote workspace.
+Add negotiated pricing, PDF quotations, notifications, and acceptance workflows.
+Phase 5: Build the customer portal
+Add company profiles, customer groups, account-specific pricing, and quote history.
+Verify privacy and authorization boundaries.
+Phase 6: Integrate and test
+Add optional image-service integration.
+Test pricing thresholds, mixed-product quotes, expired quotes, and price changes.
+Test security, validation, error states, and mobile layouts.
+Fix discovered defects rather than merely reporting them.
+Phase 7: Prepare deployment
+Document installation and deployment.
+Explain required environment variables and third-party services.
+Provide database migration, queue worker, scheduler, storage, and email setup instructions.
+List anything that still requires credentials, business decisions, or manual verification.
+15. Non-negotiable requirements
+Do not create a static-only mockup.
+Do not use fake buttons that do nothing.
+Do not hardcode product prices into frontend components.
+Do not trust client-submitted prices.
+Do not leak wholesale pricing or customer quotations.
+Do not invent payment gateway credentials or external service integrations.
+Do not overwrite existing project files without understanding their purpose.
+Do not claim tests passed unless you actually ran them.
+Do not skip database migrations or authorization checks.
+Do not attempt to build every advanced feature at the expense of a working core system.
+
+If a feature depends on unavailable credentials or external services, implement the parts that can be completed, document the remaining configuration, and provide a manual fallback where practical.
+
+Start by inspecting the project and presenting a concise implementation plan. Then begin building the application in small, verifiable steps. Do not stop after producing a design document or a homepage. Continue through the core storefront, quantity-pricing engine, quote workflow, and administration until they work together end to end.
+
+Your goal is to deliver a premium, maintainable B2B leather goods commerce platform that a real business can configure, test, and prepare for launch.
