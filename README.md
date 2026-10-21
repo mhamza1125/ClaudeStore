@@ -45,7 +45,9 @@ DB_CONNECTION=mysql DB_DATABASE=claudestore_test php vendor/bin/phpunit   # agai
 139 tests cover the pricing precedence and tier boundaries, integer money maths, the
 basket, RFQ submission (validation, spam protection, rate limits, attachments, price
 snapshots), the full quote lifecycle (pricing, versions, secure links, expiry, acceptance,
-conversion), authorisation boundaries, the portal, product/category/CSV/image administration.
+conversion), authorisation boundaries, the portal, product/category/CSV/image administration,
+the hero carousel, WhatsApp link generation, and the chatbot (endpoint, privacy of its business
+context, and the Anthropic SDK request shape via a mocked transport).
 
 ## What's where
 
