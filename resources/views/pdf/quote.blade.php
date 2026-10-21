@@ -60,13 +60,13 @@
 </table>
 
 <table class="items" style="margin-top:22px;">
-    <thead><tr><th style="width:40%;">Product</th><th>SKU</th><th class="right">Qty</th><th class="right">Unit price</th><th class="right">Discount</th><th class="right">Line total</th></tr></thead>
+    <thead><tr><th style="width:34%;">Product</th><th>SKU</th><th class="right">Qty</th><th class="right">Unit price</th><th class="right">Discount</th><th class="right">Line total</th></tr></thead>
     <tbody>
     @foreach ($quote->items as $item)
         <tr>
             <td><strong>{{ $item->product_name }}</strong>@if ($item->variant_name)<br><span class="muted">{{ $item->variant_name }}</span>@endif
                 @if ($item->customization)<br><span class="muted">Customisation: {{ $item->customization }}</span>@endif</td>
-            <td>{{ $item->sku }}</td>
+            <td style="white-space:nowrap;font-size:8.5px;">{{ $item->sku }}</td>
             <td class="right">{{ number_format($item->quantity) }}</td>
             <td class="right">{{ money($item->unit_price_cents, $quote->currency) }}</td>
             <td class="right">{{ $item->discount_bps ? \App\Support\Money::bpsToPercentString($item->discount_bps).'%' : '—' }}</td>

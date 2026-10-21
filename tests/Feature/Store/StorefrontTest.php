@@ -126,4 +126,11 @@ class StorefrontTest extends TestCase
             ->assertSee('Trade wallet in full-grain leather')
             ->assertSee('application/ld+json', false);
     }
+
+    public function test_search_wildcards_are_literal(): void
+    {
+        $this->wallet();
+        Livewire::test(Catalog::class)->set('q', '%')->assertDontSee('Classic Bifold Wallet');
+        Livewire::test(Catalog::class)->set('q', 'AH_WAL')->assertDontSee('Classic Bifold Wallet');
+    }
 }

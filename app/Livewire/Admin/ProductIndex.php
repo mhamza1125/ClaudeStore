@@ -39,7 +39,7 @@ class ProductIndex extends Component
     public function render()
     {
         $products = Product::query()->with(['category', 'approvedImages'])->withCount(['variants', 'priceTiers'])
-            ->when($this->search !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', "%{$this->search}%")->orWhere('sku', 'like', "%{$this->search}%")))
+            ->when($this->search !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', like_term($this->search))->orWhere('sku', 'like', like_term($this->search))))
             ->when($this->status !== '', fn ($q) => $q->where('status', $this->status))
             ->when($this->category !== '', fn ($q) => $q->where('category_id', (int) $this->category))
             ->latest('id')->paginate(25);

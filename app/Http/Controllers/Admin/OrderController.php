@@ -15,7 +15,7 @@ class OrderController extends Controller
     {
         $orders = SalesOrder::query()
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('reference', 'like', '%'.$request->string('q').'%')->orWhere('company_name', 'like', '%'.$request->string('q').'%')))
+            ->when($request->filled('q'), fn ($q) => $q->where(fn ($w) => $w->where('reference', 'like', like_term($request->string('q')))->orWhere('company_name', 'like', like_term($request->string('q')))))
             ->latest('id')->paginate(25)->withQueryString();
 
         return view('admin.orders.index', ['orders' => $orders, 'statuses' => SalesOrderStatus::options()]);

@@ -120,7 +120,7 @@ class Catalog extends Component
             ->with(['approvedImages', 'priceTiers', 'category', 'activeVariants'])
             ->when($this->category, fn (Builder $q) => $q->whereIn('category_id', $this->category->selfAndChildIds()))
             ->when(trim($this->q) !== '', function (Builder $q) {
-                $term = '%'.str_replace(['%', '_'], ['\%', '\_'], trim($this->q)).'%';
+                $term = like_term($this->q);
                 $q->where(fn (Builder $w) => $w->where('name', 'like', $term)->orWhere('sku', 'like', $term)
                     ->orWhere('product_code', 'like', $term)
                     ->orWhereHas('variants', fn (Builder $v) => $v->where('sku', 'like', $term)));

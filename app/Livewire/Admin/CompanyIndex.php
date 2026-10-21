@@ -30,7 +30,7 @@ class CompanyIndex extends Component
     {
         return view('livewire.admin.company-index', [
             'companies' => Company::query()->with(['customerGroup', 'salesRep'])->withCount(['users', 'quotes'])
-                ->when($this->search !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', "%{$this->search}%")->orWhere('email', 'like', "%{$this->search}%")))
+                ->when($this->search !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', like_term($this->search))->orWhere('email', 'like', like_term($this->search))))
                 ->when($this->wholesale !== '', fn ($q) => $q->where('wholesale_status', $this->wholesale))
                 ->when($this->group !== '', fn ($q) => $q->where('customer_group_id', (int) $this->group))
                 ->orderByRaw("CASE WHEN wholesale_status = 'pending' THEN 0 ELSE 1 END")->orderBy('name')->paginate(25),

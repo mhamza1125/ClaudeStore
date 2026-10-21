@@ -41,7 +41,7 @@ class QuoteIndex extends Component
         $user = auth()->user();
         $quotes = Quote::query()->visibleTo($user)->with(['assignee', 'company'])->withCount('items')
             ->when($this->search !== '', function ($q) {
-                $term = '%'.str_replace(['%', '_'], ['\%', '\_'], $this->search).'%';
+                $term = like_term($this->search);
                 $q->where(fn ($w) => $w->where('reference', 'like', $term)->orWhere('company_name', 'like', $term)
                     ->orWhere('email', 'like', $term)->orWhere('contact_name', 'like', $term));
             })

@@ -1,66 +1,91 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Atelier Hide — B2B leather goods store & wholesale quotation platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 12 monolith for a leather goods manufacturer/wholesaler: a premium storefront, a
+server-side quantity pricing engine, a request-for-quotation (RFQ) workflow, a custom
+Livewire admin, and a B2B customer portal.
 
-## About Laravel
+> **"Atelier Hide" is a demo brand.** All seeded products, prices, specifications and images are
+> illustrative placeholders, flagged `is_demo` and labelled "Demo product" on the storefront.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Stack
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Laravel 12 · PHP 8.2+ · MySQL 8 (tests also run on SQLite in-memory) · Livewire 3 + Alpine.js ·
+Tailwind CSS v4 (Vite) · Laravel Fortify (auth) · spatie/laravel-permission (roles) ·
+barryvdh/laravel-dompdf (quotation PDFs) · Intervention Image 3 (optimisation) · database queue ·
+local/public disks with optional S3. No Filament, no payment gateway.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Quick start (local)
 
-## Learning Laravel
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+# MySQL: create the database "claudestore" (root, no password by default)
+php artisan migrate --seed          # prints the dev admin/sales/buyer passwords
+php artisan storage:link
+npm run build                       # or: npm run dev
+composer run dev                    # serve + queue worker + logs + vite
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Open http://localhost:8000. Sign in at `/login` with `admin@atelierhide.test` and the password the
+seeder printed (it is random on every seed; development only). Admin is at `/admin`.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+The queue worker matters: emails, image optimisation and image-provider jobs are queued.
+With `MAIL_MAILER=log`, emails (including the customer's secure quotation link) are written to
+`storage/logs/laravel.log`.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Tests
 
-## Laravel Sponsors
+```bash
+php artisan test                                        # SQLite in-memory (phpunit.xml)
+DB_CONNECTION=mysql DB_DATABASE=claudestore_test php vendor/bin/phpunit   # against MySQL
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+112 tests cover the pricing precedence and tier boundaries, integer money maths, the
+basket, RFQ submission (validation, spam protection, rate limits, attachments, price
+snapshots), the full quote lifecycle (pricing, versions, secure links, expiry, acceptance,
+conversion), authorisation boundaries, the portal, product/category/CSV/image administration.
 
-### Premium Partners
+## What's where
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+| Area | Code |
+| --- | --- |
+| Pricing engine | `app/Pricing/PriceResolver.php`, `QuoteTotals.php`, `app/Support/Money.php` — see [docs/PRICING.md](docs/PRICING.md) |
+| Quote basket / RFQ | `app/Services/QuoteBasketService.php`, `QuoteSubmissionService.php`, `app/Http/Requests/QuoteSubmissionRequest.php` |
+| Quote lifecycle | `app/Services/QuoteWorkflow.php`, `app/Livewire/Admin/QuoteWorkspace.php`, `app/Http/Controllers/CustomerQuoteController.php` |
+| Storefront | `app/Livewire/Store/*`, `resources/views/store`, `resources/views/livewire/store` |
+| Admin | `app/Livewire/Admin/*`, `app/Http/Controllers/Admin/*` |
+| Portal | `app/Http/Controllers/Account/*`, `resources/views/account` |
+| Images | `app/Images/*`, `app/Jobs/*` — see [docs/IMAGES.md](docs/IMAGES.md) |
+| Design tokens / themes | `resources/css/app.css`, `resources/js/theme.js`, `resources/views/partials/head.blade.php` |
+| Roles & permissions | `database/seeders/RolesAndPermissionsSeeder.php`, `app/Policies/QuotePolicy.php` |
 
-## Contributing
+## Roles
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+| Role | Access |
+| --- | --- |
+| super-admin | Everything, including staff & roles |
+| admin | Everything except staff management |
+| sales-rep | Quotes assigned to them or unassigned (price, send, convert); read-only customers |
+| customer | Storefront, own/company quotes and orders, portal |
 
-## Code of Conduct
+## Key workflows
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. **Browse** → catalogue filters/search → product page with live server-side tier pricing.
+2. **Add to Quote** (MOQ and order multiples enforced on the server) → `/quote` basket.
+3. **Submit RFQ** (guests allowed) → reference `AH-Q-YYYY-000123`, confirmation page, emails.
+4. **Admin** → quote workspace: set negotiated prices/discounts, shipping/tax/charges, validity
+   and terms → **Save & send** (PDF + secure link, new version).
+5. **Customer accepts/rejects** via the secure link or portal, with explicit confirmation.
+   Expired or revised quotes cannot be accepted.
+6. **Convert to sales order** (`AH-SO-YYYY-000123`) from the accepted version snapshot.
+   Payment is handled offline.
 
-## Security Vulnerabilities
+## Documentation
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — server setup, queue, scheduler, storage, mail, backups
+- [docs/ENV.md](docs/ENV.md) — every environment variable
+- [docs/PRICING.md](docs/PRICING.md) — pricing precedence and maths
+- [docs/IMAGES.md](docs/IMAGES.md) — image workflow and provider integration
+- [docs/STATUS.md](docs/STATUS.md) — implemented features, pending integrations, known limitations
