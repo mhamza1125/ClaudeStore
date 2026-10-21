@@ -17,6 +17,15 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->string('phone', 40)->nullable();
+            $table->string('job_title')->nullable();
+            // Company membership: a user belongs to at most one company. The FK is added
+            // in the companies migration because companies reference users (sales rep).
+            $table->unsignedBigInteger('company_id')->nullable()->index();
+            $table->string('company_role', 20)->nullable(); // owner | member
+            $table->string('theme', 10)->nullable(); // light | dark | system
+            $table->boolean('is_active')->default(true);
+            $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
