@@ -42,6 +42,10 @@ class Settings
             'newsletter.enabled' => false,
             'homepage.testimonials' => [],
             'homepage.hero_autoplay_seconds' => 6, // 0 = manual navigation only // [{quote, name, company}] — only genuine, supplied content
+            'whatsapp.enabled' => true,
+            'whatsapp.phone' => '923110012233', // international format, digits only
+            'whatsapp.message_preset' => 'services', // a key of store.whatsapp_presets, or "custom"
+            'whatsapp.custom_message' => null,
             'policies.terms' => null,
             'policies.privacy' => null,
             'policies.shipping' => null,

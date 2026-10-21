@@ -5,6 +5,8 @@ namespace App\Livewire\Admin;
 use App\Services\AuditLogger;
 use App\Services\Settings;
 use App\Support\Money;
+use App\Support\WhatsApp;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -35,6 +37,10 @@ class SettingsForm extends Component
             'acceptance' => (string) $all['quote.acceptance_instructions'],
             'newsletter' => (bool) $all['newsletter.enabled'],
             'hero_autoplay' => (int) $all['homepage.hero_autoplay_seconds'],
+            'whatsapp_enabled' => (bool) $all['whatsapp.enabled'],
+            'whatsapp_phone' => (string) $all['whatsapp.phone'],
+            'whatsapp_preset' => (string) $all['whatsapp.message_preset'],
+            'whatsapp_custom' => (string) $all['whatsapp.custom_message'],
             'policy_terms' => (string) $all['policies.terms'], 'policy_privacy' => (string) $all['policies.privacy'],
             'policy_shipping' => (string) $all['policies.shipping'], 'policy_returns' => (string) $all['policies.returns'],
         ];
@@ -57,6 +63,12 @@ class SettingsForm extends Component
             's.policy_shipping' => ['nullable', 'string', 'max:50000'], 's.policy_returns' => ['nullable', 'string', 'max:50000'],
             'testimonials' => ['nullable', 'string', 'max:10000'],
             's.hero_autoplay' => ['required', 'integer', 'min:0', 'max:60'],
+            's.whatsapp_enabled' => ['boolean'],
+            's.whatsapp_phone' => [$this->s['whatsapp_enabled'] ? 'required' : 'nullable', 'string', 'max:30',
+                fn ($attr, $value, $fail) => filled($value) && ! WhatsApp::isValidPhone($value)
+                    ? $fail('Enter the full international number with country code, e.g. +92 311 0012233.') : null],
+            's.whatsapp_preset' => ['required', Rule::in([...array_keys(WhatsApp::presets()), 'custom'])],
+            's.whatsapp_custom' => [$this->s['whatsapp_preset'] === 'custom' ? 'required' : 'nullable', 'string', 'max:500'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
         ], ['s.tax_rate.regex' => 'Enter a percentage such as 8.25.', 's.shipping_flat.regex' => 'Enter an amount such as 25.00.', 's.min_order.regex' => 'Enter an amount such as 500.00.']);
 
@@ -72,6 +84,10 @@ class SettingsForm extends Component
             'quote.payment_terms' => $s['payment_terms'], 'quote.delivery_terms' => $s['delivery_terms'], 'quote.acceptance_instructions' => $s['acceptance'],
             'newsletter.enabled' => (bool) $s['newsletter'],
             'homepage.hero_autoplay_seconds' => (int) $s['hero_autoplay'],
+            'whatsapp.enabled' => (bool) $s['whatsapp_enabled'],
+            'whatsapp.phone' => WhatsApp::normalizePhone($s['whatsapp_phone']) ?: null,
+            'whatsapp.message_preset' => $s['whatsapp_preset'],
+            'whatsapp.custom_message' => trim((string) $s['whatsapp_custom']) ?: null,
             'policies.terms' => $s['policy_terms'] ?: null, 'policies.privacy' => $s['policy_privacy'] ?: null,
             'policies.shipping' => $s['policy_shipping'] ?: null, 'policies.returns' => $s['policy_returns'] ?: null,
             'homepage.testimonials' => collect(preg_split('/\R/', $this->testimonials))->map('trim')->filter()->map(function ($line) {
@@ -103,7 +119,14 @@ class SettingsForm extends Component
 
     public function render(Settings $settings)
     {
-        return view('livewire.admin.settings-form', ['logoPath' => $settings->get('brand.logo_path')])
+        $message = $this->s['whatsapp_preset'] === 'custom' ? trim((string) $this->s['whatsapp_custom']) : (WhatsApp::presets()[$this->s['whatsapp_preset']] ?? '');
+
+        return view('livewire.admin.settings-form', [
+            'logoPath' => $settings->get('brand.logo_path'),
+            'whatsappPresets' => WhatsApp::presets() + ['custom' => 'Custom message…'],
+            // Live preview of the link the button will open (from the unsaved form values).
+            'whatsappPreview' => WhatsApp::isValidPhone($this->s['whatsapp_phone']) && $message !== '' ? WhatsApp::link($this->s['whatsapp_phone'], $message) : null,
+        ])
             ->layout('components.layouts.admin', ['title' => 'Settings']);
     }
 }

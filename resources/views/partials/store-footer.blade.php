@@ -50,7 +50,7 @@
         </div>
     </div>
     <div class="border-t border-border">
-        <div class="container-page flex flex-wrap items-center justify-between gap-2 py-5 text-xs text-muted">
+        <div class="container-page flex flex-wrap items-center justify-between gap-2 pt-5 pb-24 text-xs text-muted">
             <p>© {{ now()->year }} {{ $brand['name'] }}. Prices exclude tax and shipping unless stated. Submitted quote requests are not orders.</p>
             <p>All prices in {{ config('store.currency') }}.</p>
         </div>

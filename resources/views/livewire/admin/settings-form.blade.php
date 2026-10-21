@@ -34,6 +34,24 @@
             <x-textarea-field name="s.delivery_terms" model="s.delivery_terms" label="Default delivery terms" rows="3" class="sm:col-span-2"/>
             <x-textarea-field name="s.acceptance" model="s.acceptance" label="Acceptance instructions" rows="3" class="sm:col-span-2"/>
         </section>
+        <section class="panel space-y-4" aria-labelledby="wa-h">
+            <h2 id="wa-h" class="text-2xl">WhatsApp button</h2>
+            <p class="text-sm text-muted">A floating button in the bottom-left corner of the storefront that opens WhatsApp with a prefilled message.</p>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" wire:model.live="s.whatsapp_enabled"> Show the WhatsApp button</label>
+            <x-field name="s.whatsapp_phone" model="s.whatsapp_phone" label="WhatsApp number" placeholder="+92 311 0012233" help="International format with country code. Spaces, + and dashes are removed automatically." :required="$s['whatsapp_enabled']"/>
+            <x-select-field name="s.whatsapp_preset" model="s.whatsapp_preset" label="Prefilled message" :options="$whatsappPresets"/>
+            @if ($s['whatsapp_preset'] === 'custom')
+                <x-textarea-field name="s.whatsapp_custom" model="s.whatsapp_custom" label="Custom message" rows="3" required/>
+            @endif
+            <div class="text-xs">
+                <p class="field-label text-xs">Link preview</p>
+                @if ($whatsappPreview)
+                    <a href="{{ $whatsappPreview }}" target="_blank" rel="noopener noreferrer" class="link break-all font-mono" data-testid="whatsapp-preview">{{ $whatsappPreview }}</a>
+                @else
+                    <p class="text-muted">Enter a valid number and message to preview the link.</p>
+                @endif
+            </div>
+        </section>
         <section class="panel space-y-4 xl:col-span-2">
             <h2 class="text-2xl">Homepage</h2>
             <x-field name="s.hero_autoplay" model="s.hero_autoplay" type="number" min="0" max="60" label="Hero carousel: seconds per slide" help="0 turns autoplay off (visitors use the arrows and dots). Slides are the products marked “Featured” (then bestsellers), up to five." class="max-w-sm"/>

@@ -13,6 +13,7 @@
     {{ $slot }}
 </main>
 @include('partials.store-footer')
+<x-whatsapp-button/>
 @livewireScriptConfig
 @stack('scripts')
 </body>
