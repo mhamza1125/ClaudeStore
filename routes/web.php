@@ -1,11 +1,106 @@
 <?php
 
+use App\Http\Controllers\Account;
+use App\Http\Controllers\Admin;
+use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\CustomerQuoteController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PreferenceController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\QuoteSubmissionController;
+use App\Livewire;
 use Illuminate\Support\Facades\Route;
 
-// Phase 2: foundation only. Storefront, quotes and admin routes arrive in later phases.
-Route::get('/', fn () => view('welcome'))->name('home');
+/*
+| Storefront
+*/
+Route::get('/', HomeController::class)->name('home');
+Route::get('/products', Livewire\Store\Catalog::class)->name('catalog');
+Route::get('/categories/{category:slug}', Livewire\Store\Catalog::class)->name('catalog.category');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product:slug}/spec-sheet', [ProductController::class, 'specSheet'])->name('products.spec-sheet');
+Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show');
+Route::post('/newsletter', [NewsletterController::class, 'store'])->middleware('throttle:newsletter')->name('newsletter.subscribe');
+
+// Quote basket and RFQ submission (guests allowed; rate limited + honeypot)
+Route::get('/quote', Livewire\Store\QuoteBasketPage::class)->name('quote.basket');
+Route::post('/quote', [QuoteSubmissionController::class, 'store'])->middleware('throttle:quote-submit')->name('quote.submit');
+Route::get('/quote/submitted', [QuoteSubmissionController::class, 'confirmation'])->name('quote.confirmation');
+
+// Secure customer quotation link (token-hashed; works without an account)
+Route::middleware('throttle:quote-response')->group(function () {
+    Route::get('/q/{quote:reference}/{token}', [CustomerQuoteController::class, 'show'])->name('quotes.public.show');
+    Route::get('/q/{quote:reference}/{token}/pdf', [CustomerQuoteController::class, 'pdf'])->name('quotes.public.pdf');
+    Route::post('/q/{quote:reference}/{token}/accept', [CustomerQuoteController::class, 'accept'])->name('quotes.public.accept');
+    Route::post('/q/{quote:reference}/{token}/reject', [CustomerQuoteController::class, 'reject'])->name('quotes.public.reject');
+});
 
 Route::middleware('auth')->group(function () {
     Route::put('/preferences/theme', [PreferenceController::class, 'theme'])->name('preferences.theme');
+    Route::get('/attachments/{attachment}', [AttachmentController::class, 'show'])->name('attachments.show');
+});
+
+/*
+| Customer portal
+*/
+Route::middleware('auth')->prefix('account')->name('account.')->group(function () {
+    Route::get('/', [Account\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [Account\ProfileController::class, 'edit'])->name('profile');
+    Route::get('/company', [Account\CompanyController::class, 'edit'])->name('company');
+    Route::put('/company', [Account\CompanyController::class, 'update'])->name('company.update');
+    Route::post('/company/wholesale', [Account\CompanyController::class, 'requestWholesale'])->middleware('throttle:sensitive')->name('company.wholesale');
+    Route::post('/addresses', [Account\AddressController::class, 'store'])->name('addresses.store');
+    Route::put('/addresses/{address}', [Account\AddressController::class, 'update'])->name('addresses.update');
+    Route::delete('/addresses/{address}', [Account\AddressController::class, 'destroy'])->name('addresses.destroy');
+    Route::get('/pricing', [Account\PricingController::class, 'index'])->name('pricing');
+    Route::get('/quotes', [Account\QuoteController::class, 'index'])->name('quotes.index');
+    Route::get('/quotes/{quote:reference}', [Account\QuoteController::class, 'show'])->name('quotes.show');
+    Route::get('/quotes/{quote:reference}/pdf', [Account\QuoteController::class, 'pdf'])->name('quotes.pdf');
+    Route::post('/quotes/{quote:reference}/accept', [Account\QuoteController::class, 'accept'])->middleware('throttle:sensitive')->name('quotes.accept');
+    Route::post('/quotes/{quote:reference}/reject', [Account\QuoteController::class, 'reject'])->middleware('throttle:sensitive')->name('quotes.reject');
+    Route::post('/quotes/{quote:reference}/reorder', [Account\ReorderController::class, 'quote'])->name('quotes.reorder');
+    Route::get('/orders', [Account\OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/{order:reference}', [Account\OrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order:reference}/reorder', [Account\ReorderController::class, 'order'])->name('orders.reorder');
+    Route::get('/favorites', [Account\FavoriteController::class, 'index'])->name('favorites');
+    Route::post('/favorites/{product}', [Account\FavoriteController::class, 'store'])->name('favorites.store');
+    Route::delete('/favorites/{product}', [Account\FavoriteController::class, 'destroy'])->name('favorites.destroy');
+    Route::get('/team', [Account\TeamController::class, 'index'])->name('team');
+});
+
+/*
+| Admin (custom Livewire admin; no Filament)
+*/
+Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/quotes', Livewire\Admin\QuoteIndex::class)->name('quotes.index');
+    Route::get('/quotes/{quote:reference}', Livewire\Admin\QuoteWorkspace::class)->name('quotes.show');
+    Route::get('/quotes/{quote:reference}/pdf', [Admin\QuotePdfController::class, 'show'])->name('quotes.pdf');
+
+    Route::get('/orders', [Admin\OrderController::class, 'index'])->middleware('can:orders.manage')->name('orders.index');
+    Route::get('/orders/{order:reference}', [Admin\OrderController::class, 'show'])->name('orders.show');
+    Route::put('/orders/{order:reference}', [Admin\OrderController::class, 'update'])->middleware('can:orders.manage')->name('orders.update');
+
+    Route::middleware('can:products.manage')->group(function () {
+        Route::get('/products', Livewire\Admin\ProductIndex::class)->name('products.index');
+        Route::get('/products/create', Livewire\Admin\ProductEditor::class)->name('products.create');
+        Route::get('/products/{product:id}/edit', Livewire\Admin\ProductEditor::class)->name('products.edit');
+        Route::get('/categories', Livewire\Admin\CategoryManager::class)->name('categories');
+        Route::get('/import-export', [Admin\ProductCsvController::class, 'index'])->name('csv.index');
+        Route::get('/products-export.csv', [Admin\ProductCsvController::class, 'export'])->name('csv.export');
+        Route::post('/products-import', [Admin\ProductCsvController::class, 'import'])->name('csv.import');
+    });
+
+    Route::middleware('can:customers.view')->group(function () {
+        Route::get('/customers', Livewire\Admin\CompanyIndex::class)->name('companies.index');
+        Route::get('/customers/{company}', Livewire\Admin\CompanyShow::class)->name('companies.show');
+    });
+    Route::get('/customer-groups', Livewire\Admin\CustomerGroupManager::class)->middleware('can:customers.manage')->name('groups');
+
+    Route::get('/settings', Livewire\Admin\SettingsForm::class)->middleware('can:settings.manage')->name('settings');
+    Route::get('/staff', Livewire\Admin\StaffManager::class)->middleware('can:staff.manage')->name('staff');
+    Route::get('/audit-log', [Admin\AuditLogController::class, 'index'])->middleware('can:audit.view')->name('audit');
 });
