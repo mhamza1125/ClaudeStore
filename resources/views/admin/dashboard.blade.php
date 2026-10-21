@@ -1,0 +1,44 @@
+<x-layouts.admin title="Dashboard">
+    <x-page-header title="Dashboard" eyebrow="Overview"/>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        @foreach ([['new', 'New requests', 'pending'], ['review', 'In review / quoted', 'under_review'], ['awaiting', 'Awaiting customer', 'awaiting_response'], ['accepted', 'Accepted — ready to convert', 'accepted']] as [$key, $label, $status])
+            <a href="{{ route('admin.quotes.index', ['status' => $status]) }}" class="panel block hover:border-accent">
+                <p class="text-sm text-muted">{{ $label }}</p>
+                <p class="mt-2 font-serif text-4xl">{{ $counts[$key] }}</p>
+            </a>
+        @endforeach
+    </div>
+
+    <div class="mt-8 grid gap-6 xl:grid-cols-3">
+        <section class="card overflow-x-auto xl:col-span-2">
+            <div class="flex items-center justify-between border-b border-border px-5 py-4"><h2 class="text-2xl">Recent quote requests</h2><a href="{{ route('admin.quotes.index') }}" class="link text-sm">All quotes</a></div>
+            <table class="table">
+                <thead><tr><th>Reference</th><th>Company</th><th>Status</th><th>Assigned</th><th>Received</th></tr></thead>
+                <tbody>
+                @forelse ($recent as $q)
+                    <tr><td><a class="font-medium hover:text-accent" href="{{ route('admin.quotes.show', $q) }}">{{ $q->reference }}</a></td><td>{{ $q->company_name }}</td><td><x-badge :tone="$q->status->tone()">{{ $q->status->label() }}</x-badge></td><td class="text-muted">{{ $q->assignee?->name ?? '—' }}</td><td class="text-muted">{{ $q->created_at->diffForHumans() }}</td></tr>
+                @empty
+                    <tr><td colspan="5" class="text-center text-muted">No quote requests yet.</td></tr>
+                @endforelse
+                </tbody>
+            </table>
+        </section>
+        <div class="space-y-6">
+            @if ($pendingWholesale !== null)
+                <a href="{{ route('admin.companies.index', ['wholesale' => 'pending']) }}" class="panel block hover:border-accent"><p class="text-sm text-muted">Wholesale applications to review</p><p class="mt-2 font-serif text-4xl">{{ $pendingWholesale }}</p></a>
+            @endif
+            @if ($imageReview !== null)
+                <div class="panel"><p class="text-sm text-muted">Images awaiting review</p><p class="mt-2 font-serif text-4xl">{{ $imageReview }}</p></div>
+            @endif
+            @if ($products)
+                <div class="panel text-sm"><p class="text-muted">Catalogue</p><p class="mt-2">{{ $products['published'] }} published · {{ $products['draft'] }} draft</p><a href="{{ route('admin.products.create') }}" class="btn btn-secondary btn-sm mt-4">New product</a></div>
+            @endif
+            @if ($orders->isNotEmpty())
+                <div class="panel text-sm">
+                    <p class="mb-3 text-muted">Latest sales orders</p>
+                    @foreach ($orders as $o)<a href="{{ route('admin.orders.show', $o) }}" class="flex justify-between py-1 hover:text-accent"><span>{{ $o->reference }}</span><span>{{ money($o->total_cents) }}</span></a>@endforeach
+                </div>
+            @endif
+        </div>
+    </div>
+</x-layouts.admin>

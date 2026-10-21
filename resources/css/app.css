@@ -1,12 +1,130 @@
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../vendor/livewire/livewire/src/Features/SupportPagination/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source "../**/*.blade.php";
 @source "../**/*.js";
-@source "../**/*.vue";
+@source "../../app/**/*.php";
 
+/* Class-based dark mode: the "dark" class on <html> is set before CSS loads (see partials/head). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Design tokens. Components must use these semantic colours only — the default
+ * Tailwind palette is disabled so a hard-coded colour fails to compile.
+ * Light theme values live here; dark overrides live under .dark below.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-*: initial;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+
+    --color-bg: #f6f0e6;          /* warm cream page background */
+    --color-surface: #fffcf6;     /* ivory cards, inputs */
+    --color-elevated: #efe6d7;    /* subtle panels, table headers */
+    --color-text: #2b1e16;        /* espresso */
+    --color-muted: #66533f;       /* secondary text */
+    --color-border: #ddd0bc;
+    --color-border-strong: #b9a68c;
+    --color-primary: #2b1e16;     /* espresso buttons */
+    --color-on-primary: #fbf6ec;
+    --color-accent: #7a5a1f;      /* muted brass — AA on cream for text */
+    --color-accent-soft: #efe2c4;
+    --color-on-accent: #fffcf6;
+    --color-success: #3f6b3a;
+    --color-success-soft: #e3ecd9;
+    --color-warning: #8a5a0b;
+    --color-warning-soft: #f6e6c6;
+    --color-danger: #9b2c22;
+    --color-danger-soft: #f6dcd6;
+    --color-focus: #9c7426;
+    --color-overlay: rgb(28 20 14 / 0.55);
+    --color-transparent: transparent;
+    --color-current: currentColor;
+
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+}
+
+.dark {
+    --color-bg: #15100c;          /* deep espresso, not pure black */
+    --color-surface: #1e1712;
+    --color-elevated: #2a2119;
+    --color-text: #f1e8da;        /* warm ivory */
+    --color-muted: #bcab95;
+    --color-border: #3b3026;
+    --color-border-strong: #5c4b3b;
+    --color-primary: #e9d9bd;
+    --color-on-primary: #1a130e;
+    --color-accent: #d6ad62;      /* brighter brass */
+    --color-accent-soft: #3a2d1a;
+    --color-on-accent: #1a130e;
+    --color-success: #9cc58f;
+    --color-success-soft: #22301d;
+    --color-warning: #e3b76a;
+    --color-warning-soft: #3a2c14;
+    --color-danger: #ef9a8c;
+    --color-danger-soft: #3d1f1a;
+    --color-focus: #e2bc74;
+    --color-overlay: rgb(0 0 0 / 0.65);
+    color-scheme: dark;
+}
+
+@layer base {
+    html {
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        -webkit-font-smoothing: antialiased;
+        color-scheme: light;
+    }
+    html.dark { color-scheme: dark; }
+    body { @apply bg-bg text-text font-sans; }
+    h1, h2, h3, .font-display { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.01em; }
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+    ::selection { background: var(--color-accent-soft); color: var(--color-text); }
+    [x-cloak] { display: none !important; }
+    input[type='number']::-webkit-inner-spin-button { opacity: 1; }
+}
+
+@layer components {
+    .container-page { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+    .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent; }
+    .link { @apply underline decoration-border-strong underline-offset-4 hover:decoration-accent transition-colors; }
+
+    .btn { @apply inline-flex items-center justify-center gap-2 rounded-sm border px-5 py-2.5 text-sm font-medium tracking-wide transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer; }
+    .btn-sm { @apply px-3 py-1.5 text-xs; }
+    .btn-lg { @apply px-7 py-3.5 text-base; }
+    .btn-primary { @apply border-primary bg-primary text-on-primary hover:bg-accent hover:border-accent hover:text-on-accent; }
+    .btn-secondary { @apply border-border-strong bg-transparent text-text hover:border-text; }
+    .btn-accent { @apply border-accent bg-accent text-on-accent hover:opacity-90; }
+    .btn-ghost { @apply border-transparent bg-transparent text-text hover:bg-elevated; }
+    .btn-danger { @apply border-danger bg-transparent text-danger hover:bg-danger-soft; }
+
+    .field-label { @apply mb-1.5 block text-sm font-medium text-text; }
+    .field-help { @apply mt-1 text-xs text-muted; }
+    .field-error { @apply mt-1 text-xs font-medium text-danger; }
+    .input { @apply block w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-muted/70 transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60; }
+    .input-invalid { @apply border-danger focus:border-danger focus:ring-danger; }
+    .checkbox { @apply h-4 w-4 rounded-sm border-border-strong bg-surface accent-[var(--color-accent)]; }
+
+    .card { @apply rounded-md border border-border bg-surface; }
+    .panel { @apply rounded-md border border-border bg-surface p-5 sm:p-6; }
+
+    .table { @apply w-full text-left text-sm; }
+    .table thead th { @apply border-b border-border bg-elevated px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted; }
+    .table tbody td { @apply border-b border-border px-4 py-3 align-top; }
+    .table tbody tr:hover td { @apply bg-elevated/40; }
+
+    .badge { @apply inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium whitespace-nowrap; }
+    .badge-neutral { @apply bg-elevated text-muted; }
+    .badge-accent { @apply bg-accent-soft text-accent; }
+    .badge-success { @apply bg-success-soft text-success; }
+    .badge-warning { @apply bg-warning-soft text-warning; }
+    .badge-danger { @apply bg-danger-soft text-danger; }
+
+    .prose-store { @apply max-w-none text-[15px] leading-7 text-text; }
+    .prose-store p { @apply mb-4; }
 }

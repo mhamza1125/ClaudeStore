@@ -1,5 +1,21 @@
 <?php
 
+// S3-compatible settings shared by the optional S3 variants of the "public" and "local" disks.
+$s3 = fn (string $root, string $visibility) => [
+    'driver' => 's3',
+    'key' => env('AWS_ACCESS_KEY_ID'),
+    'secret' => env('AWS_SECRET_ACCESS_KEY'),
+    'region' => env('AWS_DEFAULT_REGION'),
+    'bucket' => env('AWS_BUCKET'),
+    'url' => env('AWS_URL'),
+    'endpoint' => env('AWS_ENDPOINT'),
+    'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+    'root' => $root,
+    'visibility' => $visibility,
+    'throw' => false,
+    'report' => false,
+];
+
 return [
 
     /*
@@ -30,7 +46,9 @@ return [
 
     'disks' => [
 
-        'local' => [
+        // Private files: quote attachments and original product photographs.
+        // PRIVATE_DISK_DRIVER=s3 stores them in the bucket under private/ (never public).
+        'local' => env('PRIVATE_DISK_DRIVER', 'local') === 's3' ? $s3('private', 'private') : [
             'driver' => 'local',
             'root' => storage_path('app/private'),
             'serve' => true,
@@ -38,7 +56,9 @@ return [
             'report' => false,
         ],
 
-        'public' => [
+        // Public media: optimised product images, category images, logo, spec sheets.
+        // MEDIA_DISK_DRIVER=s3 serves them from the bucket (set AWS_URL to the bucket/CDN URL).
+        'public' => env('MEDIA_DISK_DRIVER', 'local') === 's3' ? $s3('public', 'public') : [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
