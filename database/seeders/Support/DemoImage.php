@@ -21,6 +21,40 @@ final class DemoImage
         'passport' => '<rect x="270" y="330" width="260" height="360" rx="18"/><rect x="330" y="420" width="140" height="90" rx="8" fill="none" stroke="#C9A45C" stroke-width="5" opacity=".7"/>',
     ];
 
+    /** Landscape (4:3) banner illustration for homepage slides; labelled as a demo image. */
+    public static function banner(string $shape, string $color, string $title, string $tone = 'warm'): string
+    {
+        $body = self::SHAPES[$shape] ?? self::SHAPES['tote'];
+        [$top, $bottom, $arch] = match ($tone) {
+            'cool' => ['#e9e6e1', '#cfc8bd', '#ddd6cb'],
+            'deep' => ['#3a2a20', '#20160f', '#4a3628'],
+            default => ['#efe3cf', '#d6bf9c', '#e6d4b8'],
+        };
+        $label = $tone === 'deep' ? '#c9b393' : '#7a6652';
+        $title = htmlspecialchars($title, ENT_XML1);
+        $stitch = '<g fill="none" stroke="#f4e6c8" stroke-width="3" stroke-dasharray="10 8" opacity=".5" transform="translate(400 600) scale(0.93) translate(-400 -600)">'
+            .preg_replace('/fill="[^"]*"/', '', $body).'</g>';
+
+        return <<<SVG
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-label="Demo illustration: {$title}">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="{$top}"/><stop offset="1" stop-color="{$bottom}"/></linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <path d="M330 900 V420 a270 270 0 0 1 540 0 V900 Z" fill="{$arch}" opacity=".7"/>
+  <rect y="720" width="1200" height="180" fill="#000" opacity=".08"/>
+  <ellipse cx="600" cy="745" rx="300" ry="26" fill="#000" opacity=".16"/>
+  <g transform="translate(200 -110)">
+    <g fill="{$color}" stroke="{$color}">{$body}</g>
+    <g fill="url(#sheen)" stroke="none">{$body}</g>
+    {$stitch}
+  </g>
+  <text x="600" y="860" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="4" fill="{$label}">DEMO IMAGE</text>
+</svg>
+SVG;
+    }
+
     public static function svg(string $shape, string $color, string $view, string $title): string
     {
         $body = self::SHAPES[$shape] ?? self::SHAPES['tote'];

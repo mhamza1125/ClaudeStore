@@ -106,6 +106,8 @@
     color-scheme: dark;
 }
 
+@keyframes hero-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
 @layer base {
     html {
         background-color: var(--color-bg);
@@ -186,6 +188,30 @@
             max-height: calc(100dvh - var(--float-bottom) - var(--float-gutter) - env(safe-area-inset-top, 0px));
         }
     }
+
+    /* Homepage banner: slides share one grid cell, so the height never jumps between slides. */
+    .hero-stack { display: grid; }
+    .hero-stack > .hero-slide { grid-area: 1 / 1; transition: opacity 700ms ease, visibility 700ms; }
+    .hero-slide:not(.is-active) { opacity: 0; visibility: hidden; }
+    .hero-media img { transform: scale(1.06); transition: transform 7s ease-out; }
+    .hero-slide.is-active .hero-media img { transform: scale(1); }
+    .hero-copy > * { opacity: 0; transform: translateY(0.75rem); transition: opacity 600ms ease, transform 600ms ease; }
+    .hero-slide.is-active .hero-copy > * { opacity: 1; transform: none; }
+    .hero-slide.is-active .hero-copy > :nth-child(2) { transition-delay: 90ms; }
+    .hero-slide.is-active .hero-copy > :nth-child(3) { transition-delay: 180ms; }
+    .hero-slide.is-active .hero-copy > :nth-child(4) { transition-delay: 270ms; }
+    /* Active dot fills over the autoplay interval; its animationend advances the slide, and
+       pausing the animation pauses autoplay. */
+    .hero-progress { transform-origin: left; transform: scaleX(0); }
+    .hero-progress.is-running { animation: hero-progress var(--hero-interval, 6s) linear forwards; }
+    .hero-progress.is-paused { animation-play-state: paused; }
+    .hero-progress.is-static { transform: scaleX(1); }
+    @media (prefers-reduced-motion: reduce) {
+        .hero-media img, .hero-copy > *, .hero-stack > .hero-slide { transition: none; transform: none; }
+    }
+
+    .no-scrollbar { scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
 
     .container-page { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
     .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent; }

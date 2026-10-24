@@ -36,13 +36,19 @@ class ImageStorage
     /** Resize/compress the original into a public WebP display image. Returns [path, width, height]. */
     public function optimise(string $binary, int $productId): array
     {
+        return $this->optimiseInto($binary, "products/{$productId}");
+    }
+
+    /** Resize (never upscale) and encode as WebP on the public disk. Returns [path, width, height]. */
+    public function optimiseInto(string $binary, string $directory): array
+    {
         $manager = new ImageManager(new Driver);
         $image = $manager->read($binary);
         $max = (int) config('store.images.max_dimension', 2000);
         $image->scaleDown(width: $max, height: $max);
         $encoded = $image->toWebp((int) config('store.images.quality', 82));
 
-        $path = "products/{$productId}/".Str::uuid().'.webp';
+        $path = trim($directory, '/').'/'.Str::uuid().'.webp';
         Storage::disk('public')->put($path, (string) $encoded);
 
         return [$path, $image->width(), $image->height()];

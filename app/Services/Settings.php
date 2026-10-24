@@ -44,7 +44,8 @@ class Settings
             'theme.system_light' => 'mid', // palette used by "system" when the OS is in light mode
             'theme.allow_switch' => true, // show the theme switcher to visitors
             'homepage.testimonials' => [],
-            'homepage.hero_autoplay_seconds' => 6, // 0 = manual navigation only // [{quote, name, company}] — only genuine, supplied content
+            'homepage.hero_autoplay_seconds' => 6, // banner slider; 0 = manual navigation only
+            'homepage.products_autoplay_seconds' => 5, // featured products carousel; 0 = manual // [{quote, name, company}] — only genuine, supplied content
             'whatsapp.enabled' => true,
             'whatsapp.phone' => '923110012233', // international format, digits only
             'whatsapp.message_preset' => 'services', // a key of store.whatsapp_presets, or "custom"

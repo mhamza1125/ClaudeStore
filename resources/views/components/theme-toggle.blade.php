@@ -1,6 +1,6 @@
 @props(['force' => false])
 @if ($force || \App\Support\Theme::allowSwitch())
-    <div x-data="themeToggle" class="relative" @keydown.escape="open = false" @click.outside="open = false">
+    <div x-data="themeToggle" {{ $attributes->merge(['class' => 'relative']) }} @keydown.escape="open = false" @click.outside="open = false">
         <button type="button" class="btn-ghost btn btn-sm !px-2" @click="open = !open" :aria-expanded="open" aria-haspopup="true" aria-label="Colour theme">
             @foreach (\App\Support\Theme::CHOICES as $value => [$label, $icon])
                 <span x-show="choice === '{{ $value }}'" @if ($value !== 'mid') x-cloak @endif><x-icon :name="$icon" class="h-4 w-4"/></span>

@@ -17,6 +17,7 @@
         ['admin.csv.index', 'Import / export', 'upload', $u->can('products.manage')],
         ['admin.companies.index', 'Customers', 'users', $u->can('customers.view')],
         ['admin.groups', 'Customer groups', 'users', $u->can('customers.manage')],
+        ['admin.hero-slides', 'Homepage slides', 'image', $u->can('settings.manage')],
         ['admin.settings', 'Settings', 'settings', $u->can('settings.manage')],
         ['admin.staff', 'Staff & roles', 'shield', $u->can('staff.manage')],
         ['admin.audit', 'Audit log', 'list', $u->can('audit.view')],

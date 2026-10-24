@@ -1,26 +1,20 @@
 <x-layouts.store :description="'Wholesale and private-label leather bags, wallets, belts and accessories. Volume pricing and fast quotations for trade buyers.'">
-    {{-- Hero --}}
-    <section class="relative overflow-hidden border-b border-border">
-        <div class="container-page grid items-center gap-10 py-14 lg:grid-cols-12 lg:py-24">
-            <div class="lg:col-span-6">
-                <p class="eyebrow mb-5">Manufacturer · Wholesaler · Private label</p>
-                <h1 class="text-5xl leading-[1.05] sm:text-6xl lg:text-7xl">Leather goods,<br>made for trade.</h1>
-                <p class="mt-6 max-w-lg text-lg text-muted">Bags, wallets, belts and small leather goods for retailers, distributors and brands — with transparent volume pricing and quotations within one business day.</p>
-                <div class="mt-9 flex flex-wrap gap-3">
-                    <a href="{{ route('catalog') }}" class="btn btn-primary btn-lg">Explore Products <x-icon name="arrow-right" class="h-4 w-4"/></a>
-                    <a href="{{ route('quote.basket') }}" class="btn btn-secondary btn-lg">Request a Wholesale Quote</a>
+    {{-- Hero banner (Admin → Homepage slides) --}}
+    @include('store.partials.hero-banner', ['slides' => $heroSlides, 'autoplay' => $heroAutoplaySeconds])
+
+    {{-- Trust strip --}}
+    <div class="border-b border-border">
+        <dl class="container-page grid grid-cols-2 gap-x-6 gap-y-3 py-4 text-sm sm:grid-cols-4">
+            @foreach ([['tag', 'Live volume pricing', 'Price breaks on every product'], ['clipboard', 'Quotes in 1 business day', 'Mixed products welcome'], ['scissors', 'Private label', 'Embossing & custom colours'], ['shield', 'Trade accounts', 'Your own pricing, kept private']] as [$icon, $title, $text])
+                <div class="flex items-start gap-3">
+                    <x-icon :name="$icon" class="mt-0.5 h-5 w-5 shrink-0 text-accent"/>
+                    <div><dt class="font-medium">{{ $title }}</dt><dd class="text-xs text-muted">{{ $text }}</dd></div>
                 </div>
-                <dl class="mt-12 grid max-w-lg grid-cols-3 gap-6 border-t border-border pt-6 text-sm">
-                    <div><dt class="text-muted">Volume tiers</dt><dd class="mt-1 font-serif text-2xl">Live</dd></div>
-                    <div><dt class="text-muted">Quote turnaround</dt><dd class="mt-1 font-serif text-2xl">1 day</dd></div>
-                    <div><dt class="text-muted">Private label</dt><dd class="mt-1 font-serif text-2xl">From MOQ</dd></div>
-                </dl>
-            </div>
-            <div class="lg:col-span-6">
-                @include('store.partials.hero-carousel', ['slides' => $heroSlides, 'autoplay' => $heroAutoplaySeconds])
-            </div>
-        </div>
-    </section>
+            @endforeach
+        </dl>
+    </div>
+
+    @include('store.partials.featured-products', ['products' => $featured, 'autoplay' => $productsAutoplaySeconds])
 
     {{-- Featured categories --}}
     @if ($categories->isNotEmpty())

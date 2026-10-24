@@ -20,7 +20,7 @@
             <x-logo/>
         </div>
 
-        <nav class="hidden items-center gap-7 text-sm lg:flex" aria-label="Main">
+        <nav class="hidden items-center gap-4 text-sm lg:flex xl:gap-7" aria-label="Main">
             @foreach ($navCategories as $cat)
                 <div class="group relative">
                     <a href="{{ route('catalog.category', $cat) }}" class="flex items-center gap-1 whitespace-nowrap py-2 hover:text-accent {{ request()->is('categories/'.$cat->slug) ? 'text-accent' : '' }}">
@@ -38,8 +38,8 @@
         </nav>
 
         <div class="flex items-center gap-1">
-            <x-search-box id="header-search" class="hidden md:block" input-class="w-48 xl:w-64" dropdown-class="right-0 w-[min(28rem,calc(100vw-2rem))]"/>
-            <x-theme-toggle/>
+            <x-search-box id="header-search" class="hidden md:block" input-class="w-44 lg:w-36 xl:w-64" dropdown-class="right-0 w-[min(28rem,calc(100vw-2rem))]"/>
+            <x-theme-toggle class="hidden sm:block"/>
             @auth
                 <div x-data="{ open: false }" class="relative" @click.outside="open = false">
                     <button type="button" class="btn btn-ghost btn-sm !px-2" @click="open = !open" :aria-expanded="open" aria-label="Account menu"><x-icon name="user"/></button>
@@ -64,7 +64,11 @@
     {{-- Scrolls inside itself: content below a sticky header could otherwise never be reached. --}}
     <nav id="mobile-nav" x-show="mobile" x-cloak x-transition class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-border bg-surface lg:hidden" aria-label="Mobile">
         <div class="container-page space-y-1 py-4">
-            <x-search-box id="mobile-search" class="mb-3" dropdown-class="left-0 right-0"/>
+            {{-- Search lives here below md; the theme switch moves here below sm. --}}
+            <div class="mb-3 flex items-center gap-2 md:hidden">
+                <x-search-box id="mobile-search" class="flex-1" dropdown-class="left-0 right-0"/>
+                <x-theme-toggle class="sm:hidden"/>
+            </div>
             <a href="{{ route('catalog') }}" class="block py-2 font-medium">All products</a>
             @foreach ($navCategories as $cat)
                 <a href="{{ route('catalog.category', $cat) }}" class="block py-2">{{ $cat->name }}</a>

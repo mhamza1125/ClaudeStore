@@ -112,6 +112,7 @@ Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')
     });
     Route::get('/customer-groups', Livewire\Admin\CustomerGroupManager::class)->middleware('can:customers.manage')->name('groups');
 
+    Route::get('/homepage-slides', Livewire\Admin\HeroSlideManager::class)->middleware('can:settings.manage')->name('hero-slides');
     Route::get('/settings', Livewire\Admin\SettingsForm::class)->middleware('can:settings.manage')->name('settings');
     Route::get('/staff', Livewire\Admin\StaffManager::class)->middleware('can:staff.manage')->name('staff');
     Route::get('/audit-log', [Admin\AuditLogController::class, 'index'])->middleware('can:audit.view')->name('audit');

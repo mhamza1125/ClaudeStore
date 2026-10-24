@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\HeroSlide;
 use App\Models\Product;
 
 class HomeController extends Controller
@@ -15,34 +16,30 @@ class HomeController extends Controller
             'categories' => Category::active()->roots()->where('is_featured', true)->orderBy('sort_order')->withCount('products')->get(),
             'bestsellers' => Product::published()->where('is_bestseller', true)->with($with)->latest('published_at')->limit(4)->get(),
             'newArrivals' => Product::published()->with($with)->latest('published_at')->limit(4)->get(),
-            'heroSlides' => $this->heroSlides(),
+            'heroSlides' => HeroSlide::forHomepage(),
+            'featured' => $this->featuredProducts(),
+            'productsAutoplaySeconds' => (int) setting('homepage.products_autoplay_seconds', 5),
             'heroAutoplaySeconds' => (int) setting('homepage.hero_autoplay_seconds', 6),
             'testimonials' => collect(setting('homepage.testimonials', []))->filter(fn ($t) => filled($t['quote'] ?? null))->values(),
         ]);
     }
 
     /**
-     * Hero carousel slides: featured products first (admin-controlled via the
-     * product "Featured" flag), topped up with bestsellers, max five. Prefers each
-     * product's lifestyle image, then its first approved image.
+     * Featured products carousel: products marked "Featured" first (admin-controlled), topped up
+     * with bestsellers, up to eight.
      *
-     * @return \Illuminate\Support\Collection<int, array{product: Product, image: \App\Models\ProductImage}>
+     * @return \Illuminate\Support\Collection<int, Product>
      */
-    private function heroSlides(): \Illuminate\Support\Collection
+    private function featuredProducts(): \Illuminate\Support\Collection
     {
-        $products = Product::published()->where('is_featured', true)->with('approvedImages')
-            ->orderByDesc('published_at')->limit(5)->get();
-        if ($products->count() < 5) {
+        $with = ['approvedImages', 'priceTiers', 'category'];
+        $products = Product::published()->where('is_featured', true)->with($with)->orderByDesc('published_at')->limit(8)->get();
+        if ($products->count() < 8) {
             $products = $products->concat(Product::published()->where('is_bestseller', true)
-                ->whereNotIn('id', $products->pluck('id'))->with('approvedImages')
-                ->orderByDesc('published_at')->limit(5 - $products->count())->get());
+                ->whereNotIn('id', $products->pluck('id'))->with($with)
+                ->orderByDesc('published_at')->limit(8 - $products->count())->get());
         }
 
-        return $products->map(function (Product $product) {
-            $images = $product->approvedImages->whereNull('variant_id');
-            $image = $images->firstWhere('view_type.value', 'lifestyle') ?? $images->first() ?? $product->approvedImages->first();
-
-            return $image ? ['product' => $product, 'image' => $image] : null;
-        })->filter()->values();
+        return $products->values();
     }
 }
