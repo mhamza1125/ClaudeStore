@@ -1,6 +1,6 @@
 @props(['title' => null])
 <!DOCTYPE html>
-<html lang="en" data-user-theme="{{ auth()->user()->theme }}" data-theme-url="{{ route('preferences.theme') }}">
+<html lang="en" {!! \App\Support\Theme::htmlAttributes(forceSwitch: true) !!}>
 <head>
     @include('partials.head', ['title' => ($title ? $title.' · ' : '').'Admin'])
     <meta name="robots" content="noindex">
@@ -45,7 +45,7 @@
                 <span class="text-sm text-muted">Admin</span>
             </div>
             <div class="flex items-center gap-2">
-                <x-theme-toggle/>
+                <x-theme-toggle :force="true"/>
                 <span class="hidden text-sm sm:inline">{{ $u->name }} <span class="text-muted">· {{ $u->getRoleNames()->implode(', ') }}</span></span>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-ghost btn-sm" aria-label="Sign out"><x-icon name="logout" class="h-4 w-4"/></button></form>
             </div>

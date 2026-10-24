@@ -83,20 +83,20 @@
     </section>
 
     {{-- Custom manufacturing / private label --}}
-    <section class="bg-primary text-on-primary" aria-labelledby="custom-heading">
+    <section class="bg-band text-on-band" aria-labelledby="custom-heading">
         <div class="container-page grid items-center gap-12 py-20 lg:grid-cols-2">
             <div>
                 <p class="mb-2 text-xs font-semibold uppercase tracking-[0.18em] opacity-80">Custom manufacturing</p>
                 <h2 id="custom-heading" class="text-4xl sm:text-5xl">Your brand, our workshop.</h2>
                 <p class="mt-5 max-w-lg opacity-85">Private-label programmes from pattern to packaging: logo embossing, custom colours and materials, branded hardware and retail-ready packaging. Share a tech pack or reference photos and we will quote to your specification.</p>
                 <div class="mt-8 flex flex-wrap gap-3">
-                    <a href="{{ route('pages.show', 'custom-manufacturing') }}" class="btn border-on-primary text-on-primary hover:bg-on-primary hover:text-primary">How private label works</a>
+                    <a href="{{ route('pages.show', 'custom-manufacturing') }}" class="btn border-on-band text-on-band hover:bg-on-band hover:text-band">How private label works</a>
                     <a href="{{ route('catalog.category', 'custom') }}" class="btn btn-accent">Start a custom request</a>
                 </div>
             </div>
             <ol class="grid gap-6 sm:grid-cols-2">
                 @foreach (['Brief & references', 'Sampling', 'Approval', 'Production & dispatch'] as $i => $step)
-                    <li class="border-t border-on-primary/25 pt-4">
+                    <li class="border-t border-on-band/25 pt-4">
                         <span class="font-serif text-3xl opacity-60">0{{ $i + 1 }}</span>
                         <p class="mt-1 font-medium">{{ $step }}</p>
                     </li>

@@ -40,6 +40,9 @@ class Settings
             'quote.delivery_terms' => 'Ex-works unless otherwise agreed. Lead times are confirmed on order.',
             'quote.acceptance_instructions' => 'Review the quotation, then use the secure link to accept or reject it. Acceptance is subject to stock and production confirmation. No payment is taken online.',
             'newsletter.enabled' => false,
+            'theme.default' => 'mid', // white | mid | dark | system
+            'theme.system_light' => 'mid', // palette used by "system" when the OS is in light mode
+            'theme.allow_switch' => true, // show the theme switcher to visitors
             'homepage.testimonials' => [],
             'homepage.hero_autoplay_seconds' => 6, // 0 = manual navigation only // [{quote, name, company}] — only genuine, supplied content
             'whatsapp.enabled' => true,

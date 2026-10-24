@@ -1,7 +1,6 @@
 @props(['title' => null, 'description' => null, 'canonical' => null])
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}"
-      @auth data-user-theme="{{ auth()->user()->theme }}" data-theme-url="{{ route('preferences.theme') }}" @endauth>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" {!! \App\Support\Theme::htmlAttributes() !!}>
 <head>
     @include('partials.head', ['title' => $title, 'description' => $description, 'canonical' => $canonical])
     @stack('head')

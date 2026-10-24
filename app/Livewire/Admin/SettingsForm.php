@@ -7,6 +7,7 @@ use App\Assistant\Contracts\ChatProvider;
 use App\Services\AuditLogger;
 use App\Services\Settings;
 use App\Support\Money;
+use App\Support\Theme;
 use App\Support\WhatsApp;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
@@ -39,6 +40,9 @@ class SettingsForm extends Component
             'acceptance' => (string) $all['quote.acceptance_instructions'],
             'newsletter' => (bool) $all['newsletter.enabled'],
             'hero_autoplay' => (int) $all['homepage.hero_autoplay_seconds'],
+            'theme_default' => (string) (Theme::normalize($all['theme.default']) ?? 'mid'),
+            'theme_system_light' => (string) $all['theme.system_light'],
+            'theme_allow_switch' => (bool) $all['theme.allow_switch'],
             'whatsapp_enabled' => (bool) $all['whatsapp.enabled'],
             'whatsapp_phone' => (string) $all['whatsapp.phone'],
             'whatsapp_preset' => (string) $all['whatsapp.message_preset'],
@@ -71,6 +75,9 @@ class SettingsForm extends Component
             's.policy_shipping' => ['nullable', 'string', 'max:50000'], 's.policy_returns' => ['nullable', 'string', 'max:50000'],
             'testimonials' => ['nullable', 'string', 'max:10000'],
             's.hero_autoplay' => ['required', 'integer', 'min:0', 'max:60'],
+            's.theme_default' => ['required', Rule::in(array_keys(Theme::CHOICES))],
+            's.theme_system_light' => ['required', Rule::in(['white', 'mid'])],
+            's.theme_allow_switch' => ['boolean'],
             's.whatsapp_enabled' => ['boolean'],
             's.whatsapp_phone' => [$this->s['whatsapp_enabled'] ? 'required' : 'nullable', 'string', 'max:30',
                 fn ($attr, $value, $fail) => filled($value) && ! WhatsApp::isValidPhone($value)
@@ -98,6 +105,9 @@ class SettingsForm extends Component
             'quote.payment_terms' => $s['payment_terms'], 'quote.delivery_terms' => $s['delivery_terms'], 'quote.acceptance_instructions' => $s['acceptance'],
             'newsletter.enabled' => (bool) $s['newsletter'],
             'homepage.hero_autoplay_seconds' => (int) $s['hero_autoplay'],
+            'theme.default' => $s['theme_default'],
+            'theme.system_light' => $s['theme_system_light'],
+            'theme.allow_switch' => (bool) $s['theme_allow_switch'],
             'whatsapp.enabled' => (bool) $s['whatsapp_enabled'],
             'whatsapp.phone' => WhatsApp::normalizePhone($s['whatsapp_phone']) ?: null,
             'whatsapp.message_preset' => $s['whatsapp_preset'],

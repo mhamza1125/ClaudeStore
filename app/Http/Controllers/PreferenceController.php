@@ -9,7 +9,7 @@ class PreferenceController extends Controller
 {
     public function theme(Request $request)
     {
-        $data = $request->validate(['theme' => ['required', Rule::in(['light', 'dark', 'system'])]]);
+        $data = $request->validate(['theme' => ['required', Rule::in(array_keys(\App\Support\Theme::CHOICES))]]);
         $request->user()->forceFill(['theme' => $data['theme']])->save();
 
         return response()->noContent();
