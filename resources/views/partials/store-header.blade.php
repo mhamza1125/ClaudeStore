@@ -2,7 +2,7 @@
     $navCategories = \Illuminate\Support\Facades\Cache::remember('nav.categories', 600, fn () =>
         \App\Models\Category::active()->roots()->orderBy('sort_order')->with(['children' => fn ($q) => $q->where('is_active', true)])->get());
 @endphp
-<header x-data="{ mobile: false }" class="sticky top-0 z-40 border-b border-border bg-bg/95 backdrop-blur">
+<header x-data="{ mobile: false }" class="sticky top-0 z-(--z-header) border-b border-border bg-bg/95 backdrop-blur">
     <div class="hidden border-b border-border bg-primary text-on-primary sm:block">
         <div class="container-page flex h-9 items-center justify-between text-xs tracking-wide">
             <p>Wholesale &amp; private-label leather goods · Trade pricing for approved accounts</p>

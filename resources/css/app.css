@@ -90,7 +90,70 @@
     input[type='number']::-webkit-inner-spin-button { opacity: 1; }
 }
 
+/*
+ * Layering and floating widgets. Every floating element is positioned against the
+ * viewport from these variables only — no nested fixed/static switching and no
+ * per-breakpoint magic numbers in templates. Safe-area insets keep widgets clear of
+ * notches and home indicators.
+ */
+:root {
+    --z-header: 30;
+    --z-float: 40;
+    --z-float-panel: 45;
+    --z-modal: 50;
+    --float-gutter: 1rem;
+    --float-size: 3.5rem;
+    --float-gap: 0.75rem;
+    --float-left: calc(var(--float-gutter) + env(safe-area-inset-left, 0px));
+    --float-right: calc(var(--float-gutter) + env(safe-area-inset-right, 0px));
+    --float-bottom: calc(var(--float-gutter) + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 640px) {
+    :root { --float-gutter: 1.5rem; }
+}
+
 @layer components {
+    .floating-btn {
+        position: fixed;
+        z-index: var(--z-float);
+        bottom: var(--float-bottom);
+        height: var(--float-size);
+        min-width: var(--float-size);
+        @apply flex items-center justify-center gap-2 rounded-full border shadow-lg transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus;
+    }
+    .floating-btn--left { left: var(--float-left); }
+    .floating-btn--right { right: var(--float-right); }
+
+    /* Teaser bubble above the chat launcher; never wide enough to reach the left widget. */
+    .chat-teaser {
+        position: fixed;
+        z-index: var(--z-float);
+        right: var(--float-right);
+        bottom: calc(var(--float-bottom) + var(--float-size) + var(--float-gap));
+        width: min(18rem, calc(100vw - var(--float-left) - var(--float-right) - var(--float-size) - var(--float-gap)));
+    }
+
+    /* Chat window: opens inward from the right edge, fully inside the viewport, scrolls internally. */
+    .chat-panel {
+        position: fixed;
+        z-index: var(--z-float-panel);
+        right: var(--float-right);
+        bottom: calc(var(--float-bottom) + var(--float-size) + var(--float-gap));
+        width: min(24rem, calc(100vw - var(--float-left) - var(--float-right)));
+        max-height: min(40rem, calc(100dvh - var(--float-bottom) - var(--float-size) - var(--float-gap) - var(--float-gutter)));
+        transform-origin: bottom right;
+        @apply flex flex-col overflow-hidden rounded-md border border-border bg-surface shadow-2xl;
+    }
+    @media (max-width: 639px) {
+        /* Phones: a bottom sheet across the width; the launcher is hidden while it is open. */
+        .chat-panel {
+            left: var(--float-left);
+            width: auto;
+            bottom: var(--float-bottom);
+            max-height: calc(100dvh - var(--float-bottom) - var(--float-gutter) - env(safe-area-inset-top, 0px));
+        }
+    }
+
     .container-page { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
     .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent; }
     .link { @apply underline decoration-border-strong underline-offset-4 hover:decoration-accent transition-colors; }

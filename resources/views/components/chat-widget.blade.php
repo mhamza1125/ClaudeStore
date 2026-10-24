@@ -22,12 +22,13 @@
     ];
 @endphp
 @if (setting('chatbot.enabled'))
-    <div x-data="chatWidget(@js($config))" x-on:keydown.escape.window="open && close()" data-testid="chat-widget"
-         class="fixed bottom-[max(1rem,env(safe-area-inset-bottom))] right-4 z-40 flex flex-col items-end sm:bottom-6 sm:right-6">
+    {{-- Each part (teaser, panel, launcher) is fixed to the viewport on its own via the
+         .chat-teaser / .chat-panel / .floating-btn components; the wrapper has no box. --}}
+    <div x-data="chatWidget(@js($config))" x-on:keydown.escape.window="open && close()" data-testid="chat-widget" class="contents">
 
         {{-- Teaser bubble with the introductory message --}}
         <div x-show="showTeaser && !open" x-cloak x-transition.opacity.duration.300ms
-             class="relative mb-3 w-72 max-w-[calc(100vw-6.5rem)] rounded-md border border-border bg-surface p-4 pr-9 text-sm shadow-lg" role="status">
+             class="chat-teaser rounded-md border border-border bg-surface p-4 pr-9 text-sm shadow-lg" role="status">
             <button type="button" @click="dismissTeaser()" class="absolute right-2 top-2 text-muted hover:text-text" aria-label="Dismiss message"><x-icon name="x" class="h-4 w-4"/></button>
             <p class="font-medium">{{ $assistantName }}</p>
             <p class="mt-1 text-muted">{{ $intro }}</p>
@@ -35,9 +36,9 @@
         </div>
 
         {{-- Panel --}}
-        <section id="chat-panel" x-show="open" x-cloak x-transition.origin.bottom.right x-trap.noscroll.inert="open && window.innerWidth < 640"
-                 class="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] flex max-h-[min(85vh,640px)] flex-col overflow-hidden rounded-md border border-border bg-surface shadow-2xl sm:static sm:mb-3 sm:w-96"
-                 role="dialog" aria-modal="false" aria-labelledby="chat-title">
+        <section id="chat-panel" x-show="open" x-cloak x-transition.opacity.scale.95.origin.bottom.right
+                 x-trap.noscroll="open && window.matchMedia('(max-width: 639px)').matches"
+                 class="chat-panel" role="dialog" aria-modal="false" aria-labelledby="chat-title">
             <header class="flex items-center justify-between gap-3 border-b border-border bg-elevated px-4 py-3">
                 <div class="flex items-center gap-3">
                     <span class="relative flex h-9 w-9 items-center justify-center rounded-full border border-accent font-serif text-accent" aria-hidden="true">AH
@@ -56,7 +57,7 @@
                 </div>
             </header>
 
-            <div x-ref="log" class="flex-1 space-y-3 overflow-y-auto px-4 py-4 text-sm" role="log" aria-live="polite" aria-relevant="additions">
+            <div x-ref="log" class="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4 text-sm" role="log" aria-live="polite" aria-relevant="additions">
                 <div class="mr-8 rounded-md bg-elevated px-3 py-2">{{ $intro }}</div>
                 @if ($online)
                     <template x-for="(m, i) in messages" :key="i">
@@ -103,8 +104,8 @@
         </section>
 
         {{-- Launcher --}}
-        <button type="button" @click="toggle()" :aria-expanded="open" aria-controls="chat-panel" x-show="!open || window.innerWidth >= 640"
-                class="relative flex h-14 items-center gap-2 rounded-full border border-primary bg-primary px-4 text-on-primary shadow-lg transition hover:-translate-y-0.5 hover:border-accent hover:bg-accent hover:text-on-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        <button type="button" @click="toggle()" :aria-expanded="open" aria-controls="chat-panel" x-show="!open || !window.matchMedia('(max-width: 639px)').matches"
+                class="floating-btn floating-btn--right border-primary bg-primary px-4 text-on-primary hover:-translate-y-0.5 hover:border-accent hover:bg-accent hover:text-on-accent"
                 data-testid="chat-launcher">
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>
             <span class="hidden text-sm font-medium sm:inline" x-text="open ? 'Close' : 'Ask us'">Ask us</span>
