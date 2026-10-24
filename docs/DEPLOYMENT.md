@@ -46,6 +46,12 @@ php artisan queue:restart
 php artisan up
 ```
 
+> **Always rebuild front-end assets after pulling.** `public/build` is not committed. If
+> `npm run build` is skipped, pages load the previous CSS/JS bundle against new markup — for
+> example, the floating WhatsApp and chat buttons lose their positioning and stack in the top-left
+> corner. If the layout looks broken after a deploy, check that `public/build/manifest.json` is
+> newer than the pulled commit.
+
 ## Queue worker (required)
 
 Emails, image optimisation and image-provider calls are queued on the `database` connection.

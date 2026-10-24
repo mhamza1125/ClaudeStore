@@ -31,16 +31,28 @@ return [
     // Website chatbot (Admin → Settings → Chatbot). The API key is read from the
     // environment only and is never sent to the browser.
     'assistant' => [
-        'provider' => env('ASSISTANT_PROVIDER', 'anthropic'), // "anthropic" or "null" (offline)
-        'model' => env('ASSISTANT_MODEL', 'claude-opus-5-5'),
-        'effort' => env('ASSISTANT_EFFORT', 'low'), // low suits short chat replies; raise for harder questions
-        'max_tokens' => (int) env('ASSISTANT_MAX_TOKENS', 2048),
+        // "cloudflare" (default), "anthropic", or "null" (offline). ASSISTANT_PROVIDER is the older name.
+        'provider' => env('AI_DEFAULT_PROVIDER', env('ASSISTANT_PROVIDER', 'cloudflare')),
+        'max_tokens' => (int) env('ASSISTANT_MAX_TOKENS', 1024),
         'timeout' => (float) env('ASSISTANT_TIMEOUT', 30),
         'history_messages' => 20, // kept in the visitor's session
         'max_message_length' => 1000,
         'max_products_in_context' => 150,
         'rate_per_minute' => (int) env('ASSISTANT_RATE_PER_MINUTE', 8),
         'rate_per_day' => (int) env('ASSISTANT_RATE_PER_DAY', 80),
+
+        // Provider-specific options. Credentials live in config/services.php (from .env).
+        'cloudflare' => [
+            // Workers AI model ID. Llama 3.3 70B is published as "@cf/meta/llama-3.3-70b-instruct-fp8-fast".
+            'model' => env('CLOUDFLARE_DEFAULT_MODEL', '@cf/meta/llama-3.3-70b-instruct-fp8-fast'),
+            // Override to route through Cloudflare AI Gateway, e.g. https://gateway.ai.cloudflare.com/v1/{account}/{gateway}/workers-ai
+            'base_url' => env('CLOUDFLARE_AI_BASE_URL', 'https://api.cloudflare.com/client/v4'),
+            'temperature' => (float) env('CLOUDFLARE_AI_TEMPERATURE', 0.3),
+        ],
+        'anthropic' => [
+            'model' => env('ASSISTANT_MODEL', 'claude-opus-5-5'),
+            'effort' => env('ASSISTANT_EFFORT', 'low'),
+        ],
     ],
 
     'images' => [

@@ -75,11 +75,16 @@ runtime in Admin → Settings, which takes precedence over the env default.
 
 | Variable | Default | Notes |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | — | Required for live chatbot answers; server-side only. See CHATBOT.md |
-| `ASSISTANT_PROVIDER` | anthropic | `null` forces the offline contact panel |
-| `ASSISTANT_MODEL` | claude-opus-5-5 | Claude model ID |
-| `ASSISTANT_EFFORT` | low | low / medium / high |
-| `ASSISTANT_MAX_TOKENS` / `ASSISTANT_TIMEOUT` | 2048 / 30 | Per reply |
+| `AI_DEFAULT_PROVIDER` | cloudflare | `cloudflare`, `anthropic`, or `null` (offline contact panel). `ASSISTANT_PROVIDER` is still read as a fallback |
+| `CLOUDFLARE_ACCOUNT_ID` | — | Cloudflare account ID (dashboard → Workers AI / account home). Server-side only |
+| `CLOUDFLARE_API_TOKEN` | — | API token with the **Workers AI** permission (Read is enough to run models). Server-side secret |
+| `CLOUDFLARE_DEFAULT_MODEL` | @cf/meta/llama-3.3-70b-instruct-fp8-fast | Workers AI text-generation model ID |
+| `CLOUDFLARE_AI_BASE_URL` | https://api.cloudflare.com/client/v4 | Only change for testing or an AI Gateway URL |
+| `CLOUDFLARE_AI_TEMPERATURE` | 0.3 | Lower = more factual answers |
+| `ANTHROPIC_API_KEY` | — | Needed only when `AI_DEFAULT_PROVIDER=anthropic`; server-side only. See CHATBOT.md |
+| `ASSISTANT_MODEL` | claude-opus-5-5 | Claude model ID (Anthropic provider) |
+| `ASSISTANT_EFFORT` | low | low / medium / high (Anthropic provider) |
+| `ASSISTANT_MAX_TOKENS` / `ASSISTANT_TIMEOUT` | 1024 / 30 | Per reply (all providers) |
 | `ASSISTANT_RATE_PER_MINUTE` / `ASSISTANT_RATE_PER_DAY` | 8 / 80 | Per IP |
 
 WhatsApp button settings (number, message) are managed in Admin → Settings, not `.env`.

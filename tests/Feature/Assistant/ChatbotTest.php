@@ -39,6 +39,11 @@ class ChatbotTest extends TestCase
                 return true;
             }
 
+            public function model(): ?string
+            {
+                return 'fake-model';
+            }
+
             public function reply(string $system, array $messages): string
             {
                 $this->calls[] = compact('system', 'messages');
@@ -142,6 +147,38 @@ class ChatbotTest extends TestCase
         $this->postJson('/assistant/messages', ['message' => 'a'])->assertOk();
         $this->postJson('/assistant/messages', ['message' => 'b'])->assertOk();
         $this->postJson('/assistant/messages', ['message' => 'c'])->assertStatus(429);
+    }
+
+    public function test_an_immediate_resubmission_reuses_the_previous_answer(): void
+    {
+        $fake = $this->fakeProvider();
+        $this->enable();
+        $first = $this->postJson('/assistant/messages', ['message' => 'Do you do embossing?'])->assertOk()->json('reply');
+        $this->postJson('/assistant/messages', ['message' => '  Do you do embossing?  '])->assertOk()->assertJson(['reply' => $first]);
+        $this->assertCount(1, $fake->calls);
+        $this->assertCount(2, session('assistant.history'));
+
+        $this->travel(20)->seconds();
+        $this->postJson('/assistant/messages', ['message' => 'Do you do embossing?'])->assertOk();
+        $this->assertCount(2, $fake->calls);
+    }
+
+    public function test_concurrent_requests_from_one_session_are_refused(): void
+    {
+        $fake = $this->fakeProvider();
+        $this->enable();
+        // Pin the session ID (as the browser's session cookie does) and hold that session's lock.
+        $sessionId = \Illuminate\Support\Str::random(40);
+        $this->withCredentials()->withCookie(config('session.cookie'), $sessionId);
+        $lock = \Illuminate\Support\Facades\Cache::lock('assistant:'.hash('sha256', $sessionId), 60);
+        $this->assertTrue($lock->get());
+
+        $this->postJson('/assistant/messages', ['message' => 'Hello'])->assertStatus(409);
+        $this->assertCount(0, $fake->calls);
+
+        $lock->release();
+        $this->postJson('/assistant/messages', ['message' => 'Hello'])->assertOk();
+        $this->assertCount(1, $fake->calls);
     }
 
     public function test_requests_require_csrf_outside_tests(): void

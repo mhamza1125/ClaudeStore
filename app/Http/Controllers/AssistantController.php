@@ -7,6 +7,7 @@ use App\Assistant\BusinessContext;
 use App\Assistant\Contracts\ChatProvider;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Website chatbot endpoint. The conversation lives in the visitor's server session
@@ -16,6 +17,9 @@ use Illuminate\Http\Request;
 class AssistantController extends Controller
 {
     public const SESSION_KEY = 'assistant.history';
+
+    /** A resubmission of the same text within this window reuses the previous answer. */
+    private const DUPLICATE_WINDOW_SECONDS = 15;
 
     public function __construct(private ChatProvider $provider) {}
 
@@ -35,24 +39,38 @@ class AssistantController extends Controller
             return $this->unavailable();
         }
 
-        $history = self::history($request);
-        $messages = [...$history, ['role' => 'user', 'content' => $text]];
+        $session = $request->session();
+        $last = $session->get('assistant.last');
+        if (is_array($last) && hash_equals($last['hash'], hash('sha256', $text))
+            && now()->timestamp - $last['at'] <= self::DUPLICATE_WINDOW_SECONDS) {
+            return response()->json(['reply' => $last['reply']]);
+        }
+
+        // One provider call at a time per visitor session (double clicks, several tabs).
+        $lock = Cache::lock('assistant:'.hash('sha256', $session->getId()), 60);
+        if (! $lock->get()) {
+            return response()->json(['message' => 'Still answering your previous message — one moment.'], 409);
+        }
 
         try {
+            $messages = [...self::history($request), ['role' => 'user', 'content' => $text]];
             $reply = $this->provider->reply($context->systemPrompt(), $messages);
         } catch (AssistantUnavailable) {
             return $this->unavailable();
+        } finally {
+            $lock->release();
         }
 
         $messages[] = ['role' => 'assistant', 'content' => $reply];
-        $request->session()->put(self::SESSION_KEY, self::trim($messages));
+        $session->put(self::SESSION_KEY, self::trim($messages));
+        $session->put('assistant.last', ['hash' => hash('sha256', $text), 'at' => now()->timestamp, 'reply' => $reply]);
 
         return response()->json(['reply' => $reply]);
     }
 
     public function reset(Request $request): JsonResponse
     {
-        $request->session()->forget(self::SESSION_KEY);
+        $request->session()->forget([self::SESSION_KEY, 'assistant.last']);
 
         return response()->json(['ok' => true]);
     }

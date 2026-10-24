@@ -15,6 +15,9 @@ interface ChatProvider
     /** True only when credentials are present. */
     public function isConfigured(): bool;
 
+    /** Model identifier used for replies (for status displays). */
+    public function model(): ?string;
+
     /**
      * @param  list<array{role: 'user'|'assistant', content: string}>  $messages  oldest first, ending with the visitor's message
      *

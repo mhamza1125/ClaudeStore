@@ -42,12 +42,14 @@ php artisan test                                        # SQLite in-memory (phpu
 DB_CONNECTION=mysql DB_DATABASE=claudestore_test php vendor/bin/phpunit   # against MySQL
 ```
 
-139 tests cover the pricing precedence and tier boundaries, integer money maths, the
+170 tests cover the pricing precedence and tier boundaries, integer money maths, the
 basket, RFQ submission (validation, spam protection, rate limits, attachments, price
 snapshots), the full quote lifecycle (pricing, versions, secure links, expiry, acceptance,
 conversion), authorisation boundaries, the portal, product/category/CSV/image administration,
-the hero carousel, WhatsApp link generation, and the chatbot (endpoint, privacy of its business
-context, and the Anthropic SDK request shape via a mocked transport).
+the homepage banner and slide admin, live search suggestions, themes, root page URLs and
+redirects, WhatsApp link generation, and the chatbot (endpoint, privacy of its business context,
+the Cloudflare Workers AI request/response handling via faked HTTP, and the Anthropic SDK request
+shape via a mocked transport).
 
 ## What's where
 
@@ -60,7 +62,8 @@ context, and the Anthropic SDK request shape via a mocked transport).
 | Admin | `app/Livewire/Admin/*`, `app/Http/Controllers/Admin/*` |
 | Portal | `app/Http/Controllers/Account/*`, `resources/views/account` |
 | Images | `app/Images/*`, `app/Jobs/*` — see [docs/IMAGES.md](docs/IMAGES.md) |
-| Design tokens / themes | `resources/css/app.css`, `resources/js/theme.js`, `resources/views/partials/head.blade.php` |
+| Design tokens / themes | `resources/css/app.css`, `app/Support/Theme.php`, `resources/js/theme.js`, `resources/views/partials/head.blade.php` |
+| Chatbot | `app/Assistant/*` (providers: Cloudflare default, Anthropic), `app/Http/Controllers/AssistantController.php` — see [docs/CHATBOT.md](docs/CHATBOT.md) |
 | Roles & permissions | `database/seeders/RolesAndPermissionsSeeder.php`, `app/Policies/QuotePolicy.php` |
 
 ## Roles

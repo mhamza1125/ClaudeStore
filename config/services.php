@@ -18,6 +18,12 @@ return [
         'token' => env('POSTMARK_TOKEN'),
     ],
 
+    // AI chatbot providers (server-side secrets; never sent to browsers).
+    'cloudflare' => [
+        'account_id' => env('CLOUDFLARE_ACCOUNT_ID'),
+        'api_token' => env('CLOUDFLARE_API_TOKEN'),
+    ],
+
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
     ],

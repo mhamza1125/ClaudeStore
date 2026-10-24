@@ -74,9 +74,10 @@
             <p class="text-sm text-muted">A floating AI assistant in the bottom-right corner. It answers from your public catalogue, settings and the notes below, and guides visitors toward a quote request. It never sees trade-only or negotiated prices.</p>
             <div class="rounded-sm border px-3 py-2 text-sm {{ $chatProvider->isConfigured() ? 'border-success/40 badge-success' : 'border-warning/40 badge-warning' }}" data-testid="chat-provider-status">
                 @if ($chatProvider->isConfigured())
-                    AI provider connected: <strong>{{ $chatProvider->name() }}</strong> · model <code>{{ config('store.assistant.model') }}</code>
+                    AI provider configured: <strong>{{ $chatProvider->name() }}</strong> · model <code>{{ $chatProvider->model() }}</code>.
+                    Credentials are present; run <code>php artisan assistant:check</code> on the server to confirm they work.
                 @else
-                    AI provider not configured (<code>{{ config('store.assistant.provider') }}</code>). Set <code>ANTHROPIC_API_KEY</code> in the server's .env (see docs/CHATBOT.md). Until then, visitors who open the chat see an “offline” panel with your quote, email and WhatsApp links.
+                    AI provider not configured (<code>{{ config('store.assistant.provider') }}</code>). For Cloudflare Workers AI set <code>CLOUDFLARE_ACCOUNT_ID</code>, <code>CLOUDFLARE_API_TOKEN</code> and <code>CLOUDFLARE_DEFAULT_MODEL</code> in the server's .env (see docs/CHATBOT.md). Until then, visitors who open the chat see an “offline” panel with your quote, email and WhatsApp links.
                 @endif
             </div>
             <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" wire:model.live="s.chatbot_enabled"> Show the chatbot</label>

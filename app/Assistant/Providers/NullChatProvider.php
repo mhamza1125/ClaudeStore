@@ -18,6 +18,11 @@ class NullChatProvider implements ChatProvider
         return false;
     }
 
+    public function model(): ?string
+    {
+        return null;
+    }
+
     public function reply(string $system, array $messages): string
     {
         throw new AssistantUnavailable('No AI provider is configured.');

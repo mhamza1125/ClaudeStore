@@ -45,6 +45,11 @@ class AnthropicChatProvider implements ChatProvider
         return filled($this->apiKey);
     }
 
+    public function model(): ?string
+    {
+        return $this->model;
+    }
+
     public function reply(string $system, array $messages): string
     {
         if (! $this->isConfigured()) {

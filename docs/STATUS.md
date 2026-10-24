@@ -54,16 +54,22 @@ cannot sign in. Private attachments and originals; secure links stored as SHA-25
 escaping throughout; Eloquent/parameterised queries; LIKE wildcards escaped in searches.
 Audit log for product, price, settings, customer, staff and order changes.
 
-**Engagement.** Homepage hero carousel of featured products (crossfade, pause on hover/focus,
-reduced-motion aware, configurable interval). Configurable floating WhatsApp button (number,
-preset or custom message, server-built link). Optional AI chatbot with a server-side Anthropic
-integration, public-data-only business context, and an honest offline mode (docs/CHATBOT.md).
+**Engagement.** Homepage hero banner with admin-managed slides (Admin → Homepage slides: image or
+product image with focal point, eyebrow/title/subtitle, two CTAs, scheduling, ordering), crossfade
+with progress-timed autoplay, pause, arrows, dots, swipe and reduced-motion support. Featured
+product carousel (scroll-snap, autoplay that pauses on hover/focus/touch, arrows). Live header
+search suggestions (`/search/suggest`, same matching as the catalogue). Three themes — White, Mid
+(default, brand mustard/brown) and Dark — plus System, configurable in Admin → Settings →
+Appearance. Informational pages at root URLs (`/about`, `/custom-manufacturing`) with 301
+redirects from `/pages/…`. Configurable floating WhatsApp button (bottom-left) and optional AI
+chatbot (bottom-right) with Cloudflare Workers AI as the default provider (Anthropic optional),
+public-data-only business context and an honest offline mode (docs/CHATBOT.md).
 
 ## Needs credentials or external setup
 
 | Item | What's needed |
 | --- | --- |
-| AI chatbot | `ANTHROPIC_API_KEY` in `.env`, then enable it in Admin → Settings → Chatbot. Not tested against the live API yet |
+| AI chatbot | `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN` (Workers AI permission) in `.env`, `php artisan config:cache`, `php artisan assistant:check`, then enable it in Admin → Settings → Chatbot. Not tested against the live Cloudflare API yet (no credentials; outbound access blocked in the build environment) |
 | Production email | SMTP credentials and a verified sending domain (`MAIL_*`) |
 | S3 storage | Bucket and keys (`MEDIA_DISK_DRIVER`/`PRIVATE_DISK_DRIVER=s3`, `AWS_*`) |
 | Background removal | `IMAGE_PROVIDER=removebg` + `REMOVEBG_API_KEY`. Only tested with faked HTTP |
