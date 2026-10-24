@@ -2,7 +2,7 @@
     $navCategories = \Illuminate\Support\Facades\Cache::remember('nav.categories', 600, fn () =>
         \App\Models\Category::active()->roots()->orderBy('sort_order')->with(['children' => fn ($q) => $q->where('is_active', true)])->get());
 @endphp
-<header x-data="{ mobile: false }" class="sticky top-0 z-(--z-header) border-b border-border bg-bg/95 backdrop-blur">
+<header x-data="{ mobile: false }" x-effect="$dispatch('mobile-nav', { open: mobile })" @keydown.escape.window="mobile = false" class="sticky top-0 z-(--z-header) border-b border-border bg-bg/95 backdrop-blur">
     <div class="hidden border-b border-border bg-band text-on-band sm:block">
         <div class="container-page flex h-9 items-center justify-between text-xs tracking-wide">
             <p>Wholesale &amp; private-label leather goods · Trade pricing for approved accounts</p>
@@ -38,11 +38,7 @@
         </nav>
 
         <div class="flex items-center gap-1">
-            <form action="{{ route('catalog') }}" method="get" class="relative hidden md:block" role="search">
-                <label for="header-search" class="sr-only">Search products, SKU or code</label>
-                <input id="header-search" name="q" value="{{ request('q') }}" placeholder="Search name or SKU" class="input w-48 pl-8 xl:w-60">
-                <x-icon name="search" class="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted"/>
-            </form>
+            <x-search-box id="header-search" class="hidden md:block" input-class="w-48 xl:w-64" dropdown-class="right-0 w-[min(28rem,calc(100vw-2rem))]"/>
             <x-theme-toggle/>
             @auth
                 <div x-data="{ open: false }" class="relative" @click.outside="open = false">
@@ -65,12 +61,10 @@
         </div>
     </div>
 
-    <nav id="mobile-nav" x-show="mobile" x-cloak x-transition class="border-t border-border bg-surface lg:hidden" aria-label="Mobile">
+    {{-- Scrolls inside itself: content below a sticky header could otherwise never be reached. --}}
+    <nav id="mobile-nav" x-show="mobile" x-cloak x-transition class="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-border bg-surface lg:hidden" aria-label="Mobile">
         <div class="container-page space-y-1 py-4">
-            <form action="{{ route('catalog') }}" method="get" class="mb-3" role="search">
-                <label for="mobile-search" class="sr-only">Search</label>
-                <input id="mobile-search" name="q" placeholder="Search name or SKU" class="input">
-            </form>
+            <x-search-box id="mobile-search" class="mb-3" dropdown-class="left-0 right-0"/>
             <a href="{{ route('catalog') }}" class="block py-2 font-medium">All products</a>
             @foreach ($navCategories as $cat)
                 <a href="{{ route('catalog.category', $cat) }}" class="block py-2">{{ $cat->name }}</a>
@@ -78,7 +72,6 @@
                     <a href="{{ route('catalog.category', $child) }}" class="block py-1.5 pl-4 text-sm text-muted">{{ $child->name }}</a>
                 @endforeach
             @endforeach
-            <a href="{{ route('pages.show', 'custom-manufacturing') }}" class="block py-2">Private label &amp; custom</a>
             @guest
                 <div class="flex gap-2 pt-3"><a href="{{ route('login') }}" class="btn btn-secondary flex-1">Sign in</a><a href="{{ route('register') }}" class="btn btn-primary flex-1">Open trade account</a></div>
             @endguest

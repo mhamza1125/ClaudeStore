@@ -81,6 +81,19 @@ class Product extends Model
         return $q->where('status', 'published');
     }
 
+    /**
+     * Name, SKU, product code or variant SKU contains the term. Shared by the catalogue
+     * and the header's live suggestions so both always return the same products.
+     */
+    public function scopeSearch(Builder $q, string $term): Builder
+    {
+        $like = like_term($term);
+
+        return $q->where(fn (Builder $w) => $w->where('name', 'like', $like)->orWhere('sku', 'like', $like)
+            ->orWhere('product_code', 'like', $like)
+            ->orWhereHas('variants', fn (Builder $v) => $v->where('sku', 'like', $like)));
+    }
+
     public function isPublished(): bool
     {
         return $this->status === 'published';

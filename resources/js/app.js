@@ -2,9 +2,11 @@ import './bootstrap';
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
 import { registerTheme } from './theme';
 import { registerChat } from './chat';
+import { registerSearch } from './search';
 
 registerTheme(Alpine);
 registerChat(Alpine);
+registerSearch(Alpine);
 
 // Product gallery: thumbnails swap the main image; arrow keys navigate.
 Alpine.data('gallery', (count) => ({

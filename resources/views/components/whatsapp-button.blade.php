@@ -3,7 +3,9 @@
 @php $whatsappLink = \App\Support\WhatsApp::configuredLink(); @endphp
 @if ($whatsappLink)
     <a href="{{ $whatsappLink }}" target="_blank" rel="noopener noreferrer"
-       x-data="{ hidden: false }" x-on:chat-panel.window="hidden = $event.detail.open && window.matchMedia('(max-width: 639px)').matches" x-show="!hidden"
+       x-data="{ chat: false, nav: false }" x-show="!chat && !nav"
+       x-on:chat-panel.window="chat = $event.detail.open && window.matchMedia('(max-width: 639px)').matches"
+       x-on:mobile-nav.window="nav = $event.detail.open"
        class="floating-btn floating-btn--left border-border bg-surface text-text hover:-translate-y-0.5 hover:border-accent hover:text-accent"
        aria-label="Chat with us on WhatsApp (opens in a new tab)" title="Chat with us on WhatsApp" data-testid="whatsapp-button">
         <svg viewBox="0 0 24 24" class="h-7 w-7" fill="currentColor" aria-hidden="true">

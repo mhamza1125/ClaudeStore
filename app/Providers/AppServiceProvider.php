@@ -45,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute((int) config('store.assistant.rate_per_minute', 8))->by('as-m:'.$request->ip()),
             Limit::perDay((int) config('store.assistant.rate_per_day', 80))->by('as-d:'.$request->ip()),
         ]);
+        RateLimiter::for('search', fn (Request $request) => Limit::perMinute(90)->by('search:'.$request->ip()));
         RateLimiter::for('sensitive', fn (Request $request) => Limit::perMinute(30)->by('s:'.($request->user()?->id ?: $request->ip())));
 
         Event::listen(\Illuminate\Queue\Events\JobProcessing::class, fn () => app(Settings::class)->forgetLoaded());

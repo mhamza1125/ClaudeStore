@@ -11,6 +11,7 @@ use App\Http\Controllers\PageController;
 use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QuoteSubmissionController;
+use App\Http\Controllers\SearchController;
 use App\Livewire;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,7 @@ Route::get('/', HomeController::class)->name('home');
 Route::get('/products', Livewire\Store\Catalog::class)->name('catalog');
 Route::get('/categories/{category:slug}', Livewire\Store\Catalog::class)->name('catalog.category');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/search/suggest', [SearchController::class, 'suggest'])->middleware('throttle:search')->name('search.suggest');
 Route::get('/products/{product:slug}/spec-sheet', [ProductController::class, 'specSheet'])->name('products.spec-sheet');
 Route::post('/assistant/messages', [AssistantController::class, 'send'])->middleware('throttle:assistant')->name('assistant.send');
 Route::post('/assistant/reset', [AssistantController::class, 'reset'])->name('assistant.reset');

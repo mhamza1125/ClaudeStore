@@ -25,6 +25,7 @@ export function registerChat(Alpine) {
     Alpine.data('chatWidget', (config) => ({
         ...config,
         open: false,
+        navOpen: false, // the mobile menu is open; the launcher steps aside
         showTeaser: false,
         messages: config.history || [],
         draft: '',

@@ -24,7 +24,7 @@
 @if (setting('chatbot.enabled'))
     {{-- Each part (teaser, panel, launcher) is fixed to the viewport on its own via the
          .chat-teaser / .chat-panel / .floating-btn components; the wrapper has no box. --}}
-    <div x-data="chatWidget(@js($config))" x-on:keydown.escape.window="open && close()" data-testid="chat-widget" class="contents">
+    <div x-data="chatWidget(@js($config))" x-on:keydown.escape.window="open && close()" data-testid="chat-widget" class="contents" x-on:mobile-nav.window="navOpen = $event.detail.open; if (navOpen) showTeaser = false">
 
         {{-- Teaser bubble with the introductory message --}}
         <div x-show="showTeaser && !open" x-cloak x-transition.opacity.duration.300ms
@@ -104,7 +104,7 @@
         </section>
 
         {{-- Launcher --}}
-        <button type="button" @click="toggle()" :aria-expanded="open" aria-controls="chat-panel" x-show="!open || !window.matchMedia('(max-width: 639px)').matches"
+        <button type="button" @click="toggle()" :aria-expanded="open" aria-controls="chat-panel" x-show="!navOpen && (!open || !window.matchMedia('(max-width: 639px)').matches)"
                 class="floating-btn floating-btn--right border-primary bg-primary px-4 text-on-primary hover:-translate-y-0.5 hover:border-accent hover:bg-accent hover:text-on-accent"
                 data-testid="chat-launcher">
             <svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>

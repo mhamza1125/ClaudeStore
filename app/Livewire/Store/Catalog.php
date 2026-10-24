@@ -119,12 +119,7 @@ class Catalog extends Component
         $query = (clone $base)
             ->with(['approvedImages', 'priceTiers', 'category', 'activeVariants'])
             ->when($this->category, fn (Builder $q) => $q->whereIn('category_id', $this->category->selfAndChildIds()))
-            ->when(trim($this->q) !== '', function (Builder $q) {
-                $term = like_term($this->q);
-                $q->where(fn (Builder $w) => $w->where('name', 'like', $term)->orWhere('sku', 'like', $term)
-                    ->orWhere('product_code', 'like', $term)
-                    ->orWhereHas('variants', fn (Builder $v) => $v->where('sku', 'like', $term)));
-            })
+            ->when(trim($this->q) !== '', fn (Builder $q) => $q->search(trim($this->q)))
             ->when($this->material, fn (Builder $q) => $q->whereIn('material', $this->material))
             ->when($this->color, fn (Builder $q) => $q->whereHas('activeVariants', fn (Builder $v) => $v->whereIn('color', $this->color)))
             ->when($this->availability, fn (Builder $q) => $q->whereIn('availability', $this->availability));
