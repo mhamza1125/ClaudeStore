@@ -71,7 +71,7 @@ class BusinessContext
         if ($min = (int) setting('order.min_value_cents')) {
             $lines[] = 'Minimum order value: '.money($min).'.';
         }
-        $lines[] = 'Pages: catalogue /products; quote list and request form /quote; private label and custom manufacturing /pages/custom-manufacturing; about /pages/about; open a trade account /register; customer account /account.';
+        $lines[] = 'Pages: catalogue /products; quote list and request form /quote; private label and custom manufacturing /custom-manufacturing; about /about; open a trade account /register; customer account /account.';
 
         $lines[] = "\nCategories:";
         foreach (Category::active()->roots()->orderBy('sort_order')->with(['children' => fn ($q) => $q->where('is_active', true)])->get() as $cat) {
@@ -103,7 +103,7 @@ class BusinessContext
 
         foreach (PageController::POLICIES as $key => $label) {
             if (filled($text = setting('policies.'.$key))) {
-                $lines[] = "\n{$label} (/pages/{$key}):\n".Str::limit(trim($text), 2000);
+                $lines[] = "\n{$label} (/{$key}):\n".Str::limit(trim($text), 2000);
             }
         }
 

@@ -2,7 +2,7 @@
 // the AI provider and its key are server-side. Model output is rendered as text
 // nodes; only same-site paths and a short list of https hosts become links.
 const SAFE_HOSTS = ['api.whatsapp.com', 'wa.me'];
-const TOKEN = /(https?:\/\/[^\s<>()"']+|(?<![\w/])\/(?:products|categories|quote|pages|account|register|login)(?:\/[\w\-./]*)?)/g;
+const TOKEN = /(https?:\/\/[^\s<>()"']+|(?<![\w/])\/(?:products|categories|quote|account|register|login|about|custom-manufacturing|terms|privacy|shipping|returns)(?:\/[\w\-./]*)?)/g;
 
 function store(key, value) {
     try { sessionStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }

@@ -1,4 +1,4 @@
-<x-layouts.store title="About the workshop">
+<x-layouts.store :canonical="$canonical" title="About the workshop">
     <div class="container-page max-w-3xl py-16">
         <x-page-header title="About {{ $brand['name'] }}" eyebrow="The company"/>
         <div class="prose-store">

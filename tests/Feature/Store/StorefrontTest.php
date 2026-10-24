@@ -32,7 +32,7 @@ class StorefrontTest extends TestCase
     public function test_core_pages_render(): void
     {
         $product = $this->wallet();
-        foreach (['/', '/products', '/products/'.$product->slug, '/categories/'.$product->category->slug, '/quote', '/pages/about', '/pages/custom-manufacturing', '/pages/terms', '/login', '/register'] as $url) {
+        foreach (['/', '/products', '/products/'.$product->slug, '/categories/'.$product->category->slug, '/quote', '/about', '/custom-manufacturing', '/terms', '/login', '/register'] as $url) {
             $this->get($url)->assertOk();
         }
     }

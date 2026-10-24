@@ -1,4 +1,4 @@
-<x-layouts.store :title="$title">
+<x-layouts.store :canonical="$canonical" :title="$title">
     <div class="container-page max-w-3xl py-16">
         <x-page-header :title="$title" eyebrow="Policies"/>
         @if (filled($content))

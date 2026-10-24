@@ -1,4 +1,4 @@
-<x-layouts.store title="Custom & private label" description="Private-label and custom leather goods manufacturing: embossing, custom colours, materials and packaging.">
+<x-layouts.store :canonical="$canonical" title="Custom & private label" description="Private-label and custom leather goods manufacturing: embossing, custom colours, materials and packaging.">
     <div class="container-page py-16">
         <x-page-header title="Custom manufacturing & private label" eyebrow="Your brand, our workshop"/>
         <div class="grid gap-12 lg:grid-cols-12">

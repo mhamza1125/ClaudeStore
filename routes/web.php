@@ -22,7 +22,6 @@ Route::get('/products', Livewire\Store\Catalog::class)->name('catalog');
 Route::get('/categories/{category:slug}', Livewire\Store\Catalog::class)->name('catalog.category');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/products/{product:slug}/spec-sheet', [ProductController::class, 'specSheet'])->name('products.spec-sheet');
-Route::get('/pages/{page}', [PageController::class, 'show'])->name('pages.show');
 Route::post('/assistant/messages', [AssistantController::class, 'send'])->middleware('throttle:assistant')->name('assistant.send');
 Route::post('/assistant/reset', [AssistantController::class, 'reset'])->name('assistant.reset');
 Route::post('/newsletter', [NewsletterController::class, 'store'])->middleware('throttle:newsletter')->name('newsletter.subscribe');
@@ -44,6 +43,14 @@ Route::middleware('auth')->group(function () {
     Route::put('/preferences/theme', [PreferenceController::class, 'theme'])->name('preferences.theme');
     Route::get('/attachments/{attachment}', [AttachmentController::class, 'show'])->name('attachments.show');
 });
+
+/*
+| Informational pages at the site root (/about, /custom-manufacturing, /terms …).
+| Constrained to the known slugs, so they cannot shadow products, categories or any
+| other route. Old /pages/{slug} URLs redirect permanently.
+*/
+Route::get('/pages/{page}', [PageController::class, 'legacy'])->whereIn('page', PageController::slugs());
+Route::get('/{page}', [PageController::class, 'show'])->whereIn('page', PageController::slugs())->name('pages.show');
 
 /*
 | Customer portal
