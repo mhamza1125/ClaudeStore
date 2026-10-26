@@ -29,7 +29,7 @@ class StaffSeeder extends Seeder
         }
 
         foreach ($accounts as $a) {
-            $password = $production ? env('SEED_ADMIN_PASSWORD') : Str::password(16, symbols: false);
+            $password = env('SEED_ADMIN_PASSWORD') ?: Str::password(16, symbols: false);
             $user = User::query()->updateOrCreate(['email' => $a['email']], [
                 'name' => $a['name'],
                 'password' => $password,
