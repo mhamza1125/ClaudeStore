@@ -7,15 +7,15 @@
                     @foreach ($images as $i => $img)
                         <button type="button" role="tab" :aria-selected="active === {{ $i }}" @click="go({{ $i }})"
                                 class="shrink-0 overflow-hidden rounded-sm border-2 transition" :class="active === {{ $i }} ? 'border-accent' : 'border-transparent opacity-70 hover:opacity-100'">
-                            <img src="{{ $img->url() }}" alt="{{ $img->view_type->label() }}" class="h-20 w-16 object-cover" loading="lazy">
+                            <img src="{{ $img->url() }}" alt="{{ $img->view_type?->label() ?? 'Image '.($i + 1) }}" class="h-20 w-16 object-cover" loading="lazy">
                         </button>
                     @endforeach
                 </div>
                 <div class="relative flex-1 overflow-hidden rounded-sm bg-elevated" tabindex="0" aria-roledescription="carousel" aria-label="Product images, use arrow keys">
                     @foreach ($images as $i => $img)
                         <figure x-show="active === {{ $i }}" @if ($i > 0) x-cloak @endif>
-                            <img src="{{ $img->url() }}" alt="{{ $img->alt ?: $product->name.' — '.$img->view_type->label() }}" class="aspect-[4/5] w-full object-cover" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif width="800" height="1000">
-                            <figcaption class="absolute bottom-3 left-3"><x-badge>{{ $img->view_type->label() }}</x-badge></figcaption>
+                            <img src="{{ $img->url() }}" alt="{{ $img->alt ?: $product->name.($img->view_type ? ' — '.$img->view_type->label() : '') }}" class="aspect-[4/5] w-full object-cover" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif width="800" height="1000">
+                            @if ($img->view_type)<figcaption class="absolute bottom-3 left-3"><x-badge>{{ $img->view_type->label() }}</x-badge></figcaption>@endif
                         </figure>
                     @endforeach
                 </div>

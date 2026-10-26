@@ -32,6 +32,12 @@ class AdminPagesTest extends TestCase
         }
     }
 
+    public function test_header_shows_the_role_in_title_case(): void
+    {
+        $this->actingAs($this->staff('super-admin'));
+        $this->get('/admin')->assertOk()->assertSee('Super Admin')->assertDontSee('super-admin</span>', false);
+    }
+
     public function test_demo_seed_produces_the_illustrative_wallet_tiers(): void
     {
         Storage::fake('public');

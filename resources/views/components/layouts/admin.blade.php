@@ -47,7 +47,12 @@
             </div>
             <div class="flex items-center gap-2">
                 <x-theme-toggle :force="true"/>
-                <span class="hidden text-sm sm:inline">{{ $u->name }} <span class="text-muted">· {{ $u->getRoleNames()->implode(', ') }}</span></span>
+                <div class="flex min-w-0 flex-col items-end gap-0.5 leading-tight" data-testid="admin-user">
+                    <span class="hidden max-w-48 truncate text-sm font-medium sm:block">{{ $u->name }}</span>
+                    <span class="flex flex-wrap justify-end gap-1">
+                        @foreach ($u->getRoleNames() as $role)<x-badge tone="accent" class="!px-1.5 !py-0 text-[0.6875rem]">{{ \Illuminate\Support\Str::headline($role) }}</x-badge>@endforeach
+                    </span>
+                </div>
                 <form method="POST" action="{{ route('logout') }}">@csrf<button class="btn btn-ghost btn-sm" aria-label="Sign out"><x-icon name="logout" class="h-4 w-4"/></button></form>
             </div>
         </header>

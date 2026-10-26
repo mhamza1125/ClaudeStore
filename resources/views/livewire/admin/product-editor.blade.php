@@ -136,7 +136,9 @@
 
     @if ($product)
         {{-- Images --}}
-        <section class="panel mt-8" aria-labelledby="img-h">
+        @php $processing = $product->images->where('status', 'processing'); @endphp
+        {{-- Re-render while optimisation runs in the queue so the cards show the real status. --}}
+        <section class="panel mt-8" aria-labelledby="img-h" @if ($processing->isNotEmpty()) wire:poll.3s @endif>
             <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
                 <h2 id="img-h" class="text-2xl">Images</h2>
                 <p class="text-xs text-muted">Image provider: <span class="font-medium text-text">{{ $provider->isConfigured() ? $provider->name() : 'not configured (manual workflow)' }}</span></p>
@@ -150,29 +152,46 @@
                     @error('uploads')<p class="field-error">{{ $message }}</p>@enderror @error('uploads.*')<p class="field-error">{{ $message }}</p>@enderror
                     <div wire:loading wire:target="uploads" class="text-xs text-muted">Uploading…</div>
                 </div>
-                <x-select-field name="uploadViewType" model="uploadViewType" label="View" :options="$viewTypes"/>
+                <x-select-field name="uploadViewType" model="uploadViewType" label="View (optional)" :options="$viewTypes" placeholder="Not specified"/>
                 <x-select-field name="uploadVariant" model="uploadVariant" label="Variant" :options="$product->variants->pluck('name', 'id')" placeholder="All variants"/>
                 <div class="flex flex-col justify-end gap-2">
                     <label class="flex items-center gap-2 text-xs"><input type="checkbox" class="checkbox" wire:model="uploadAsDraft"> Upload as draft for review (e.g. retouched or AI-generated)</label>
-                    <button class="btn btn-secondary btn-sm" wire:loading.attr="disabled"><x-icon name="upload" class="h-4 w-4"/> Upload</button>
+                    <button class="btn btn-secondary btn-sm" wire:loading.attr="disabled" wire:target="uploads,uploadImages">
+                        <span wire:loading.remove wire:target="uploadImages" class="inline-flex items-center gap-1"><x-icon name="upload" class="h-4 w-4"/> Upload</span>
+                        <span wire:loading wire:target="uploadImages">Processing…</span>
+                    </button>
                 </div>
             </form>
 
             <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 @forelse ($product->images as $img)
-                    <div class="rounded-sm border {{ $img->status === 'pending_review' ? 'border-warning' : 'border-border' }} p-3 text-xs" wire:key="img-{{ $img->id }}">
+                    @php
+                        // Uploads are processed during the request; still "processing" after a minute means it was interrupted.
+                        $stalled = $img->status === 'processing' && $img->updated_at?->lt(now()->subMinute());
+                        $canProcess = $img->source === 'upload' && $img->original_path && ($img->status === 'failed' || $stalled);
+                    @endphp
+                    <div class="rounded-sm border {{ $img->status === 'pending_review' ? 'border-warning' : ($img->status === 'failed' ? 'border-danger' : 'border-border') }} p-3 text-xs" wire:key="img-{{ $img->id }}">
                         <div class="relative aspect-[4/5] overflow-hidden rounded-sm bg-elevated">
-                            @if ($img->url())<img src="{{ $img->url() }}" alt="{{ $img->alt }}" class="h-full w-full object-cover" loading="lazy">@else<div class="flex h-full items-center justify-center text-muted">{{ $img->status === 'failed' ? 'Failed' : 'Processing…' }}</div>@endif
+                            @if ($img->url())<img src="{{ $img->url() }}" alt="{{ $img->alt }}" class="h-full w-full object-cover" loading="lazy">
+                            @elseif ($img->status === 'failed')<div class="flex h-full items-center justify-center text-danger">Processing failed</div>
+                            @else<div class="flex h-full flex-col items-center justify-center gap-2 text-muted"><span class="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" aria-hidden="true"></span>{{ $stalled ? 'Not finished' : 'Processing…' }}</div>@endif
                             <div class="absolute left-2 top-2 flex flex-wrap gap-1">
-                                <x-badge :tone="['approved' => 'success', 'pending_review' => 'warning', 'rejected' => 'danger', 'failed' => 'danger', 'processing' => 'neutral'][$img->status] ?? 'neutral'">{{ str_replace('_', ' ', $img->status) }}</x-badge>
+                                <x-badge :tone="['approved' => 'success', 'pending_review' => 'warning', 'rejected' => 'danger', 'failed' => 'danger', 'processing' => 'neutral'][$img->status] ?? 'neutral'">{{ ucfirst(str_replace('_', ' ', $img->status)) }}</x-badge>
                                 @if ($img->source !== 'upload')<x-badge>{{ $img->source }}@if ($img->provider) · {{ $img->provider }}@endif</x-badge>@endif
                             </div>
                         </div>
-                        @if ($img->provider_notes)<p class="mt-2 text-muted">{{ $img->provider_notes }}</p>@endif
+                        @if ($img->provider_notes)<p class="mt-2 {{ $img->status === 'failed' ? 'text-danger' : 'text-muted' }}">{{ $img->provider_notes }}</p>@endif
+                        @if ($stalled)<p class="mt-2 text-warning" role="status">Processing was interrupted before it finished. Process it now to complete it.</p>@endif
+                        @if ($canProcess)
+                            <button type="button" wire:click="processImageNow({{ $img->id }})" wire:loading.attr="disabled" wire:target="processImageNow({{ $img->id }})" class="btn btn-secondary btn-sm mt-2 w-full">
+                                <span wire:loading.remove wire:target="processImageNow({{ $img->id }})">{{ $img->status === 'failed' ? 'Retry processing' : 'Process now' }}</span>
+                                <span wire:loading wire:target="processImageNow({{ $img->id }})">Processing…</span>
+                            </button>
+                        @endif
                         @if ($img->parent_id)<p class="mt-1 text-muted">Derived from image #{{ $img->parent_id }} — compare against the original before approving (logo, hardware, stitching, colour).</p>@endif
                         <div class="mt-2 grid gap-2">
                             <label class="sr-only" for="vt{{ $img->id }}">View type</label>
-                            <select id="vt{{ $img->id }}" class="input py-1 text-xs" wire:change="updateImage({{ $img->id }}, 'view_type', $event.target.value)">@foreach ($viewTypes as $v => $l)<option value="{{ $v }}" @selected($img->view_type->value === $v)>{{ $l }}</option>@endforeach</select>
+                            <select id="vt{{ $img->id }}" class="input py-1 text-xs" wire:change="updateImage({{ $img->id }}, 'view_type', $event.target.value)"><option value="">No view specified</option>@foreach ($viewTypes as $v => $l)<option value="{{ $v }}" @selected($img->view_type?->value === $v)>{{ $l }}</option>@endforeach</select>
                             <label class="sr-only" for="iv{{ $img->id }}">Variant</label>
                             <select id="iv{{ $img->id }}" class="input py-1 text-xs" wire:change="updateImage({{ $img->id }}, 'variant_id', $event.target.value)"><option value="">All variants</option>@foreach ($product->variants as $variant)<option value="{{ $variant->id }}" @selected($img->variant_id === $variant->id)>{{ $variant->name }}</option>@endforeach</select>
                             <label class="sr-only" for="ia{{ $img->id }}">Alt text</label>
