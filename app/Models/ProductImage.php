@@ -6,7 +6,7 @@ use App\Enums\ImageViewType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
+use App\Images\ProtectedImages;
 
 class ProductImage extends Model
 {
@@ -40,9 +40,16 @@ class ProductImage extends Model
         return $this->hasMany(ProductImage::class, 'parent_id');
     }
 
-    public function url(): ?string
+    /** Signed, watermarked rendition (thumb | card | large) served by the protected media route. */
+    public function url(string $size = 'card'): ?string
     {
-        return $this->path ? Storage::disk($this->disk)->url($this->path) : null;
+        return app(ProtectedImages::class)->url($this, $size);
+    }
+
+    /** Unwatermarked rendition for staff screens (the route only honours "raw" for staff). */
+    public function adminUrl(string $size = 'card'): ?string
+    {
+        return app(ProtectedImages::class)->url($this, $size, raw: true);
     }
 
     public function isDraft(): bool

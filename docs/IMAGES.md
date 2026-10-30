@@ -7,12 +7,57 @@
    optionally a variant.
 2. The **original is stored privately** on the `local` disk (`storage/app/private/product-originals`)
    and never modified.
-3. A queued job (`OptimizeProductImage`) writes a resized (≤ 2000 px) **WebP** to the `public` disk.
-   Until the worker runs, the image shows as "processing".
+3. `OptimizeProductImage` writes a resized (≤ 2000 px) **WebP display master**, also on the private
+   disk (`product-display/`). Visitors never receive it directly (see Protection below).
 4. Only images with status **approved** appear on the storefront. Uploads are approved by default;
    tick "Upload as draft for review" for retouched or AI-generated images.
 5. Staff can approve, reject, reorder, re-assign to a variant, edit alt text, or delete. Deleting
    an uploaded image also deletes its private original.
+
+## Protection
+
+Settings: Admin → B2B settings → Image watermarking (docs/B2B.md).
+
+**Server-side controls** (these actually restrict access):
+
+- Originals and display masters live on the private disk and have no public URL.
+- Images are served by `GET /media/products/{image}/{thumb|card|large}/{signature}`
+  (`ProductImageController`, `App\Images\ProtectedImages`). The signature is an HMAC of the image
+  ID and size, so URLs can't be guessed or enumerated, and each size needs its own signature.
+- Only approved images of published products are served; drafts, rejected images and unpublished
+  products return 404 except to catalogue staff. Staff screens use `?raw=1` for unwatermarked
+  copies, which is ignored for everyone else.
+- Responses are resized renditions: 320 px (thumbnails, search, quote list), 800 px (cards,
+  gallery) and 1600 px (zoom, retina gallery, homepage banner). The 2000 px master and the
+  original are never sent.
+- **One centred watermark** (the business name, about 40% of the image width, semi-transparent
+  white with a faint shadow) plus, if enabled, the signed-in customer's email or
+  "Customer #ID" in small type underneath. Two modes (Admin → B2B settings):
+  - **embedded** (default): drawn into the resized copy that is served. The original upload and
+    the private master are never modified. The mark stays on saved or shared files.
+    Personalised copies are sent with `Cache-Control: private` and per-viewer URLs.
+  - **overlay**: copies are served unmarked and `<x-image-watermark>` lays the same centred mark
+    over each image with CSS (cards, gallery, thumbnails, zoom, search, quote list, banner).
+    This is a deterrent only: the mark is not in the downloaded file and can be removed with
+    developer tools.
+- The route is rate-limited to 300 requests per minute per IP, which slows bulk scraping.
+
+**Deterrents** (they discourage casual copying but can't stop a determined user):
+
+- Right-click and drag-to-save are blocked on product images, with no iOS long-press
+  "Save image" and no selection.
+- Images load inside the page rather than as obvious files.
+
+Screenshots, screen recording and browser developer tools can't be prevented by any website. A
+viewer can always capture what is on their screen. That is why the watermark (and the
+personalised identifier) is the main protection: copies stay attributable.
+
+Renditions are cached in `storage/app/private/image-cache/{image id}/`, keyed by file, size and
+watermark. They are deleted with the image, and `images:prune-cache` (scheduled daily) removes
+files older than 14 days. Changing watermark settings changes the URLs, so browsers fetch new
+copies. Demo SVG illustrations get the same watermark as an SVG overlay, served with a
+restrictive Content-Security-Policy. The watermark font is DejaVu Sans Bold
+(`resources/fonts`, free licence, from dompdf).
 
 ## Provider interface
 

@@ -39,7 +39,7 @@ class OptimizeProductImage implements ShouldQueue
             return;
         }
         [$path, $w, $h] = $storage->optimise($binary, $this->image->product_id);
-        $this->image->update(['path' => $path, 'width' => $w, 'height' => $h, 'status' => $this->statusAfter]);
+        $this->image->update(['disk' => ImageStorage::DISPLAY_DISK, 'path' => $path, 'width' => $w, 'height' => $h, 'status' => $this->statusAfter]);
     }
 
     public function failed(Throwable $e): void

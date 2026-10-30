@@ -1,4 +1,8 @@
 <x-layouts.store :description="'Wholesale and private-label leather bags, wallets, belts and accessories. Volume pricing and fast quotations for trade buyers.'">
+    {{-- Notices from redirects to home (e.g. "You have been signed out.") --}}
+    @if (session('status') || session('warning') || session('error'))
+        <div class="container-page pt-6"><x-flash/></div>
+    @endif
     {{-- Hero banner (Admin → Homepage slides) --}}
     @include('store.partials.hero-banner', ['slides' => $heroSlides, 'autoplay' => $heroAutoplaySeconds])
 

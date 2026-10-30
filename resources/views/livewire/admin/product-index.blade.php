@@ -16,7 +16,7 @@
             <tbody>
             @forelse ($products as $p)
                 <tr wire:key="p-{{ $p->id }}">
-                    <td>@if ($img = $p->primaryImage())<img src="{{ $img->url() }}" alt="" class="h-12 w-10 rounded-sm object-cover">@endif</td>
+                    <td>@if ($img = $p->primaryImage())<img src="{{ $img->adminUrl('thumb') }}" alt="" class="h-12 w-10 rounded-sm object-cover">@endif</td>
                     <td><a href="{{ route('admin.products.edit', $p) }}" class="font-medium hover:text-accent">{{ $p->name }}</a><span class="block text-xs text-muted">{{ $p->sku }}@if ($p->is_demo) · demo @endif</span></td>
                     <td class="text-muted">{{ $p->category?->name ?? '—' }}</td>
                     <td>{{ money($p->base_price_cents) }}</td>

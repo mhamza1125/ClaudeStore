@@ -28,7 +28,7 @@ class PageController extends Controller
         if (array_key_exists($page, self::POLICIES)) {
             return view('store.pages.policy', [
                 'title' => self::POLICIES[$page],
-                'content' => setting('policies.'.$page),
+                'content' => \App\Support\Policies::html($page),
                 'canonical' => $canonical,
             ]);
         }

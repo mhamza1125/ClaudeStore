@@ -9,8 +9,8 @@
             @forelse ($lines as $line)
                 @php $item = $line['item']; $price = $line['price']; $img = $item->product->primaryImage(); @endphp
                 <article wire:key="line-{{ $item->id }}" class="flex gap-4 border-b border-border py-6 first:pt-0">
-                    <a href="{{ route('products.show', $item->product) }}" class="shrink-0">
-                        @if ($img)<img src="{{ $img->url() }}" alt="" class="h-28 w-22 rounded-sm object-cover">@else<div class="h-28 w-22 rounded-sm bg-elevated"></div>@endif
+                    <a href="{{ route('products.show', $item->product) }}" class="relative shrink-0 self-start overflow-hidden rounded-sm">
+                        @if ($img)<img src="{{ $img->url('thumb') }}" alt="" class="protected-img h-28 w-22 object-cover" draggable="false"><x-image-watermark size="xs"/>@else<div class="h-28 w-22 rounded-sm bg-elevated"></div>@endif
                     </a>
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-start justify-between gap-2">
@@ -71,6 +71,16 @@
         </section>
 
         <section class="lg:col-span-5" aria-labelledby="form-heading" wire:ignore>
+            @if (! $user && ! $guestInquiries)
+                <div class="panel" data-testid="inquiry-sign-in">
+                    <h2 id="form-heading" class="text-3xl">Request your quotation</h2>
+                    <p class="mt-2 text-sm text-muted">Sign in or create a free trade account to send your quote request. Your quote list is kept when you sign in.</p>
+                    <div class="mt-6 flex flex-wrap gap-3">
+                        <a href="{{ route('login') }}" class="btn btn-primary">Sign in</a>
+                        <a href="{{ route('register') }}" class="btn btn-secondary">Create an account</a>
+                    </div>
+                </div>
+            @else
             <div class="panel">
                 <h2 id="form-heading" class="text-3xl">Request your quotation</h2>
                 <p class="mt-1 mb-6 text-sm text-muted">We reply within one business day. Submitting a request does not place an order.</p>
@@ -115,6 +125,7 @@
                     <p class="text-xs text-muted">By submitting you agree that we may contact you about this request. See our <a class="link" href="{{ route('pages.show', 'privacy') }}">privacy policy</a>.</p>
                 </form>
             </div>
+            @endif
         </section>
     </div>
 </div>

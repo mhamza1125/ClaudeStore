@@ -6,7 +6,7 @@ worker and the scheduler.
 
 ## Requirements
 
-- PHP 8.2+ with `pdo_mysql`, `mbstring`, `intl`, `gd`, `zip`, `fileinfo`, `openssl`, `curl`
+- **PHP 8.3+** (the locked `spatie/laravel-permission` 8.3 requires it; `composer install` fails on 8.2) with `pdo_mysql`, `mbstring`, `intl`, `gd`, `zip`, `fileinfo`, `openssl`, `curl`
 - MySQL 8 (MariaDB 10.11 also works)
 - Node 20+ (build step only)
 - Composer 2
@@ -16,19 +16,39 @@ worker and the scheduler.
 ## First deploy
 
 ```bash
-git clone <repo> /var/www/atelier && cd /var/www/atelier
+git clone <repo> /var/www/leamate && cd /var/www/leamate
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build
 cp .env.example .env            # then edit: APP_ENV=production, APP_DEBUG=false, APP_URL, DB_*, MAIL_*
 php artisan key:generate
 php artisan migrate --force
-SEED_ADMIN_PASSWORD='<strong password>' php artisan db:seed --force   # roles, groups, admin (no demo data in production)
+SEED_ADMIN_PASSWORD='<strong password>' php artisan db:seed --force   # roles, groups, admin, Leamate categories (no demo data in production)
 php artisan storage:link
 php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan event:cache
 ```
 
 Directory permissions: the PHP user must be able to write `storage/` and `bootstrap/cache/`.
 Point the web root at `public/`. Force HTTPS and set `SESSION_SECURE_COOKIE=true`.
+
+### Production .env checklist
+
+| Variable | Production value |
+| --- | --- |
+| `APP_NAME` | `Leamate` |
+| `APP_ENV` / `APP_DEBUG` | `production` / `false` (never `true`: it exposes stack traces and config) |
+| `APP_URL` | `https://<your-domain>`. Used in emails, signed links and canonical URLs; must not be `127.0.0.1` or `localhost` |
+| `APP_KEY` | from `php artisan key:generate` (also signs image URLs; changing it changes every image URL) |
+| `DB_*` | production database credentials (not `root` with an empty password) |
+| `MAIL_MAILER` + `MAIL_HOST`/`PORT`/`USERNAME`/`PASSWORD` | real SMTP. With `log` nothing is delivered: no verification, contact or quote emails |
+| `MAIL_FROM_ADDRESS` | `info@leamate.com` (a domain with SPF/DKIM set up at your mail provider) |
+| `SALES_NOTIFICATION_EMAIL` | inbox for quote requests, contact messages and new-account alerts (default `info@leamate.com`) |
+| `SESSION_SECURE_COOKIE` | `true` (HTTPS only) |
+| `QUEUE_CONNECTION` | `database` (default) or `redis`, with a worker running (see below) |
+| `LOG_LEVEL` | `warning` or `error` |
+| `CLOUDFLARE_*` | only if the chatbot is enabled |
+
+Brand and contact details default to Leamate (`config/brand.php`); Admin → Settings overrides
+them without a deploy.
 
 Want demo content on a staging server? Run `php artisan db:seed --class=DemoCatalogSeeder`
 explicitly. Do not do this in production.
@@ -51,6 +71,16 @@ php artisan up
 > example, the floating WhatsApp and chat buttons lose their positioning and stack in the top-left
 > corner. If the layout looks broken after a deploy, check that `public/build/manifest.json` is
 > newer than the pulled commit.
+
+> **Upgrading an existing installation (once).** `php artisan db:seed --class=CategorySeeder --force`
+> creates the Leamate category tree, moves products out of the old demo categories and
+> deactivates those (no products, prices or images are changed; safe to re-run).
+>
+> **Upgrading to protected product images (once).** Run `php artisan images:protect` after the
+> migration. It moves product display images written to the public disk by earlier versions into
+> private storage, so their old `/storage/products/…` URLs stop working and images are served
+> only through the watermarked media route. It is safe to re-run. Configure B2B pricing and
+> watermarks in Admin → B2B settings (docs/B2B.md).
 
 ## Queue worker (required)
 

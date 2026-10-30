@@ -20,10 +20,14 @@ use Illuminate\Support\Collection;
  *   3. Standard quantity tiers — variant tiers override product tiers
  *   4. Variant base price, then product base price
  * A customer group's optional discount (basis points) applies only to levels 3 and 4.
+ *
+ * Storefront callers pass the viewer's PriceAccessDecision: when it denies access no price is
+ * visible and account pricing is not applied. Without one (staff tools) visibility follows the
+ * product's public pricing flag and wholesale approval only.
  */
 class PriceResolver
 {
-    public function resolve(Product $product, ?ProductVariant $variant, int $quantity, ?Company $company = null, ?Carbon $on = null): PriceResult
+    public function resolve(Product $product, ?ProductVariant $variant, int $quantity, ?Company $company = null, ?Carbon $on = null, ?PriceAccessDecision $access = null): PriceResult
     {
         $on ??= now();
         $quantity = max(0, $quantity);
@@ -34,13 +38,14 @@ class PriceResolver
         $moq = max(1, (int) ($variant?->moq ?? $product->moq ?? 1));
         $multiple = max(1, (int) ($product->order_multiple ?? 1));
         $errors = $this->quantityErrors($quantity, $moq, $multiple);
-        $eligible = $company !== null && $company->isWholesaleApproved();
+        $allowed = $access?->allowed ?? true;
+        $eligible = $allowed && $company !== null && $company->isWholesaleApproved();
 
         if ($product->price_on_request) {
             return new PriceResult(null, PriceSource::OnRequest, false, $quantity, $moq, $multiple, errors: $errors);
         }
 
-        $visible = $product->public_pricing || $eligible;
+        $visible = $allowed && ($product->public_pricing || $eligible || ($access?->tradeCatalogue ?? false));
         $tiers = $product->relationLoaded('priceTiers') ? $product->priceTiers : $product->priceTiers()->get();
         $groupId = $eligible ? $company->customer_group_id : null;
         $groupDiscount = $eligible ? (int) ($company->customerGroup?->discount_bps ?? 0) : 0;

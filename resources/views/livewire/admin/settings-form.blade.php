@@ -101,7 +101,7 @@
         </section>
         <section class="panel grid gap-4 xl:col-span-2 xl:grid-cols-2">
             <h2 class="text-2xl xl:col-span-2">Policies</h2>
-            <p class="text-sm text-muted xl:col-span-2">Plain text, shown on the footer policy pages. Must be supplied by the business (ideally legally reviewed).</p>
+            <p class="text-sm text-muted xl:col-span-2">Shown on the footer policy pages. Leave a field empty to use the standard text (resources/policies), or paste your own. Supports simple formatting: <code>## Heading</code>, <code>- bullet</code>, <code>**bold**</code>, and placeholders such as <code>{brand}</code>, <code>{email}</code>, <code>{phone}</code>, <code>{address}</code>. Have the final wording reviewed by a legal adviser.</p>
             <x-textarea-field name="s.policy_terms" model="s.policy_terms" label="Terms of trade" rows="6"/>
             <x-textarea-field name="s.policy_privacy" model="s.policy_privacy" label="Privacy policy" rows="6"/>
             <x-textarea-field name="s.policy_shipping" model="s.policy_shipping" label="Shipping & delivery" rows="6"/>

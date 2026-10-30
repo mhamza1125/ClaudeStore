@@ -16,7 +16,10 @@
         ['admin.categories', 'Categories', 'folder', $u->can('products.manage')],
         ['admin.csv.index', 'Import / export', 'upload', $u->can('products.manage')],
         ['admin.companies.index', 'Customers', 'users', $u->can('customers.view')],
+        ['admin.customer-accounts', 'Customer accounts', 'user', $u->can('customers.view')],
+        ['admin.messages', 'Messages', 'mail', $u->can('customers.view')],
         ['admin.groups', 'Customer groups', 'users', $u->can('customers.manage')],
+        ['admin.b2b', 'B2B settings', 'shield', $u->can('settings.manage')],
         ['admin.hero-slides', 'Homepage slides', 'image', $u->can('settings.manage')],
         ['admin.settings', 'Settings', 'settings', $u->can('settings.manage')],
         ['admin.staff', 'Staff & roles', 'shield', $u->can('staff.manage')],
@@ -25,7 +28,7 @@
 @endphp
 <div class="flex min-h-screen">
     <aside class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full border-r border-border bg-surface transition-transform lg:static lg:translate-x-0" :class="nav && 'translate-x-0'" aria-label="Admin navigation">
-        <div class="flex h-16 items-center border-b border-border px-5"><x-logo/></div>
+        <div class="flex h-16 items-center border-b border-border px-5"><x-logo size="h-10"/></div>
         <nav class="space-y-0.5 p-3 text-sm">
             @foreach ($items as [$route, $label, $icon])
                 <a href="{{ route($route) }}" class="flex items-center gap-3 rounded-sm px-3 py-2 {{ request()->routeIs(str_replace('.index', '', $route).'*') ? 'bg-elevated font-medium text-accent' : 'text-muted hover:bg-elevated hover:text-text' }}">

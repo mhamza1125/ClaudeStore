@@ -40,6 +40,21 @@ class Settings
             'quote.delivery_terms' => 'Ex-works unless otherwise agreed. Lead times are confirmed on order.',
             'quote.acceptance_instructions' => 'Review the quotation, then use the secure link to accept or reject it. Acceptance is subject to stock and production confirmation. No payment is taken online.',
             'newsletter.enabled' => false,
+            // B2B price access (Admin → B2B settings, see docs/B2B.md). On by default: guests
+            // must register to see prices. Off = prices follow the per-product "public pricing"
+            // flag and wholesale approval only (anyone sees public list prices).
+            'b2b.enabled' => true,
+            'b2b.guest_prices' => true, // guests see public list prices (ignored when registration is required)
+            'b2b.require_registration' => true,
+            'b2b.require_email_verification' => false,
+            'b2b.require_approval' => false,
+            'b2b.guest_inquiries' => true, // guests may submit quote requests without an account
+            'images.watermark_enabled' => true,
+            'images.watermark_mode' => 'embedded', // embedded (drawn into served copies) | overlay (CSS on the page)
+            'images.watermark_text' => null, // defaults to the business name
+            'images.watermark_opacity' => 22, // percent
+            'images.watermark_personalized' => false, // adds the signed-in customer's email or ID
+            'images.watermark_identifier' => 'email', // email | id
             'theme.default' => 'mid', // white | mid | dark | system
             'theme.system_light' => 'mid', // palette used by "system" when the OS is in light mode
             'theme.allow_switch' => true, // show the theme switcher to visitors
@@ -47,7 +62,7 @@ class Settings
             'homepage.hero_autoplay_seconds' => 6, // banner slider; 0 = manual navigation only
             'homepage.products_autoplay_seconds' => 5, // featured products carousel; 0 = manual // [{quote, name, company}] — only genuine, supplied content
             'whatsapp.enabled' => true,
-            'whatsapp.phone' => '923110012233', // international format, digits only
+            'whatsapp.phone' => '923314657496', // international format, digits only
             'whatsapp.message_preset' => 'services', // a key of store.whatsapp_presets, or "custom"
             'whatsapp.custom_message' => null,
             'chatbot.enabled' => false, // needs ANTHROPIC_API_KEY to answer; offline contact panel otherwise

@@ -12,6 +12,36 @@ Artisan::command('quotes:expire', function (QuoteWorkflow $workflow) {
 Schedule::command('quotes:expire')->dailyAt('00:15');
 Schedule::command('queue:prune-failed --hours=720')->daily();
 
+// Product image protection (docs/IMAGES.md). Run once after upgrading: display copies written
+// to the public disk by earlier versions are moved to the private disk, so their old
+// /storage URLs stop working and images are only served watermarked.
+Artisan::command('images:protect', function () {
+    $moved = 0;
+    \App\Models\ProductImage::query()->where('disk', '!=', \App\Images\ImageStorage::DISPLAY_DISK)->whereNotNull('path')
+        ->each(function (\App\Models\ProductImage $image) use (&$moved) {
+            $from = \Illuminate\Support\Facades\Storage::disk($image->disk);
+            $binary = $from->get($image->path);
+            if ($binary === null) {
+                $this->warn("Image #{$image->id}: file {$image->path} not found on the {$image->disk} disk; skipped.");
+
+                return;
+            }
+            $path = \App\Images\ImageStorage::DISPLAY_DIR.'/'.($image->source === 'demo' ? 'demo' : $image->product_id).'/'.basename($image->path);
+            \Illuminate\Support\Facades\Storage::disk(\App\Images\ImageStorage::DISPLAY_DISK)->put($path, $binary);
+            $old = [$image->disk, $image->path];
+            $image->update(['disk' => \App\Images\ImageStorage::DISPLAY_DISK, 'path' => $path]);
+            \Illuminate\Support\Facades\Storage::disk($old[0])->delete($old[1]);
+            $moved++;
+        });
+    $this->info("{$moved} product image(s) moved to private storage.");
+})->purpose('Move product display images from the public disk to private storage');
+
+Artisan::command('images:prune-cache {--days=14}', function (\App\Images\ProtectedImages $images) {
+    $this->info($images->prune((int) $this->option('days')).' cached image rendition(s) removed.');
+})->purpose('Delete watermarked image renditions not regenerated recently');
+
+Schedule::command('images:prune-cache')->dailyAt('03:30');
+
 // Live check of the chatbot's AI provider with the server's real configuration.
 Artisan::command('assistant:check', function (\App\Assistant\Contracts\ChatProvider $provider) {
     $this->line('Provider: '.$provider->name().'   Model: '.($provider->model() ?? '—'));

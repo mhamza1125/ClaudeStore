@@ -2,10 +2,14 @@
 
 namespace App\Actions\Fortify;
 
+use App\Mail\NewCustomerRegistered;
 use App\Models\Company;
 use App\Models\CustomerGroup;
 use App\Models\User;
+use App\Pricing\PriceAccess;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -26,7 +30,10 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return DB::transaction(function () use ($input) {
+        // Accounts wait for review only while B2B approval is required (Admin → B2B settings).
+        $needsApproval = app(PriceAccess::class)->approvalRequired();
+
+        $user = DB::transaction(function () use ($input, $needsApproval) {
             $company = null;
             if (filled($input['company_name'] ?? null)) {
                 $company = Company::create([
@@ -45,10 +52,23 @@ class CreateNewUser implements CreatesNewUsers
                 'password' => $input['password'],
                 'company_id' => $company?->id,
                 'company_role' => $company ? 'owner' : null,
+                'approval_status' => $needsApproval ? 'pending' : 'approved',
+                'approved_at' => $needsApproval ? null : now(),
             ]);
             $user->assignRole('customer');
 
             return $user;
         });
+
+        // New B2B lead: tell the sales team (who may need to approve it).
+        if (app(PriceAccess::class)->enabled() && ($to = setting('sales.notification_email'))) {
+            try {
+                Mail::to($to)->queue(new NewCustomerRegistered($user));
+            } catch (\Throwable $e) {
+                Log::error('New customer alert could not be queued', ['user' => $user->id, 'error' => $e->getMessage()]);
+            }
+        }
+
+        return $user;
     }
 }

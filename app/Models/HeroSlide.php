@@ -49,7 +49,7 @@ class HeroSlide extends Model
             $images = $this->product->approvedImages;
             $image = $images->firstWhere('view_type.value', 'lifestyle') ?? $images->whereNull('variant_id')->first() ?? $images->first();
 
-            return $image?->url();
+            return $image?->url('large');
         }
 
         return null;

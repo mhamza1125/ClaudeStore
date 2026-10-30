@@ -6,7 +6,7 @@ use App\Models\ReferenceSequence;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Sequential, per-year references such as AH-Q-2026-000123. The counter row is
+ * Sequential, per-year references such as LM-Q-2026-000123. The counter row is
  * locked for update so concurrent submissions cannot receive the same number.
  */
 class ReferenceGenerator
@@ -26,6 +26,6 @@ class ReferenceGenerator
             return $row->last_value;
         });
 
-        return sprintf('%s-%s-%d-%06d', config('brand.reference_prefix', 'AH'), $type, $year, $value);
+        return sprintf('%s-%s-%d-%06d', config('brand.reference_prefix', 'LM'), $type, $year, $value);
     }
 }

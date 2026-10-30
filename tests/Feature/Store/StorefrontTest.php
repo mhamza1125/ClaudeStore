@@ -19,6 +19,9 @@ class StorefrontTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Covers the pricing rules for guests with B2B price access switched off. */
+    protected bool $b2bPricing = false;
+
     private function wallet(array $attrs = []): Product
     {
         $p = Product::factory()->create(array_merge(['name' => 'Classic Bifold Wallet', 'sku' => 'AH-WAL-001', 'base_price_cents' => 1800], $attrs));

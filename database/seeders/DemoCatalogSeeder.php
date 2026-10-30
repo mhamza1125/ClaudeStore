@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Database\Seeders\Support\DemoImage;
 use Illuminate\Database\Seeder;
+use App\Images\ImageStorage;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -61,39 +62,12 @@ class DemoCatalogSeeder extends Seeder
         $this->command?->info('  Demo catalogue seeded ('.Product::query()->where('is_demo', true)->count().' demo products).');
     }
 
+    /** The Leamate tree (CategorySeeder), keyed by slug. */
     private function categories(): array
     {
-        $tree = [
-            'bags' => ['Bags', 'Handbags, backpacks, laptop bags, duffels and travel bags.', 'tote', [
-                'handbags' => 'Handbags', 'backpacks' => 'Backpacks', 'laptop-bags' => 'Laptop bags', 'travel-bags' => 'Duffel & travel bags',
-            ]],
-            'wallets' => ['Wallets', 'Wallets, cardholders and money clips.', 'wallet', [
-                'bifold-wallets' => 'Bifold wallets', 'cardholders' => 'Cardholders', 'money-clips' => 'Money clips',
-            ]],
-            'belts' => ['Belts', 'Dress and casual belts.', 'belt', []],
-            'accessories' => ['Accessories', 'Small leather goods and travel accessories.', 'keyholder', []],
-            'custom' => ['Custom & private label', 'Custom-manufactured and private-label programmes.', 'passport', []],
-        ];
+        $this->callWith(CategorySeeder::class);
 
-        $out = [];
-        $i = 0;
-        foreach ($tree as $slug => [$name, $desc, $shape, $children]) {
-            $path = "demo/categories/{$slug}.svg";
-            Storage::disk('public')->put($path, DemoImage::svg($shape, self::COLORS['Chestnut'], 'lifestyle', $name));
-            $parent = Category::query()->updateOrCreate(['slug' => $slug], [
-                'name' => $name, 'description' => $desc, 'sort_order' => $i++, 'is_active' => true,
-                'is_featured' => true, 'image_path' => $path,
-            ]);
-            $out[$slug] = $parent;
-            $j = 0;
-            foreach ($children as $childSlug => $childName) {
-                $out[$childSlug] = Category::query()->updateOrCreate(['slug' => $childSlug], [
-                    'name' => $childName, 'parent_id' => $parent->id, 'sort_order' => $j++, 'is_active' => true,
-                ]);
-            }
-        }
-
-        return $out;
+        return Category::query()->get()->keyBy('slug')->all();
     }
 
     private function images(Product $product, string $shape, array $variants): void
@@ -103,10 +77,11 @@ class DemoCatalogSeeder extends Seeder
 
         $baseColor = self::COLORS[$variants[0]['color'] ?? 'Chestnut'] ?? self::COLORS['Chestnut'];
         foreach (['front', 'side', 'back', 'detail', 'lifestyle'] as $order => $view) {
-            $path = "demo/products/{$product->slug}-{$view}.svg";
-            Storage::disk('public')->put($path, DemoImage::svg($shape, $baseColor, $view, $product->name));
+            // Product images live on the private disk and are served watermarked (ProtectedImages).
+            $path = ImageStorage::DISPLAY_DIR."/demo/{$product->slug}-{$view}.svg";
+            Storage::disk(ImageStorage::DISPLAY_DISK)->put($path, DemoImage::svg($shape, $baseColor, $view, $product->name));
             ProductImage::create([
-                'product_id' => $product->id, 'disk' => 'public', 'path' => $path, 'view_type' => $view,
+                'product_id' => $product->id, 'disk' => ImageStorage::DISPLAY_DISK, 'path' => $path, 'view_type' => $view,
                 'alt' => "{$product->name} — {$view} view (demo illustration)", 'status' => 'approved',
                 'source' => 'demo', 'sort_order' => $order,
             ]);
@@ -119,10 +94,10 @@ class DemoCatalogSeeder extends Seeder
                 'is_active' => true,
             ], $v));
             if (isset(self::COLORS[$v['color'] ?? ''])) {
-                $path = "demo/products/{$product->slug}-{$variant->id}-front.svg";
-                Storage::disk('public')->put($path, DemoImage::svg($shape, self::COLORS[$v['color']], 'front', "{$product->name} {$v['name']}"));
+                $path = ImageStorage::DISPLAY_DIR."/demo/{$product->slug}-{$variant->id}-front.svg";
+                Storage::disk(ImageStorage::DISPLAY_DISK)->put($path, DemoImage::svg($shape, self::COLORS[$v['color']], 'front', "{$product->name} {$v['name']}"));
                 ProductImage::create([
-                    'product_id' => $product->id, 'variant_id' => $variant->id, 'disk' => 'public', 'path' => $path,
+                    'product_id' => $product->id, 'variant_id' => $variant->id, 'disk' => ImageStorage::DISPLAY_DISK, 'path' => $path,
                     'view_type' => 'front', 'alt' => "{$product->name} in {$v['name']} (demo illustration)",
                     'status' => 'approved', 'source' => 'demo', 'sort_order' => 10 + $k,
                 ]);
@@ -150,7 +125,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Espresso', 'Tan', 'Black']),
             ],
             [
-                'name' => 'Slim Cardholder', 'sku' => 'AH-WAL-002', 'category' => 'cardholders', 'shape' => 'cardholder',
+                'name' => 'Slim Cardholder', 'sku' => 'AH-WAL-002', 'category' => 'card-holders', 'shape' => 'cardholder',
                 'short_description' => 'Four-slot cardholder with a central pocket.',
                 'material' => 'Full-grain leather', 'dimensions' => '10 × 7 cm', 'finishing' => 'Painted edges',
                 'packaging' => 'Gift sleeve, 100 per carton', 'lead_time' => 'Ships in 5 business days.',
@@ -160,7 +135,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Black', 'Cognac', 'Navy', 'Oxblood']),
             ],
             [
-                'name' => 'Money Clip Wallet', 'sku' => 'AH-WAL-003', 'category' => 'money-clips', 'shape' => 'moneyclip',
+                'name' => 'Money Clip Wallet', 'sku' => 'AH-WAL-003', 'category' => 'leather-wallets', 'shape' => 'moneyclip',
                 'short_description' => 'Card wallet with an integrated spring-steel money clip.',
                 'material' => 'Top-grain leather', 'hardware' => 'Brushed steel clip (demo value)', 'dimensions' => '10.5 × 7.5 cm',
                 'lead_time' => 'Ships in 7 business days.', 'base_price_cents' => 2400, 'moq' => 12,
@@ -169,7 +144,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Black', 'Tan']),
             ],
             [
-                'name' => 'Heritage Structured Tote', 'sku' => 'AH-BAG-101', 'category' => 'handbags', 'shape' => 'tote',
+                'name' => 'Heritage Structured Tote', 'sku' => 'AH-BAG-101', 'category' => 'business-bags', 'shape' => 'tote',
                 'short_description' => 'A structured everyday tote with reinforced handles and an interior zip pocket.',
                 'material' => 'Full-grain leather', 'dimensions' => '38 × 30 × 14 cm', 'hardware' => 'Antique brass (demo value)',
                 'finishing' => 'Hand-stained edges', 'packaging' => 'Dust bag and tissue, 10 per carton',
@@ -179,7 +154,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Chestnut', 'Black', 'Tan']),
             ],
             [
-                'name' => 'Soft Hobo Shoulder Bag', 'sku' => 'AH-BAG-102', 'category' => 'handbags', 'shape' => 'tote',
+                'name' => 'Soft Hobo Shoulder Bag', 'sku' => 'AH-BAG-102', 'category' => 'messenger-bags', 'shape' => 'tote',
                 'short_description' => 'Slouchy hobo silhouette. Trade pricing is shown to approved wholesale accounts only.',
                 'material' => 'Nappa leather', 'dimensions' => '40 × 32 × 12 cm', 'lead_time' => 'Made to order: 4 weeks.',
                 'base_price_cents' => 16800, 'moq' => 5, 'public_pricing' => false, 'availability' => 'made_to_order',
@@ -187,7 +162,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Oxblood', 'Black']),
             ],
             [
-                'name' => 'Commuter Roll-Top Backpack', 'sku' => 'AH-BAG-201', 'category' => 'backpacks', 'shape' => 'backpack',
+                'name' => 'Commuter Roll-Top Backpack', 'sku' => 'AH-BAG-201', 'category' => 'laptop-bags', 'shape' => 'backpack',
                 'short_description' => 'Roll-top backpack with padded 15" sleeve.',
                 'material' => 'Leather & waxed canvas', 'dimensions' => '45 × 30 × 14 cm', 'hardware' => 'Matte black buckles',
                 'lead_time' => 'Ships in 10 business days.', 'base_price_cents' => 18900, 'moq' => 3,
@@ -205,7 +180,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Chestnut', 'Black']),
             ],
             [
-                'name' => 'Weekender Duffel', 'sku' => 'AH-BAG-401', 'category' => 'travel-bags', 'shape' => 'duffel',
+                'name' => 'Weekender Duffel', 'sku' => 'AH-BAG-401', 'category' => 'weekend-overnight-bags', 'shape' => 'duffel',
                 'short_description' => 'A 45-litre weekender with detachable shoulder strap.',
                 'material' => 'Full-grain leather', 'dimensions' => '55 × 28 × 28 cm', 'hardware' => 'Solid brass (demo value)',
                 'lead_time' => 'Made to order: 5 weeks.', 'base_price_cents' => 26500, 'moq' => 2,
@@ -214,7 +189,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Cognac', 'Espresso']),
             ],
             [
-                'name' => 'Carry-On Travel Holdall', 'sku' => 'AH-BAG-402', 'category' => 'travel-bags', 'shape' => 'duffel',
+                'name' => 'Carry-On Travel Holdall', 'sku' => 'AH-BAG-402', 'category' => 'duffel-bags', 'shape' => 'duffel',
                 'short_description' => 'Cabin-size holdall with shoe compartment.',
                 'material' => 'Leather & canvas', 'dimensions' => '50 × 25 × 25 cm',
                 'lead_time' => 'Ships in 10 business days.', 'base_price_cents' => 21000, 'moq' => 2,
@@ -222,7 +197,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Tan']),
             ],
             [
-                'name' => 'Dress Belt 35mm', 'sku' => 'AH-BLT-001', 'category' => 'belts', 'shape' => 'belt',
+                'name' => 'Dress Belt 35mm', 'sku' => 'AH-BLT-001', 'category' => 'formal-belts', 'shape' => 'belt',
                 'short_description' => 'Single-ply dress belt with a polished buckle. Sold in packs of six per size.',
                 'material' => 'Full-grain leather', 'dimensions' => '35 mm width; sizes 30–44', 'hardware' => 'Polished nickel buckle (demo value)',
                 'packaging' => 'Rolled in boxes of 6', 'lead_time' => 'Ships in 5 business days.',
@@ -237,7 +212,7 @@ class DemoCatalogSeeder extends Seeder
                 ],
             ],
             [
-                'name' => 'Casual Jeans Belt 40mm', 'sku' => 'AH-BLT-002', 'category' => 'belts', 'shape' => 'belt',
+                'name' => 'Casual Jeans Belt 40mm', 'sku' => 'AH-BLT-002', 'category' => 'casual-belts', 'shape' => 'belt',
                 'short_description' => 'Heavy casual belt with a roller buckle.',
                 'material' => 'Bridle leather', 'dimensions' => '40 mm width', 'hardware' => 'Antique brass roller buckle',
                 'lead_time' => 'Ships in 7 business days.', 'base_price_cents' => 2600, 'moq' => 6, 'order_multiple' => 6,
@@ -246,7 +221,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Tan', 'Espresso']),
             ],
             [
-                'name' => 'Key Holder Tab', 'sku' => 'AH-ACC-001', 'category' => 'accessories', 'shape' => 'keyholder',
+                'name' => 'Key Holder Tab', 'sku' => 'AH-ACC-001', 'category' => 'leather-keychains', 'shape' => 'keyholder',
                 'short_description' => 'Simple key tab — a popular promotional item. Packed in tens.',
                 'material' => 'Full-grain leather', 'dimensions' => '9 × 3.5 cm', 'hardware' => 'Split ring',
                 'lead_time' => 'Ships in 5 business days.', 'base_price_cents' => 600, 'moq' => 50, 'order_multiple' => 10,
@@ -255,7 +230,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Tan', 'Black', 'Navy']),
             ],
             [
-                'name' => 'Passport Cover', 'sku' => 'AH-ACC-002', 'category' => 'accessories', 'shape' => 'passport',
+                'name' => 'Passport Cover', 'sku' => 'AH-ACC-002', 'category' => 'leather-organizers', 'shape' => 'passport',
                 'short_description' => 'Passport cover with two card slots.',
                 'material' => 'Top-grain leather', 'dimensions' => '14 × 10 cm', 'lead_time' => 'Ships in 7 business days.',
                 'base_price_cents' => 1900, 'moq' => 10, 'availability' => 'in_stock', 'stock_quantity' => 400, 'customizable' => true,
@@ -263,7 +238,7 @@ class DemoCatalogSeeder extends Seeder
                 'variants' => $colors(['Navy', 'Cognac']),
             ],
             [
-                'name' => 'Private-Label Wallet Programme', 'sku' => 'AH-CUS-001', 'category' => 'custom', 'shape' => 'wallet',
+                'name' => 'Private-Label Wallet Programme', 'sku' => 'AH-CUS-001', 'category' => 'leather-wallets', 'shape' => 'wallet',
                 'short_description' => 'Your design, your branding. Pricing depends on specification and volume.',
                 'description' => 'Bring a tech pack or start from one of our patterns. We quote on materials, hardware, branding method and volume.',
                 'lead_time' => 'Sampling 2–3 weeks; production 6–8 weeks after sample approval.',
@@ -271,7 +246,7 @@ class DemoCatalogSeeder extends Seeder
                 'availability' => 'made_to_order', 'is_featured' => true,
             ],
             [
-                'name' => 'Embossed Corporate Gift Set', 'sku' => 'AH-CUS-002', 'category' => 'custom', 'shape' => 'passport',
+                'name' => 'Embossed Corporate Gift Set', 'sku' => 'AH-CUS-002', 'category' => 'leather-organizers', 'shape' => 'passport',
                 'short_description' => 'Cardholder and key tab gift set with blind or foil embossing.',
                 'moq' => 100, 'price_on_request' => true, 'is_custom' => true, 'customizable' => true,
                 'availability' => 'made_to_order', 'lead_time' => '4–6 weeks after artwork approval.',

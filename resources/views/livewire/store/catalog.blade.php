@@ -1,27 +1,66 @@
-<div class="container-page py-12">
-    <nav class="mb-4 text-xs text-muted" aria-label="Breadcrumb">
-        <a href="{{ route('home') }}" class="hover:text-text">Home</a> /
-        <a href="{{ route('catalog') }}" class="hover:text-text">Products</a>
-        @if ($category?->parent) / <a href="{{ route('catalog.category', $category->parent) }}" class="hover:text-text">{{ $category->parent->name }}</a>@endif
-        @if ($category) / <span class="text-text">{{ $category->name }}</span>@endif
-    </nav>
-    <x-page-header :title="$category?->name ?? 'All products'" :eyebrow="$category ? 'Collection' : 'Catalogue'">
-        <x-slot:actions>
-            <label for="sort" class="sr-only">Sort by</label>
+<div>
+    @php
+        // Header links: every main collection (current one highlighted), then the subcategories
+        // of the current collection.
+        $currentRoot = $category?->parent ?? $category;
+        $subcategories = $currentRoot ? ($categories->firstWhere('id', $currentRoot->id)?->children ?? collect()) : collect();
+        $description = $category?->description ?: $category?->parent?->description ?: 'Premium leather bags, belts, wallets and accessories for retailers, distributors and brands.';
+    @endphp
+    <section class="catalog-hero border-b border-border bg-band text-on-band" data-testid="catalog-hero">
+        <div class="container-page py-9 sm:py-12">
+            <nav class="mb-4 text-xs text-on-band/70" aria-label="Breadcrumb">
+                <a href="{{ route('home') }}" class="hover:text-on-band hover:underline">Home</a> /
+                <a href="{{ route('catalog') }}" class="hover:text-on-band hover:underline">Products</a>
+                @if ($category?->parent) / <a href="{{ route('catalog.category', $category->parent) }}" class="hover:text-on-band hover:underline">{{ $category->parent->name }}</a>@endif
+                @if ($category) / <span class="text-on-band">{{ $category->name }}</span>@endif
+            </nav>
+            <p class="eyebrow mb-2 !text-on-band/70">{{ $category ? ($category->parent ? $category->parent->name : 'Collection') : 'Catalogue' }}</p>
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <h1 class="text-4xl leading-tight sm:text-5xl">{{ $category?->name ?? 'All products' }}</h1>
+                <span class="rounded-full border border-on-band/25 px-3 py-1 text-xs tracking-wide text-on-band/80" data-testid="catalog-count">
+                    {{ number_format($products->total()) }} {{ \Illuminate\Support\Str::plural('product', $products->total()) }}
+                </span>
+            </div>
+            {{-- One quiet line (two on small screens); the full text stays available on hover. --}}
+            <p class="mt-3 max-w-5xl text-sm text-on-band/75 line-clamp-2 lg:line-clamp-1" title="{{ $description }}">{{ $description }}</p>
+
+            <div class="mt-7 flex flex-wrap gap-2" aria-label="Collections">
+                <a href="{{ route('catalog') }}" class="catalog-chip {{ ! $category ? 'is-active' : '' }}">All products</a>
+                @foreach ($categories as $root)
+                    <a href="{{ route('catalog.category', $root) }}" class="catalog-chip {{ $currentRoot?->id === $root->id ? 'is-active' : '' }}" @if ($currentRoot?->id === $root->id) aria-current="true" @endif>{{ $root->name }}</a>
+                @endforeach
+            </div>
+            @if ($subcategories->isNotEmpty())
+                <div class="mt-4 flex flex-wrap items-center gap-1.5 border-t border-on-band/15 pt-4" aria-label="{{ $currentRoot->name }} subcategories">
+                    <a href="{{ route('catalog.category', $currentRoot) }}" class="catalog-chip catalog-chip--sub {{ $category?->id === $currentRoot->id ? 'is-active' : '' }}">All {{ $currentRoot->name }}</a>
+                    @foreach ($subcategories as $sub)
+                        <a href="{{ route('catalog.category', $sub) }}" class="catalog-chip catalog-chip--sub {{ $category?->id === $sub->id ? 'is-active' : '' }}" @if ($category?->id === $sub->id) aria-current="page" @endif>{{ $sub->name }}</a>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+    </section>
+
+    <div class="container-page py-10">
+    <div class="mb-8 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <p class="text-sm text-muted">Showing {{ $products->firstItem() ?? 0 }}–{{ $products->lastItem() ?? 0 }} of {{ $products->total() }}</p>
+        <div class="flex flex-wrap items-center gap-2">
+            <label for="sort" class="text-sm text-muted">Sort by</label>
             <select id="sort" wire:model.live="sort" class="input w-auto">
                 <option value="featured">Featured</option>
                 <option value="newest">Newest</option>
                 <option value="name">Name A–Z</option>
-                <option value="price_asc">Price: low to high</option>
-                <option value="price_desc">Price: high to low</option>
+                @if ($access->allowed)
+                    <option value="price_asc">Price: low to high</option>
+                    <option value="price_desc">Price: high to low</option>
+                @endif
             </select>
             <div class="flex rounded-sm border border-border-strong" role="group" aria-label="Layout">
                 <button type="button" wire:click="$set('view', 'grid')" class="btn btn-sm border-0 {{ $view === 'grid' ? 'bg-elevated' : '' }}" aria-pressed="{{ $view === 'grid' ? 'true' : 'false' }}"><x-icon name="grid" class="h-4 w-4"/><span class="sr-only">Grid view</span></button>
                 <button type="button" wire:click="$set('view', 'list')" class="btn btn-sm border-0 {{ $view === 'list' ? 'bg-elevated' : '' }}" aria-pressed="{{ $view === 'list' ? 'true' : 'false' }}"><x-icon name="list" class="h-4 w-4"/><span class="sr-only">List view with bulk quantity entry</span></button>
             </div>
-        </x-slot:actions>
-    </x-page-header>
-    @if ($category?->description)<p class="-mt-4 mb-8 max-w-2xl text-muted">{{ $category->description }}</p>@endif
+        </div>
+    </div>
 
     <div class="grid gap-10 lg:grid-cols-[240px_1fr]">
         <aside x-data="{ open: false }" class="lg:block" aria-label="Filters">
@@ -33,13 +72,13 @@
                 </div>
                 <div>
                     <h2 class="eyebrow mb-3">Categories</h2>
-                    <ul class="space-y-1.5">
+                    <ul class="space-y-3.5">
                         <li><a href="{{ route('catalog') }}" class="{{ ! $category ? 'font-semibold text-accent' : 'hover:text-accent' }}">All products</a></li>
                         @foreach ($categories as $cat)
                             <li>
                                 <a href="{{ route('catalog.category', $cat) }}" class="{{ $category?->id === $cat->id ? 'font-semibold text-accent' : 'hover:text-accent' }}">{{ $cat->name }}</a>
                                 @if ($cat->children->isNotEmpty())
-                                    <ul class="mt-1 space-y-1 border-l border-border pl-3">
+                                    <ul class="mt-2 mb-1 space-y-1.5 border-l border-border pl-3">
                                         @foreach ($cat->children as $child)
                                             <li><a href="{{ route('catalog.category', $child) }}" class="{{ $category?->id === $child->id ? 'font-semibold text-accent' : 'text-muted hover:text-accent' }}">{{ $child->name }}</a></li>
                                         @endforeach
@@ -71,17 +110,19 @@
                         <label class="flex items-center gap-2 py-1"><input type="checkbox" class="checkbox" value="{{ $value }}" wire:model.live="availability"> {{ $label }}</label>
                     @endforeach
                 </fieldset>
-                <fieldset>
-                    <legend class="eyebrow mb-3">List price (USD)</legend>
-                    <div class="flex items-center gap-2">
-                        <label class="sr-only" for="pmin">Minimum price</label>
-                        <input id="pmin" inputmode="decimal" wire:model.live.debounce.600ms="priceMin" placeholder="Min" class="input">
-                        <span class="text-muted">–</span>
-                        <label class="sr-only" for="pmax">Maximum price</label>
-                        <input id="pmax" inputmode="decimal" wire:model.live.debounce.600ms="priceMax" placeholder="Max" class="input">
-                    </div>
-                    <p class="field-help">Applies to products with public list prices.</p>
-                </fieldset>
+                @if ($access->allowed)
+                    <fieldset>
+                        <legend class="eyebrow mb-3">List price (USD)</legend>
+                        <div class="flex items-center gap-2">
+                            <label class="sr-only" for="pmin">Minimum price</label>
+                            <input id="pmin" inputmode="decimal" wire:model.live.debounce.600ms="priceMin" placeholder="Min" class="input">
+                            <span class="text-muted">–</span>
+                            <label class="sr-only" for="pmax">Maximum price</label>
+                            <input id="pmax" inputmode="decimal" wire:model.live.debounce.600ms="priceMax" placeholder="Max" class="input">
+                        </div>
+                        <p class="field-help">Applies to products with list prices you can see.</p>
+                    </fieldset>
+                @endif
                 <button type="button" wire:click="clearFilters" class="link text-xs">Clear all filters</button>
             </div>
         </aside>
@@ -96,7 +137,7 @@
                         <thead><tr><th class="w-10"><span class="sr-only">Select</span></th><th>Product</th><th>Option</th><th>MOQ</th><th class="w-32">Quantity</th><th>Price</th></tr></thead>
                         <tbody>
                         @foreach ($products as $product)
-                            @php $price = app(\App\Services\CatalogPricing::class)->summary($product, auth()->user()?->company); $img = $product->primaryImage(); @endphp
+                            @php $price = app(\App\Services\CatalogPricing::class)->summary($product, $access); $img = $product->primaryImage(); @endphp
                             <tr wire:key="row-{{ $product->id }}">
                                 <td>
                                     @if ($product->quote_enabled)
@@ -105,7 +146,7 @@
                                 </td>
                                 <td>
                                     <div class="flex items-center gap-3">
-                                        @if ($img)<img src="{{ $img->url() }}" alt="" class="h-14 w-11 rounded-sm object-cover">@endif
+                                        @if ($img)<span class="relative block shrink-0 overflow-hidden rounded-sm"><img src="{{ $img->url('thumb') }}" alt="" class="protected-img h-14 w-11 object-cover" draggable="false"><x-image-watermark size="xs"/></span>@endif
                                         <div>
                                             <a href="{{ route('products.show', $product) }}" class="font-medium hover:text-accent">{{ $product->name }}</a>
                                             <p class="text-xs text-muted">{{ $product->sku }}</p>
@@ -146,4 +187,5 @@
             <div class="mt-12">{{ $products->links() }}</div>
         </div>
     </div>
+</div>
 </div>

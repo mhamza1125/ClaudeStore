@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             CustomerGroupSeeder::class,
             StaffSeeder::class,
+            CategorySeeder::class, // the Leamate category tree (idempotent; production too)
         ]);
 
         if (! app()->isProduction()) {

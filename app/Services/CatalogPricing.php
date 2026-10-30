@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Company;
 use App\Models\Product;
+use App\Pricing\PriceAccessDecision;
 use App\Pricing\PriceResolver;
 use App\Pricing\PriceSource;
 
@@ -13,13 +13,16 @@ class CatalogPricing
     public function __construct(private PriceResolver $resolver) {}
 
     /** @return array{label:string, cents:?int, note:?string} */
-    public function summary(Product $product, ?Company $company): array
+    public function summary(Product $product, PriceAccessDecision $access): array
     {
         if ($product->price_on_request) {
             return ['label' => 'Price on request', 'cents' => null, 'note' => 'Quoted to specification'];
         }
+        if (! $access->allowed) {
+            return ['label' => $access->label(), 'cents' => null, 'note' => null];
+        }
 
-        $atMoq = $this->resolver->resolve($product, null, max(1, $product->moq), $company);
+        $atMoq = $this->resolver->resolve($product, null, max(1, $product->moq), $access->company, access: $access);
         if (! $atMoq->hasPrice()) {
             return ['label' => 'Price on request', 'cents' => null, 'note' => null];
         }

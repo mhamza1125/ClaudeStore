@@ -2,23 +2,48 @@
     {{-- Gallery --}}
     <div class="lg:col-span-7" wire:key="gallery-{{ $variant?->id ?? 'all' }}">
         @if ($images->isNotEmpty())
-            <div x-data="gallery({{ $images->count() }})" @keydown.arrow-right.prevent="go(active + 1)" @keydown.arrow-left.prevent="go(active - 1)" class="flex flex-col-reverse gap-4 sm:flex-row">
+            {{-- Images come from the protected media route; the centred watermark is either in the
+                 served copy or laid over it by <x-image-watermark> (App\Images\ProtectedImages::mode()). --}}
+            <div x-data="gallery({{ $images->count() }})" @keydown.arrow-right.prevent="go(active + 1)" @keydown.arrow-left.prevent="go(active - 1)" @keydown.escape.window="zoom = false" class="flex flex-col-reverse gap-4 sm:flex-row" data-protected>
                 <div class="flex gap-3 overflow-x-auto sm:w-20 sm:flex-col" role="tablist" aria-label="Product images">
                     @foreach ($images as $i => $img)
                         <button type="button" role="tab" :aria-selected="active === {{ $i }}" @click="go({{ $i }})"
-                                class="shrink-0 overflow-hidden rounded-sm border-2 transition" :class="active === {{ $i }} ? 'border-accent' : 'border-transparent opacity-70 hover:opacity-100'">
-                            <img src="{{ $img->url() }}" alt="{{ $img->view_type?->label() ?? 'Image '.($i + 1) }}" class="h-20 w-16 object-cover" loading="lazy">
+                                class="relative shrink-0 overflow-hidden rounded-sm border-2 transition" :class="active === {{ $i }} ? 'border-accent' : 'border-transparent opacity-70 hover:opacity-100'">
+                            <img src="{{ $img->url('thumb') }}" alt="{{ $img->view_type?->label() ?? 'Image '.($i + 1) }}" class="protected-img h-20 w-16 object-cover" loading="lazy" draggable="false">
+                            <x-image-watermark size="xs"/>
                         </button>
                     @endforeach
                 </div>
                 <div class="relative flex-1 overflow-hidden rounded-sm bg-elevated" tabindex="0" aria-roledescription="carousel" aria-label="Product images, use arrow keys">
                     @foreach ($images as $i => $img)
                         <figure x-show="active === {{ $i }}" @if ($i > 0) x-cloak @endif>
-                            <img src="{{ $img->url() }}" alt="{{ $img->alt ?: $product->name.($img->view_type ? ' — '.$img->view_type->label() : '') }}" class="aspect-[4/5] w-full object-cover" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif width="800" height="1000">
+                            <img src="{{ $img->url('card') }}" srcset="{{ $img->url('card') }} 800w, {{ $img->url('large') }} 1600w" sizes="(min-width: 1024px) 50vw, 100vw"
+                                 alt="{{ $img->alt ?: $product->name.($img->view_type ? ' — '.$img->view_type->label() : '') }}" class="protected-img aspect-[4/5] w-full cursor-zoom-in object-cover" draggable="false"
+                                 @click="open({{ $i }})" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif width="800" height="1000">
                             @if ($img->view_type)<figcaption class="absolute bottom-3 left-3"><x-badge>{{ $img->view_type->label() }}</x-badge></figcaption>@endif
                         </figure>
                     @endforeach
+                    <x-image-watermark size="lg"/>
+                    <button type="button" @click="open(active)" class="absolute right-3 top-3 rounded-full bg-surface/90 p-2 shadow-sm hover:text-accent" aria-label="Zoom image"><x-icon name="search" class="h-4 w-4"/></button>
                 </div>
+
+                {{-- Zoom view: the large watermarked rendition, loaded only when opened. --}}
+                <template x-teleport="body">
+                    <div x-show="zoom" x-cloak x-transition.opacity class="fixed inset-0 z-[70] flex items-center justify-center bg-overlay p-4" role="dialog" aria-modal="true" aria-label="Zoomed product image" @click.self="zoom = false" data-protected>
+                        @foreach ($images as $i => $img)
+                            <div x-show="zoom && active === {{ $i }}" class="relative">
+                                <img :src="zoom && active === {{ $i }} ? @js($img->url('large')) : ''" alt="{{ $img->alt ?: $product->name }}"
+                                     class="protected-img max-h-[90vh] max-w-full rounded-sm object-contain shadow-xl" draggable="false">
+                                <x-image-watermark size="lg"/>
+                            </div>
+                        @endforeach
+                        <button type="button" @click="zoom = false" class="absolute right-4 top-4 rounded-full bg-surface p-2 shadow" aria-label="Close zoom"><x-icon name="x" class="h-5 w-5"/></button>
+                        @if ($images->count() > 1)
+                            <button type="button" @click="go(active - 1)" class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-surface p-2 shadow" aria-label="Previous image"><x-icon name="chevron-left" class="h-5 w-5"/></button>
+                            <button type="button" @click="go(active + 1)" class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-surface p-2 shadow" aria-label="Next image"><x-icon name="chevron-right" class="h-5 w-5"/></button>
+                        @endif
+                    </div>
+                </template>
             </div>
         @else
             <div class="flex aspect-[4/5] items-center justify-center rounded-sm bg-elevated text-muted"><x-icon name="image" class="h-12 w-12"/><span class="sr-only">No image available</span></div>
@@ -58,6 +83,8 @@
                     @if ($price->source === \App\Pricing\PriceSource::OnRequest)
                         <p class="font-serif text-3xl">Price on request</p>
                         <p class="mt-1 text-sm text-muted">Add to your quote list with the quantity and specification you need — we will quote within one business day.</p>
+                    @elseif (! $access->allowed)
+                        <x-price-locked :access="$access"/>
                     @elseif (! $price->visible)
                         <p class="font-serif text-3xl">Trade pricing</p>
                         <p class="mt-1 text-sm text-muted">

@@ -5,8 +5,17 @@
             @csrf @method('PUT')
             <h2 class="text-2xl">Your details</h2>
             @if (session('status') === 'profile-information-updated')<p class="text-sm text-success">Profile updated.</p>@endif
+            @if (session('status') === 'verification-link-sent')<p class="text-sm text-success">A new verification link has been sent to {{ $user->email }}.</p>@endif
             <x-field name="name" label="Name" required :value="$user->name"/>
-            <x-field name="email" type="email" label="Email" required :value="$user->email"/>
+            <x-field name="email" type="email" label="Email" required :value="$user->email" help="Changing your email address asks you to verify the new one."/>
+            <p class="text-sm" data-testid="email-status">
+                @if ($user->hasVerifiedEmail())
+                    <x-badge tone="success">Email verified</x-badge>
+                @else
+                    <x-badge tone="warning">Email not verified</x-badge>
+                    <button form="resend-verification" class="link ml-2 text-sm">Resend verification email</button>
+                @endif
+            </p>
             @foreach ($errors->updateProfileInformation->all() as $e)<p class="field-error">{{ $e }}</p>@endforeach
             <button class="btn btn-primary">Save</button>
         </form>
@@ -21,4 +30,7 @@
             <button class="btn btn-primary">Update password</button>
         </form>
     </div>
+    @unless ($user->hasVerifiedEmail())
+        <form id="resend-verification" method="POST" action="{{ route('verification.send') }}" class="hidden">@csrf</form>
+    @endunless
 </x-layouts.account>

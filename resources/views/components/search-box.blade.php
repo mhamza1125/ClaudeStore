@@ -35,8 +35,9 @@
                 <li :id="'{{ $id }}-option-' + i" role="option" :aria-selected="active === i">
                     <a :href="item.url" @mouseenter="active = i" tabindex="-1"
                        class="flex items-center gap-3 px-3 py-2" :class="active === i ? 'bg-elevated' : ''">
-                        <span class="h-12 w-10 shrink-0 overflow-hidden rounded-sm bg-elevated">
-                            <img x-show="item.image" :src="item.image" alt="" class="h-full w-full object-cover" loading="lazy">
+                        <span class="relative h-12 w-10 shrink-0 overflow-hidden rounded-sm bg-elevated">
+                            <img x-show="item.image" :src="item.image" alt="" class="protected-img h-full w-full object-cover" loading="lazy" draggable="false">
+                            <template x-if="item.image"><x-image-watermark size="xs"/></template>
                         </span>
                         <span class="min-w-0 flex-1">
                             <span class="block truncate font-medium" x-text="item.name"></span>

@@ -2,9 +2,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>{{ $title ? $title.' · '.$brand['name'] : $brand['name'].' — '.$brand['tagline'] }}</title>
-<meta name="description" content="{{ $description ?? $brand['tagline'] }}">
+@php
+    // Homepage: "Leamate | Leather Goods & Accessories"; other pages: "<page> | Leamate".
+    $pageTitle = $title ? $title.' | '.$brand['name'] : $brand['name'].' | '.$brand['tagline'];
+    $metaDescription = \Illuminate\Support\Str::limit(trim((string) ($description ?: config('brand.description'))), 160);
+@endphp
+<title>{{ $pageTitle }}</title>
+<meta name="description" content="{{ $metaDescription }}">
 @if ($canonical)<link rel="canonical" href="{{ $canonical }}">@endif
+<meta property="og:site_name" content="{{ $brand['name'] }}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{{ $pageTitle }}">
+<meta property="og:description" content="{{ $metaDescription }}">
+<meta property="og:url" content="{{ $canonical ?? url()->current() }}">
+<meta property="og:image" content="{{ $brand['logo'] ?? asset(str_replace('.png', '@2x.png', config('brand.default_logo'))) }}">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#2b1e16">
 <meta name="color-scheme" content="light dark">
 {{-- Apply the theme before CSS paints to prevent a flash of the wrong theme. --}}
 {{-- Mirrors resolveTheme() in resources/js/theme.js; keep the two in sync. --}}
@@ -25,6 +38,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="{{ asset('favicon.ico') }}" sizes="32x32">
 <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @livewireStyles

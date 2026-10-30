@@ -18,6 +18,7 @@ class AdminPagesTest extends TestCase
     public function test_every_admin_page_renders_for_super_admin_with_demo_data(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $this->seed([DemoCatalogSeeder::class, DemoCustomerSeeder::class]);
         $quote = Quote::factory()->create();
         $quote->items()->create(['sku' => 'X', 'product_name' => 'Y', 'quantity' => 1]);
@@ -41,11 +42,14 @@ class AdminPagesTest extends TestCase
     public function test_demo_seed_produces_the_illustrative_wallet_tiers(): void
     {
         Storage::fake('public');
+        Storage::fake('local');
         $this->seed([DemoCatalogSeeder::class]);
         $wallet = Product::query()->where('sku', 'AH-WAL-001')->sole();
         $this->assertSame([1 => 1800, 25 => 1500, 100 => 1250, 250 => 1000],
             $wallet->priceTiers()->whereNull('customer_group_id')->pluck('unit_price_cents', 'min_qty')->all());
         $this->assertTrue($wallet->is_demo);
-        Storage::disk('public')->assertExists('demo/products/classic-bifold-wallet-front.svg');
+        // Demo product images are private like uploads, and served watermarked.
+        Storage::disk('local')->assertExists('product-display/demo/classic-bifold-wallet-front.svg');
+        Storage::disk('public')->assertMissing('demo/products/classic-bifold-wallet-front.svg');
     }
 }

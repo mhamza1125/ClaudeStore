@@ -11,11 +11,17 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 
 /**
- * Stores originals privately and writes optimised display copies to the public disk.
+ * Stores originals privately and writes optimised display masters to the private disk too.
+ * Visitors only ever receive resized, watermarked renditions through the signed media
+ * route (ProtectedImages); neither file has a public URL.
  */
 class ImageStorage
 {
     public const ORIGINALS_DISK = 'local';
+
+    public const DISPLAY_DISK = 'local';
+
+    public const DISPLAY_DIR = 'product-display';
 
     /** Persist an uploaded original and create the image record (optimised by a queued job). */
     public function storeUpload(Product $product, UploadedFile $file, array $attributes, string $status = 'processing'): ProductImage
@@ -23,7 +29,7 @@ class ImageStorage
         $path = $file->storeAs("product-originals/{$product->id}", Str::uuid().'.'.$file->extension(), self::ORIGINALS_DISK);
 
         return $product->images()->create(array_merge([
-            'disk' => 'public',
+            'disk' => self::DISPLAY_DISK,
             'path' => null,
             'original_disk' => self::ORIGINALS_DISK,
             'original_path' => $path,
@@ -33,14 +39,14 @@ class ImageStorage
         ], $attributes));
     }
 
-    /** Resize/compress the original into a public WebP display image. Returns [path, width, height]. */
+    /** Resize/compress the original into the private WebP display master. Returns [path, width, height]. */
     public function optimise(string $binary, int $productId): array
     {
-        return $this->optimiseInto($binary, "products/{$productId}");
+        return $this->optimiseInto($binary, self::DISPLAY_DIR."/{$productId}", self::DISPLAY_DISK);
     }
 
-    /** Resize (never upscale) and encode as WebP on the public disk. Returns [path, width, height]. */
-    public function optimiseInto(string $binary, string $directory): array
+    /** Resize (never upscale) and encode as WebP. Returns [path, width, height]. */
+    public function optimiseInto(string $binary, string $directory, string $disk = 'public'): array
     {
         $manager = new ImageManager(new Driver);
         $image = $manager->read($binary);
@@ -49,7 +55,7 @@ class ImageStorage
         $encoded = $image->toWebp((int) config('store.images.quality', 82));
 
         $path = trim($directory, '/').'/'.Str::uuid().'.webp';
-        Storage::disk('public')->put($path, (string) $encoded);
+        Storage::disk($disk)->put($path, (string) $encoded);
 
         return [$path, $image->width(), $image->height()];
     }
@@ -75,6 +81,7 @@ class ImageStorage
         if ($image->original_path && $image->source !== 'demo') {
             Storage::disk($image->original_disk)->delete($image->original_path);
         }
+        app(ProtectedImages::class)->forget($image);
         $image->delete();
     }
 }

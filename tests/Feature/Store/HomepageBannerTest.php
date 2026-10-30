@@ -69,7 +69,7 @@ class HomepageBannerTest extends TestCase
     {
         $p = $this->productWithImage(['name' => 'Weekender'], 'lifestyle');
         $this->slide(['title' => 'Travel', 'image_path' => null, 'product_id' => $p->id]);
-        $this->get('/')->assertSee("img/{$p->id}-lifestyle.webp", false)->assertSee(route('products.show', $p), false);
+        $this->get('/')->assertSee($p->images()->first()->url('large'), false)->assertSee(route('products.show', $p), false);
     }
 
     public function test_admin_manages_slides(): void

@@ -1,5 +1,15 @@
 <x-layouts.account title="My account">
     <x-page-header :title="'Welcome, '.$user->name" eyebrow="Account overview"/>
+    @php $access = app(\App\Pricing\PriceAccess::class)->for($user); @endphp
+    @if (request()->boolean('verified'))
+        <div class="mb-6 rounded-sm border border-current/20 px-4 py-3 text-sm badge-success" role="status">Thank you — your email address is verified.</div>
+    @endif
+    @if (session('status') === 'verification-link-sent')
+        <div class="mb-6 rounded-sm border border-current/20 px-4 py-3 text-sm badge-success" role="status">A new verification link has been sent to {{ $user->email }}.</div>
+    @endif
+    @if (! $access->allowed)
+        <div class="panel mb-6 border-accent" data-testid="price-access-status"><x-price-locked :access="$access" compact/></div>
+    @endif
     @if (! $user->company)
         <div class="panel mb-6"><p class="font-medium">Create your company profile</p><p class="mt-1 text-sm text-muted">Add your company details and addresses, then request access to wholesale pricing.</p><a href="{{ route('account.company') }}" class="btn btn-primary btn-sm mt-4">Set up company</a></div>
     @elseif ($user->company->wholesale_status !== 'approved')

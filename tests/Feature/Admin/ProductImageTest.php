@@ -50,9 +50,11 @@ class ProductImageTest extends TestCase
         $this->assertSame('approved', $image->status); // processed in the request, no queue worker needed
         $this->assertSame('back', $image->view_type->value);
         Storage::disk('local')->assertExists($image->original_path);
-        Storage::disk('public')->assertExists($image->path);
+        // The display master is private too; visitors only get watermarked renditions.
+        $this->assertSame('local', $image->disk);
+        Storage::disk('local')->assertExists($image->path);
         $this->assertStringEndsWith('.webp', $image->path);
-        $this->assertFalse(Storage::disk('public')->exists($image->original_path), 'original is not public');
+        $this->assertSame([], Storage::disk('public')->allFiles(), 'nothing is written to the public disk');
     }
 
     public function test_upload_is_ready_immediately_without_a_queue_worker(): void
@@ -117,12 +119,12 @@ class ProductImageTest extends TestCase
 
         $image->refresh();
         $this->assertSame('pending_review', $image->status);
-        Storage::disk('public')->assertExists($image->path);
+        Storage::disk('local')->assertExists($image->path);
 
         // A stale queued copy of the job must not reprocess (or orphan files for) a handled image.
         (new \App\Jobs\OptimizeProductImage($image))->handle(app(\App\Images\ImageStorage::class));
         $this->assertSame('pending_review', $image->fresh()->status);
-        $this->assertCount(1, Storage::disk('public')->allFiles());
+        $this->assertCount(1, Storage::disk('local')->allFiles('product-display'));
     }
 
     public function test_processing_failure_is_reported_and_can_be_retried(): void
@@ -195,7 +197,7 @@ class ProductImageTest extends TestCase
         $this->assertSame('pending_review', $draft->status);
         $this->assertSame('processed', $draft->source);
         $this->assertSame('removebg', $draft->provider);
-        Storage::disk('public')->assertExists($draft->path);
+        Storage::disk('local')->assertExists($draft->path);
         Storage::disk('local')->assertExists('product-originals/1/o.png');
         Http::assertSent(fn ($r) => $r->hasHeader('X-Api-Key', 'test-key'));
     }

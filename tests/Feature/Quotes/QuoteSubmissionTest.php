@@ -22,6 +22,9 @@ class QuoteSubmissionTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Covers the pricing rules for guests with B2B price access switched off. */
+    protected bool $b2bPricing = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -56,7 +59,7 @@ class QuoteSubmissionTest extends TestCase
 
         $response->assertRedirect(route('quote.confirmation'));
         $quote = Quote::query()->with('items', 'attachments')->sole();
-        $this->assertMatchesRegularExpression('/^AH-Q-\d{4}-\d{6}$/', $quote->reference);
+        $this->assertMatchesRegularExpression('/^LM-Q-\d{4}-\d{6}$/', $quote->reference);
         $this->assertSame(QuoteStatus::Pending, $quote->status);
         $this->assertCount(2, $quote->items);
 
@@ -83,8 +86,8 @@ class QuoteSubmissionTest extends TestCase
             $this->post('/quote', $this->quoteForm(['message' => 'General inquiry about private label']));
         }
         $refs = Quote::query()->orderBy('id')->pluck('reference');
-        $this->assertSame(sprintf('AH-Q-%d-000001', now()->year), $refs[0]);
-        $this->assertSame(sprintf('AH-Q-%d-000002', now()->year), $refs[1]);
+        $this->assertSame(sprintf('LM-Q-%d-000001', now()->year), $refs[0]);
+        $this->assertSame(sprintf('LM-Q-%d-000002', now()->year), $refs[1]);
     }
 
     public function test_signed_in_buyer_quote_is_linked_to_company(): void

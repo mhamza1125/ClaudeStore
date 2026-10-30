@@ -172,7 +172,7 @@
                     @endphp
                     <div class="rounded-sm border {{ $img->status === 'pending_review' ? 'border-warning' : ($img->status === 'failed' ? 'border-danger' : 'border-border') }} p-3 text-xs" wire:key="img-{{ $img->id }}">
                         <div class="relative aspect-[4/5] overflow-hidden rounded-sm bg-elevated">
-                            @if ($img->url())<img src="{{ $img->url() }}" alt="{{ $img->alt }}" class="h-full w-full object-cover" loading="lazy">
+                            @if ($img->path)<img src="{{ $img->adminUrl() }}" alt="{{ $img->alt }}" class="h-full w-full object-cover" loading="lazy">
                             @elseif ($img->status === 'failed')<div class="flex h-full items-center justify-center text-danger">Processing failed</div>
                             @else<div class="flex h-full flex-col items-center justify-center gap-2 text-muted"><span class="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent motion-reduce:animate-none" aria-hidden="true"></span>{{ $stalled ? 'Not finished' : 'Processing…' }}</div>@endif
                             <div class="absolute left-2 top-2 flex flex-wrap gap-1">

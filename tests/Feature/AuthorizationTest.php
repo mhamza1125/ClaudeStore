@@ -84,7 +84,7 @@ class AuthorizationTest extends TestCase
     {
         $owner = $this->customer(Company::factory()->create());
         $quote = Quote::factory()->create(['user_id' => $owner->id, 'company_id' => $owner->company_id]);
-        $order = SalesOrder::create(['reference' => 'AH-SO-2026-000009', 'quote_id' => $quote->id, 'company_id' => $owner->company_id, 'user_id' => $owner->id,
+        $order = SalesOrder::create(['reference' => 'LM-SO-2026-000009', 'quote_id' => $quote->id, 'company_id' => $owner->company_id, 'user_id' => $owner->id,
             'company_name' => 'x', 'contact_name' => 'x', 'email' => 'x@x.test', 'subtotal_cents' => 1, 'discount_cents' => 0, 'shipping_cents' => 0,
             'additional_charges_cents' => 0, 'tax_rate_bps' => 0, 'tax_cents' => 0, 'total_cents' => 1, 'status' => 'confirmed']);
 

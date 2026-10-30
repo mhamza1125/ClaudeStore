@@ -477,7 +477,7 @@ class ProductEditor extends Component
             return;
         }
         $draft = $source->product->images()->create([
-            'variant_id' => $source->variant_id, 'parent_id' => $source->id, 'disk' => 'public',
+            'variant_id' => $source->variant_id, 'parent_id' => $source->id, 'disk' => ImageStorage::DISPLAY_DISK,
             'view_type' => $source->view_type, 'alt' => $source->alt, 'status' => 'processing', 'source' => 'processed',
             'provider' => $provider->name(), 'sort_order' => $source->sort_order,
         ]);

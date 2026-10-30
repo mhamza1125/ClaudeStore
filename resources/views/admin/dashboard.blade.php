@@ -1,5 +1,11 @@
 <x-layouts.admin title="Dashboard">
     <x-page-header title="Dashboard" eyebrow="Overview"/>
+    @if ($pendingAccounts)
+        <a href="{{ route('admin.customer-accounts', ['status' => 'pending']) }}" class="mb-6 flex items-center justify-between gap-4 rounded-sm border border-current/20 px-4 py-3 text-sm badge-warning" data-testid="pending-accounts">
+            <span><strong>{{ $pendingAccounts }}</strong> new customer {{ \Illuminate\Support\Str::plural('account', $pendingAccounts) }} waiting for approval to see prices.</span>
+            <span class="font-medium">Review <x-icon name="arrow-right" class="inline h-4 w-4"/></span>
+        </a>
+    @endif
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         @foreach ([['new', 'New requests', 'pending'], ['review', 'In review / quoted', 'under_review'], ['awaiting', 'Awaiting customer', 'awaiting_response'], ['accepted', 'Accepted — ready to convert', 'accepted']] as [$key, $label, $status])
             <a href="{{ route('admin.quotes.index', ['status' => $status]) }}" class="panel block hover:border-accent">

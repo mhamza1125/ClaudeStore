@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Pricing\PriceAccess;
 use App\Pricing\PriceResolver;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    public function show(Product $product, PriceResolver $resolver)
+    public function show(Product $product, PriceResolver $resolver, PriceAccess $priceAccess)
     {
         // Unpublished products are visible to staff only (preview).
         if (! $product->isPublished() && ! auth()->user()?->can('products.manage')) {
@@ -21,15 +22,15 @@ class ProductController extends Controller
 
         $isFavorite = auth()->check() && auth()->user()->favoriteProducts()->whereKey($product->id)->exists();
 
-        // Structured data: price only when publicly visible.
-        $guestPrice = $resolver->resolve($product, null, max(1, $product->moq));
+        // Structured data: price only when visible to anonymous visitors (B2B rules included).
+        $guestPrice = $resolver->resolve($product, null, max(1, $product->moq), access: $priceAccess->guest());
         $jsonLd = array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Product',
             'name' => $product->name,
             'sku' => $product->sku,
             'description' => $product->short_description,
-            'image' => $product->approvedImages->map->url()->filter()->values()->all(),
+            'image' => $product->approvedImages->map->url('large')->filter()->values()->all(),
             'brand' => ['@type' => 'Brand', 'name' => setting('brand.name')],
             'offers' => $guestPrice->visible && $guestPrice->hasPrice() ? [
                 '@type' => 'Offer',

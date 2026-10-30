@@ -37,9 +37,11 @@
                     <div class="order-1 md:order-2">
                         <div class="hero-media relative aspect-[16/10] overflow-hidden sm:aspect-[4/3] rounded-md bg-elevated shadow-sm">
                             @if ($image)
-                                <img src="{{ $image }}" alt="{{ $slide->imageAlt() }}" width="1200" height="900"
-                                     class="absolute inset-0 h-full w-full object-cover" style="object-position: {{ array_key_exists($slide->image_focus, \App\Models\HeroSlide::FOCUS) ? $slide->image_focus : 'center' }}"
+                                <img src="{{ $image }}" alt="{{ $slide->imageAlt() }}" width="1200" height="900" draggable="false"
+                                     class="protected-img absolute inset-0 h-full w-full object-cover" style="object-position: {{ array_key_exists($slide->image_focus, \App\Models\HeroSlide::FOCUS) ? $slide->image_focus : 'center' }}"
                                      @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif>
+                                {{-- Product photos only; uploaded banner artwork is not watermarked. --}}
+                                @unless ($slide->image_path)<x-image-watermark size="lg"/>@endunless
                             @endif
                             @if ($slide->product && $slide->product->isPublished())
                                 <a href="{{ route('products.show', $slide->product) }}" class="absolute bottom-3 left-3 max-w-[calc(100%-11.5rem)] truncate rounded-sm bg-surface/90 px-3 py-1.5 text-xs font-medium text-text shadow-sm backdrop-blur hover:text-accent md:max-w-[75%]">

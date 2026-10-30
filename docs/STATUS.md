@@ -65,6 +65,19 @@ redirects from `/pages/…`. Configurable floating WhatsApp button (bottom-left)
 chatbot (bottom-right) with Cloudflare Workers AI as the default provider (Anthropic optional),
 public-data-only business context and an honest offline mode (docs/CHATBOT.md).
 
+**B2B price access and image protection.** Admin → B2B settings: B2B pricing on/off, guest
+prices, registration requirement, four access methods (instant, verify email, approval, both),
+guest inquiries, company and personalised watermarks. Admin → Customer accounts: approve, reject,
+resend or mark verification, per-customer price override, suspend. Enforced server-side in every
+price channel. Product images are private and served as signed, watermarked renditions, with a
+zoom view. See docs/B2B.md and docs/IMAGES.md (`tests/Feature/B2b`, `tests/Feature/Images`).
+
+**Leamate pre-launch.** Branding (logo in header/footer/admin, favicons, "Leamate | Leather
+Goods & Accessories" title, Open Graph tags), official contact details (ribbon, footer, Contact
+page, emails, WhatsApp), Leamate category tree (`CategorySeeder`, idempotent), Contact Us page
+with stored messages, email alert and Admin → Messages, single centred image watermark
+(embedded or CSS overlay), prices hidden from guests by default, footer spacing fixed.
+
 ## Needs credentials or external setup
 
 | Item | What's needed |
@@ -104,8 +117,8 @@ public-data-only business context and an honest offline mode (docs/CHATBOT.md).
 - **Quote versions:** snapshots are stored and listed with totals. There is no visual diff
   between versions, and PDFs always render the current state (which equals the last sent version
   unless there are unsent changes).
-- **Two-factor authentication and email verification** are disabled (Fortify supports both; they
-  need UI screens).
+- **Two-factor authentication** is disabled (Fortify supports it; it needs UI screens). Email
+  verification is enabled; whether it gates prices is a B2B setting (docs/B2B.md).
 - **Newsletter:** subscribers are stored only. There is no export UI or email-provider sync, and
   no double opt-in.
 - **Search** uses SQL `LIKE`. It's fine for a few thousand products; add Scout/Meilisearch for

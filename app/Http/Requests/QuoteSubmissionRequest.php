@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Pricing\PriceAccess;
 use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -14,9 +16,16 @@ class QuoteSubmissionRequest extends FormRequest
     /** Minimum seconds between rendering and submitting the form (bot heuristic). */
     public const MIN_FILL_SECONDS = 3;
 
+    /** B2B setting: guests may be required to sign in before sending an inquiry. */
     public function authorize(): bool
     {
-        return true;
+        return $this->user() !== null || app(PriceAccess::class)->guestInquiriesAllowed();
+    }
+
+    protected function failedAuthorization(): void
+    {
+        throw new HttpResponseException(redirect()->guest(route('login'))
+            ->with('warning', 'Please sign in or create a trade account to submit your quote request. Your quote list is kept.'));
     }
 
     public function rules(): array

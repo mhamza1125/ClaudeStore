@@ -4,6 +4,7 @@ namespace App\Livewire\Store;
 
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Pricing\PriceAccess;
 use App\Pricing\PriceResolver;
 use App\Pricing\PriceResult;
 use App\Services\QuoteBasketService;
@@ -93,12 +94,13 @@ class ProductPurchase extends Component
         return Product::query()->with(['priceTiers', 'activeVariants', 'approvedImages'])->findOrFail($this->productId);
     }
 
-    public function render(PriceResolver $resolver)
+    public function render(PriceResolver $resolver, PriceAccess $priceAccess)
     {
         $product = $this->product();
         $variant = $this->variantId ? $product->activeVariants->firstWhere('id', $this->variantId) : null;
-        $company = auth()->user()?->company?->loadMissing('customerGroup');
-        $price = $resolver->resolve($product, $variant, (int) $this->quantity, $company);
+        $access = $priceAccess->current();
+        $company = $access->company?->loadMissing('customerGroup');
+        $price = $resolver->resolve($product, $variant, (int) $this->quantity, $company, access: $access);
 
         // Gallery: product-level images first, then those for the selected variant (or all variants if none chosen).
         $images = $product->approvedImages->filter(fn ($img) => $img->variant_id === null || $img->variant_id === $variant?->id);
@@ -112,6 +114,7 @@ class ProductPurchase extends Component
             'price' => $price,
             'images' => $images->values(),
             'company' => $company,
+            'access' => $access,
         ]);
     }
 }

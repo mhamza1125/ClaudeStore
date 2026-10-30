@@ -96,7 +96,7 @@ class QuoteWorkflowTest extends TestCase
         $this->actingAs($this->staff());
         Livewire::test(QuoteWorkspace::class, ['quote' => $quote])->call('convert')->assertRedirect();
         $order = SalesOrder::query()->with('items')->sole();
-        $this->assertMatchesRegularExpression('/^AH-SO-\d{4}-000001$/', $order->reference);
+        $this->assertMatchesRegularExpression('/^LM-SO-\d{4}-000001$/', $order->reference);
         $this->assertSame($quote->total_cents, $order->total_cents);
         $this->assertSame(1250, $order->items->first()->unit_price_cents);
         $this->assertSame(1000, $order->items->first()->discount_bps);

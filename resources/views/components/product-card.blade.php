@@ -3,14 +3,15 @@
 @props(['product', 'compact' => false])
 @php
     $image = $product->primaryImage();
-    $price = app(\App\Services\CatalogPricing::class)->summary($product, auth()->user()?->company);
+    $price = app(\App\Services\CatalogPricing::class)->summary($product, app(\App\Pricing\PriceAccess::class)->current());
     $aspect = $compact ? 'aspect-[4/3]' : 'aspect-[4/5]';
 @endphp
 <article {{ $attributes->merge(['class' => 'group flex flex-col'.($compact ? ' h-full rounded-md border border-border bg-surface p-3 transition hover:border-border-strong hover:shadow-md' : '')]) }}>
     <a href="{{ route('products.show', $product) }}" class="relative block overflow-hidden rounded-sm bg-elevated" @if ($compact) tabindex="-1" aria-hidden="true" @endif>
         @if ($image)
-            <img src="{{ $image->url() }}" alt="{{ $image->alt ?? $product->name }}" loading="lazy" width="800" height="{{ $compact ? 600 : 1000 }}"
-                 class="{{ $aspect }} w-full object-cover transition duration-500 group-hover:scale-[1.03]">
+            <img src="{{ $image->url('card') }}" alt="{{ $image->alt ?? $product->name }}" loading="lazy" width="800" height="{{ $compact ? 600 : 1000 }}" draggable="false"
+                 class="protected-img {{ $aspect }} w-full object-cover transition duration-500 group-hover:scale-[1.03]">
+            <x-image-watermark :size="$compact ? 'sm' : 'md'"/>
         @else
             <div class="flex {{ $aspect }} items-center justify-center text-muted"><x-icon name="image" class="h-10 w-10"/></div>
         @endif

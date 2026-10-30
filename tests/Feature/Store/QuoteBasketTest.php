@@ -19,6 +19,9 @@ class QuoteBasketTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Covers the pricing rules for guests with B2B price access switched off. */
+    protected bool $b2bPricing = false;
+
     public function test_add_to_quote_enforces_moq_and_multiples_server_side(): void
     {
         $belt = Product::factory()->create(['moq' => 12, 'order_multiple' => 6]);

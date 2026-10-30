@@ -1,12 +1,11 @@
-@props(['compact' => false])
-<a href="{{ route('home') }}" {{ $attributes->merge(['class' => 'inline-flex items-center gap-3 text-text']) }} aria-label="{{ $brand['name'] }} — home">
+@props(['compact' => false, 'size' => 'h-11 sm:h-12'])
+{{-- Uploaded logo (Admin → Settings) if any, otherwise the shipped Leamate logo. Width follows
+     the height so the artwork is never stretched. --}}
+<a href="{{ route('home') }}" {{ $attributes->merge(['class' => 'inline-flex shrink-0 items-center text-text']) }} aria-label="{{ $brand['name'] }} — home">
     @if ($brand['logo'])
-        <img src="{{ $brand['logo'] }}" alt="{{ $brand['name'] }}" class="h-9 w-auto">
+        <img src="{{ $brand['logo'] }}" alt="{{ $brand['name'] }}" class="logo-img {{ $size }} w-auto max-w-none">
     @else
-        {{-- Logo placeholder: monogram + wordmark. Replace via Admin → Settings → Logo. --}}
-        <span class="flex h-9 w-9 items-center justify-center rounded-full border border-accent font-serif text-base text-accent">{{ \Illuminate\Support\Str::of($brand['name'])->explode(' ')->map(fn ($w) => mb_substr($w, 0, 1))->take(2)->implode('') }}</span>
-        @unless ($compact)
-            <span class="whitespace-nowrap font-serif text-xl leading-none tracking-wide sm:text-2xl">{{ $brand['name'] }}</span>
-        @endunless
+        <img src="{{ asset(config('brand.default_logo')) }}" srcset="{{ asset(config('brand.default_logo')) }} 1x, {{ asset(str_replace('.png', '@2x.png', config('brand.default_logo'))) }} 2x"
+             alt="{{ $brand['name'] }}" width="480" height="177" class="logo-img {{ $size }} w-auto max-w-none">
     @endif
 </a>

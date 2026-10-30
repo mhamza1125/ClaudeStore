@@ -67,7 +67,7 @@ class QuoteSubmissionService
                             'material' => $product->material, 'dimensions' => $product->dimensions,
                             'color' => $item->variant?->color, 'size' => $item->variant?->size,
                             'lead_time' => $product->lead_time, 'moq' => $price->moq,
-                            'image' => $product->primaryImage()?->url(),
+                            'image' => $product->primaryImage()?->url('thumb'),
                         ],
                         'quantity' => $item->quantity,
                         'customization' => $item->customization,

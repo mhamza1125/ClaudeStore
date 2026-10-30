@@ -15,8 +15,14 @@ return [
     'shipping_flat_cents' => (int) env('STORE_SHIPPING_FLAT_CENTS', 0),
     'min_order_value_cents' => (int) env('STORE_MIN_ORDER_VALUE_CENTS', 0),
     'quote_validity_days' => 30,
-    'sales_notification_email' => env('SALES_NOTIFICATION_EMAIL', 'sales@atelierhide.test'),
+    'sales_notification_email' => env('SALES_NOTIFICATION_EMAIL', 'info@leamate.com'),
     'quote_rate_limit_per_hour' => (int) env('QUOTE_RATE_LIMIT_PER_HOUR', 5),
+
+    // Shorter labels for categories in the header menus only (slug => label). Category pages,
+    // breadcrumbs, titles and the footer keep the full category name.
+    'nav_labels' => [
+        'leather-accessories' => 'Accessories',
+    ],
 
     // Selectable WhatsApp greeting messages (Admin → Settings → WhatsApp).
     // Administrators may also enter a custom message instead.

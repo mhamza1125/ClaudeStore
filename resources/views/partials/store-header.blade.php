@@ -5,15 +5,16 @@
 <header x-data="{ mobile: false }" x-effect="$dispatch('mobile-nav', { open: mobile })" @keydown.escape.window="mobile = false" class="sticky top-0 z-(--z-header) border-b border-border bg-bg/95 backdrop-blur">
     <div class="hidden border-b border-border bg-band text-on-band sm:block">
         <div class="container-page flex h-9 items-center justify-between text-xs tracking-wide">
-            <p>Wholesale &amp; private-label leather goods · Trade pricing for approved accounts</p>
-            <div class="flex items-center gap-5">
-                <a href="mailto:{{ $brand['email'] }}" class="hover:underline">{{ $brand['email'] }}</a>
-                <a href="{{ route('quote.basket') }}" class="hover:underline">Request a wholesale quote</a>
+            <p class="hidden truncate md:block">Premium leather goods · Wholesale &amp; private label</p>
+            <div class="flex items-center gap-5" data-testid="contact-ribbon">
+                <a href="tel:{{ preg_replace('/[^\d+]/', '', $brand['phone']) }}" class="inline-flex items-center gap-1.5 hover:underline"><x-icon name="phone" class="h-3.5 w-3.5"/>{{ $brand['phone'] }}</a>
+                <a href="mailto:{{ $brand['email'] }}" class="inline-flex items-center gap-1.5 hover:underline"><x-icon name="mail" class="h-3.5 w-3.5"/>{{ $brand['email'] }}</a>
+                <a href="{{ route('contact') }}" class="hover:underline">Contact us</a>
             </div>
         </div>
     </div>
     <div class="container-page flex h-18 items-center justify-between gap-4 py-3">
-        <div class="flex items-center gap-3">
+        <div class="flex shrink-0 items-center gap-3">
             <button type="button" class="btn btn-ghost btn-sm !px-2 lg:hidden" @click="mobile = !mobile" :aria-expanded="mobile" aria-controls="mobile-nav" aria-label="Menu">
                 <x-icon name="menu"/>
             </button>
@@ -24,7 +25,7 @@
             @foreach ($navCategories as $cat)
                 <div class="group relative">
                     <a href="{{ route('catalog.category', $cat) }}" class="flex items-center gap-1 whitespace-nowrap py-2 hover:text-accent {{ request()->is('categories/'.$cat->slug) ? 'text-accent' : '' }}">
-                        {{ $cat->name }}@if ($cat->children->isNotEmpty())<x-icon name="chevron-down" class="h-3.5 w-3.5"/>@endif
+                        {{ config('store.nav_labels.'.$cat->slug, $cat->name) }}@if ($cat->children->isNotEmpty())<x-icon name="chevron-down" class="h-3.5 w-3.5"/>@endif
                     </a>
                     @if ($cat->children->isNotEmpty())
                         <div class="invisible absolute left-0 top-full z-50 w-56 card py-2 opacity-0 shadow-lg transition group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
@@ -55,7 +56,7 @@
                     </div>
                 </div>
             @else
-                <a href="{{ route('login') }}" class="btn btn-ghost btn-sm hidden whitespace-nowrap sm:inline-flex">Sign in</a>
+                <a href="{{ route('login') }}" class="btn btn-ghost btn-sm !px-2" aria-label="Sign in" title="Sign in" data-testid="sign-in"><x-icon name="user"/></a>
             @endauth
             <livewire:quote-basket-count/>
         </div>
@@ -71,11 +72,13 @@
             </div>
             <a href="{{ route('catalog') }}" class="block py-2 font-medium">All products</a>
             @foreach ($navCategories as $cat)
-                <a href="{{ route('catalog.category', $cat) }}" class="block py-2">{{ $cat->name }}</a>
+                <a href="{{ route('catalog.category', $cat) }}" class="block py-2">{{ config('store.nav_labels.'.$cat->slug, $cat->name) }}</a>
                 @foreach ($cat->children as $child)
                     <a href="{{ route('catalog.category', $child) }}" class="block py-1.5 pl-4 text-sm text-muted">{{ $child->name }}</a>
                 @endforeach
             @endforeach
+            {{-- The contact ribbon is hidden on phones, so the menu keeps the link. --}}
+            <a href="{{ route('contact') }}" class="block py-2 font-medium sm:hidden">Contact us</a>
             @guest
                 <div class="flex gap-2 pt-3"><a href="{{ route('login') }}" class="btn btn-secondary flex-1">Sign in</a><a href="{{ route('register') }}" class="btn btn-primary flex-1">Open trade account</a></div>
             @endguest

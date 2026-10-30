@@ -14,6 +14,9 @@ class SearchSuggestTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Covers the pricing rules for guests with B2B price access switched off. */
+    protected bool $b2bPricing = false;
+
     public function test_suggestions_match_name_sku_and_variant_sku_like_the_catalogue(): void
     {
         $wallet = Product::factory()->create(['name' => 'Classic Bifold Wallet', 'sku' => 'AH-WAL-001', 'base_price_cents' => 1800]);
@@ -29,7 +32,7 @@ class SearchSuggestTest extends TestCase
             ->assertJsonPath('results.0.sku', 'AH-WAL-001')
             ->assertJsonPath('results.0.url', route('products.show', $wallet))
             ->assertJsonPath('results.0.price', 'From $12.50')
-            ->assertJsonPath('results.0.image', fn ($url) => str_ends_with($url, '/w.webp'))
+            ->assertJsonPath('results.0.image', $wallet->images()->first()->url('thumb')) // signed, watermarked thumbnail
             ->assertJsonPath('all_url', route('catalog', ['q' => 'wallet']));
 
         $this->getJson('/search/suggest?q=blt-001-blk')->assertJsonPath('results.0.name', 'Dress Belt');

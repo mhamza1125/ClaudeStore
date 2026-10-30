@@ -39,6 +39,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(2)->by('quote-burst:'.$request->ip()),
         ]);
         RateLimiter::for('newsletter', fn (Request $request) => Limit::perHour(5)->by('nl:'.$request->ip()));
+        RateLimiter::for('contact', fn (Request $request) => [
+            Limit::perHour(5)->by('contact:'.$request->ip()),
+            Limit::perMinute(2)->by('contact-burst:'.$request->ip()),
+        ]);
         RateLimiter::for('quote-response', fn (Request $request) => Limit::perMinute(10)->by('qr:'.$request->ip()));
         // Chatbot: each message is a paid AI call, so cap requests per IP per minute and per day.
         RateLimiter::for('assistant', fn (Request $request) => [
@@ -46,6 +50,8 @@ class AppServiceProvider extends ServiceProvider
             Limit::perDay((int) config('store.assistant.rate_per_day', 80))->by('as-d:'.$request->ip()),
         ]);
         RateLimiter::for('search', fn (Request $request) => Limit::perMinute(90)->by('search:'.$request->ip()));
+        // Product images: generous for browsing, but slows bulk scraping of the catalogue.
+        RateLimiter::for('media', fn (Request $request) => Limit::perMinute(300)->by('media:'.$request->ip()));
         RateLimiter::for('sensitive', fn (Request $request) => Limit::perMinute(30)->by('s:'.($request->user()?->id ?: $request->ip())));
 
         Event::listen(\Illuminate\Queue\Events\JobProcessing::class, fn () => app(Settings::class)->forgetLoaded());
