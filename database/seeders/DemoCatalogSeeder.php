@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Images\ImageStorage;
 use App\Models\Category;
 use App\Models\CustomerGroup;
 use App\Models\PriceTier;
@@ -9,13 +10,15 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Database\Seeders\Support\DemoImage;
 use Illuminate\Database\Seeder;
-use App\Images\ImageStorage;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
  * DEMONSTRATION catalogue. Every product is flagged is_demo and the storefront
  * labels it as such. Prices and specifications are illustrative placeholders.
+ *
+ * Create-only: a product whose SKU already exists is skipped entirely, so edits made
+ * in admin (and its tiers, variants and images) are never overwritten or removed.
  */
 class DemoCatalogSeeder extends Seeder
 {
@@ -38,7 +41,7 @@ class DemoCatalogSeeder extends Seeder
             $shape = $data['shape'];
             unset($data['variants'], $data['tiers'], $data['group_tiers'], $data['shape']);
 
-            $product = Product::query()->updateOrCreate(['sku' => $data['sku']], array_merge([
+            $product = Product::query()->firstOrCreate(['sku' => $data['sku']], array_merge([
                 'slug' => Str::slug($data['name']),
                 'category_id' => $cats[$data['category']]->id,
                 'description' => ($data['description'] ?? '')."\n\n".self::DEMO_NOTE,
@@ -47,8 +50,10 @@ class DemoCatalogSeeder extends Seeder
                 'is_demo' => true,
                 'quote_enabled' => true,
             ], collect($data)->except(['category', 'description'])->all()));
+            if (! $product->wasRecentlyCreated) {
+                continue;
+            }
 
-            $product->priceTiers()->delete();
             foreach ($tiers as $min => $cents) {
                 PriceTier::create(['product_id' => $product->id, 'min_qty' => $min, 'unit_price_cents' => $cents]);
             }
@@ -72,9 +77,6 @@ class DemoCatalogSeeder extends Seeder
 
     private function images(Product $product, string $shape, array $variants): void
     {
-        $product->images()->where('source', 'demo')->delete();
-        $product->variants()->delete();
-
         $baseColor = self::COLORS[$variants[0]['color'] ?? 'Chestnut'] ?? self::COLORS['Chestnut'];
         foreach (['front', 'side', 'back', 'detail', 'lifestyle'] as $order => $view) {
             // Product images live on the private disk and are served watermarked (ProtectedImages).

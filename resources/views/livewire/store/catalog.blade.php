@@ -4,7 +4,7 @@
         // of the current collection.
         $currentRoot = $category?->parent ?? $category;
         $subcategories = $currentRoot ? ($categories->firstWhere('id', $currentRoot->id)?->children ?? collect()) : collect();
-        $description = $category?->description ?: $category?->parent?->description ?: 'Premium leather bags, belts, wallets and accessories for retailers, distributors and brands.';
+        $description = $category?->description ?: $category?->parent?->description ?: ($raw ? 'Hides, sides and skins priced by quotation. Add the leathers you need to a quote with your quantities and we will reply with pricing.' : null) ?: 'Premium leather bags, belts, wallets and accessories for retailers, distributors and brands.';
     @endphp
     <section class="catalog-hero border-b border-border bg-band text-on-band" data-testid="catalog-hero">
         <div class="container-page py-9 sm:py-12">
@@ -16,7 +16,7 @@
             </nav>
             <p class="eyebrow mb-2 !text-on-band/70">{{ $category ? ($category->parent ? $category->parent->name : 'Collection') : 'Catalogue' }}</p>
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <h1 class="text-4xl leading-tight sm:text-5xl">{{ $category?->name ?? 'All products' }}</h1>
+                <h1 class="text-4xl leading-tight sm:text-5xl">{{ $category?->name ?? ($raw ? 'Raw leather' : 'All products') }}</h1>
                 <span class="rounded-full border border-on-band/25 px-3 py-1 text-xs tracking-wide text-on-band/80" data-testid="catalog-count">
                     {{ number_format($products->total()) }} {{ \Illuminate\Support\Str::plural('product', $products->total()) }}
                 </span>
@@ -25,7 +25,7 @@
             <p class="mt-3 max-w-5xl text-sm text-on-band/75 line-clamp-2 lg:line-clamp-1" title="{{ $description }}">{{ $description }}</p>
 
             <div class="mt-7 flex flex-wrap gap-2" aria-label="Collections">
-                <a href="{{ route('catalog') }}" class="catalog-chip {{ ! $category ? 'is-active' : '' }}">All products</a>
+                <a href="{{ route('catalog') }}" class="catalog-chip {{ ! $category && ! $raw ? 'is-active' : '' }}">All products</a>
                 @foreach ($categories as $root)
                     <a href="{{ route('catalog.category', $root) }}" class="catalog-chip {{ $currentRoot?->id === $root->id ? 'is-active' : '' }}" @if ($currentRoot?->id === $root->id) aria-current="true" @endif>{{ $root->name }}</a>
                 @endforeach

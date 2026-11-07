@@ -9,6 +9,9 @@ use Illuminate\Support\Str;
 /**
  * Development accounts. Passwords are random per seed run and printed to the
  * console only outside production. In production set SEED_ADMIN_PASSWORD.
+ *
+ * Create-only: an account that already exists is left exactly as it is (password,
+ * name and roles are never overwritten), so re-running the seeder is always safe.
  */
 class StaffSeeder extends Seeder
 {
@@ -30,13 +33,18 @@ class StaffSeeder extends Seeder
 
         foreach ($accounts as $a) {
             $password = env('SEED_ADMIN_PASSWORD') ?: Str::password(16, symbols: false);
-            $user = User::query()->updateOrCreate(['email' => $a['email']], [
+            $user = User::query()->firstOrCreate(['email' => $a['email']], [
                 'name' => $a['name'],
                 'password' => $password,
                 'email_verified_at' => now(),
                 'is_active' => true,
             ]);
-            $user->syncRoles([$a['role']]);
+            if (! $user->wasRecentlyCreated) {
+                $this->command?->line("  {$a['email']} already exists; left unchanged.");
+
+                continue;
+            }
+            $user->assignRole($a['role']);
             if (! $production) {
                 $this->command?->info(sprintf('  %-28s %-12s password: %s  (development only)', $a['email'], $a['role'], $password));
             }

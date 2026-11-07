@@ -16,6 +16,7 @@
             <div class="flex {{ $aspect }} items-center justify-center text-muted"><x-icon name="image" class="h-10 w-10"/></div>
         @endif
         <div class="absolute left-3 top-3 flex flex-col items-start gap-1">
+            @if ($product->is_raw_leather)<x-badge tone="accent">Raw leather · quote only</x-badge>@endif
             @if ($product->is_custom)<x-badge tone="accent">Custom</x-badge>@endif
             @if ($product->is_demo)<x-badge>Demo product</x-badge>@endif
         </div>

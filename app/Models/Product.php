@@ -18,7 +18,7 @@ class Product extends Model
         'leather_type', 'dimensions', 'hardware', 'finishing', 'packaging', 'lead_time', 'specifications',
         'base_price_cents', 'moq', 'order_multiple', 'status', 'quote_enabled', 'public_pricing',
         'price_on_request', 'is_custom', 'customizable', 'availability', 'stock_quantity', 'is_featured',
-        'is_bestseller', 'is_demo', 'spec_sheet_path', 'meta_title', 'meta_description', 'published_at',
+        'is_bestseller', 'is_raw_leather', 'is_demo', 'spec_sheet_path', 'meta_title', 'meta_description', 'published_at',
     ];
 
     protected function casts(): array
@@ -35,10 +35,25 @@ class Product extends Model
             'customizable' => 'boolean',
             'is_featured' => 'boolean',
             'is_bestseller' => 'boolean',
+            'is_raw_leather' => 'boolean',
             'is_demo' => 'boolean',
             'availability' => Availability::class,
             'published_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Raw leather is never priced online: it is always "price on request" and quotable,
+     * however it was saved (editor, bulk action or CSV import).
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Product $product) {
+            if ($product->is_raw_leather) {
+                $product->price_on_request = true;
+                $product->quote_enabled = true;
+            }
+        });
     }
 
     public function category(): BelongsTo

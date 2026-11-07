@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Enums\Availability;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -23,10 +24,10 @@ class ProductCsv
         'sku', 'name', 'slug', 'category_slug', 'status', 'short_description', 'description', 'material', 'leather_type',
         'dimensions', 'hardware', 'finishing', 'packaging', 'lead_time', 'base_price', 'moq', 'order_multiple',
         'availability', 'stock_quantity', 'quote_enabled', 'public_pricing', 'price_on_request', 'is_custom',
-        'customizable', 'is_featured', 'is_bestseller', 'price_tiers',
+        'customizable', 'is_featured', 'is_bestseller', 'is_raw_leather', 'price_tiers',
     ];
 
-    private const BOOLEANS = ['quote_enabled', 'public_pricing', 'price_on_request', 'is_custom', 'customizable', 'is_featured', 'is_bestseller'];
+    private const BOOLEANS = ['quote_enabled', 'public_pricing', 'price_on_request', 'is_custom', 'customizable', 'is_featured', 'is_bestseller', 'is_raw_leather'];
 
     /** @param resource $out */
     public function export($out): void
@@ -174,7 +175,7 @@ class ProductCsv
         if ($v->fails()) {
             throw new InvalidArgumentException($v->errors()->first());
         }
-        if (\App\Models\ProductVariant::query()->where('sku', $row['sku'])->exists()) {
+        if (ProductVariant::query()->where('sku', $row['sku'])->exists()) {
             throw new InvalidArgumentException("SKU {$row['sku']} is used by a variant.");
         }
 

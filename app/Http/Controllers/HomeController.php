@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\HeroSlide;
 use App\Models\Product;
+use Illuminate\Support\Collection;
 
 class HomeController extends Controller
 {
@@ -15,7 +16,9 @@ class HomeController extends Controller
         return view('store.home', [
             'categories' => Category::active()->roots()->where('is_featured', true)->orderBy('sort_order')->withCount('products')->get(),
             'bestsellers' => Product::published()->where('is_bestseller', true)->with($with)->latest('published_at')->limit(4)->get(),
-            'newArrivals' => Product::published()->with($with)->latest('published_at')->limit(4)->get(),
+            'newArrivals' => Product::published()->where('is_raw_leather', false)->with($with)->latest('published_at')->limit(4)->get(),
+            'rawLeather' => Product::published()->where('is_raw_leather', true)->with(['approvedImages', 'category'])
+                ->orderByDesc('is_featured')->latest('published_at')->limit(5)->get(),
             'heroSlides' => HeroSlide::forHomepage(),
             'featured' => $this->featuredProducts(),
             'productsAutoplaySeconds' => (int) setting('homepage.products_autoplay_seconds', 5),
@@ -28,9 +31,9 @@ class HomeController extends Controller
      * Featured products carousel: products marked "Featured" first (admin-controlled), topped up
      * with bestsellers, up to eight.
      *
-     * @return \Illuminate\Support\Collection<int, Product>
+     * @return Collection<int, Product>
      */
-    private function featuredProducts(): \Illuminate\Support\Collection
+    private function featuredProducts(): Collection
     {
         $with = ['approvedImages', 'priceTiers', 'category'];
         $products = Product::published()->where('is_featured', true)->with($with)->orderByDesc('published_at')->limit(8)->get();

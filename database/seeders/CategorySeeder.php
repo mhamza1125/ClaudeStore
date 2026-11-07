@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\Settings;
 use Database\Seeders\Support\DemoImage;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Cache;
@@ -12,10 +13,10 @@ use Illuminate\Support\Facades\Storage;
 /**
  * The Leamate category tree. Safe to run repeatedly and on a live database:
  *
- * - categories are matched by slug, so nothing is duplicated (existing rows are updated);
- * - products still in a category from the earlier demo tree are moved to the matching new
- *   category (nothing else about a product changes);
- * - those old categories are then deactivated, never deleted.
+ * - categories are matched by slug and only created when missing; an existing category
+ *   (and every admin edit to it: name, parent, visibility, image) is never changed;
+ * - once only, products still in a category from the earlier demo tree are moved to the
+ *   matching new category and those old categories are deactivated (never deleted).
  */
 class CategorySeeder extends Seeder
 {
@@ -70,6 +71,14 @@ class CategorySeeder extends Seeder
     {
         $bySlug = $this->tree();
 
+        // One-time move away from the earlier demo tree; never repeated, so an admin who later
+        // reactivates or reuses one of those categories is not overridden.
+        if (setting('seed.legacy_categories_moved')) {
+            $this->command?->info('  Categories ready ('.count($bySlug).').');
+
+            return;
+        }
+
         $legacy = Category::query()->whereIn('slug', array_keys(self::LEGACY))->get()->keyBy('id');
         $moved = 0;
         foreach (Product::query()->whereIn('category_id', $legacy->keys())->get() as $product) {
@@ -79,8 +88,9 @@ class CategorySeeder extends Seeder
         }
         Category::query()->whereKey($legacy->keys())->update(['is_active' => false, 'is_featured' => false]);
         Cache::forget('nav.categories');
+        app(Settings::class)->set(['seed.legacy_categories_moved' => true]);
 
-        $this->command?->info("  Categories ready (".count($bySlug)."); {$moved} product(s) moved from the old tree.");
+        $this->command?->info('  Categories ready ('.count($bySlug)."); {$moved} product(s) moved from the old tree.");
     }
 
     /** @return array<string, Category> */
@@ -108,17 +118,17 @@ class CategorySeeder extends Seeder
     }
 
     /**
-     * Name and place in the tree are always enforced; description, order and featuring are set
-     * only when the category is created, so later admin edits survive a re-run.
+     * Create-only: an existing category is returned untouched, so admin edits survive a re-run.
+     * The one exception is a category still hanging under a retired demo-tree parent, which is
+     * moved into the new tree (it would otherwise be unreachable). Nothing is ever deleted.
      */
-    private function upsert(string $slug, array $always, array $onCreate): Category
+    private function upsert(string $slug, array $attributes, array $onCreate): Category
     {
-        $category = Category::query()->firstOrNew(['slug' => $slug]);
-        $category->fill($always + ['is_active' => true]);
-        if (! $category->exists) {
-            $category->fill($onCreate);
+        $category = Category::query()->firstOrCreate(['slug' => $slug], $attributes + $onCreate + ['is_active' => true]);
+        if (! $category->wasRecentlyCreated && $category->parent_id
+            && Category::query()->whereKey($category->parent_id)->whereIn('slug', array_keys(self::LEGACY))->exists()) {
+            $category->update($attributes + ['is_active' => true]);
         }
-        $category->save();
 
         return $category;
     }

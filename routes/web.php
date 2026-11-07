@@ -14,7 +14,10 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\QuoteSubmissionController;
 use App\Http\Controllers\SearchController;
+use App\Http\Middleware\MarkAdminSectionSeen;
+use App\Images\ProtectedImages;
 use App\Livewire;
+use App\Services\AdminActivity;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,7 +31,7 @@ Route::get('/search/suggest', [SearchController::class, 'suggest'])->middleware(
 Route::get('/products/{product:slug}/spec-sheet', [ProductController::class, 'specSheet'])->name('products.spec-sheet');
 // Watermarked product image renditions (signed URLs; originals are never public).
 Route::get('/media/products/{image}/{size}/{signature}', [ProductImageController::class, 'show'])
-    ->whereIn('size', array_keys(\App\Images\ProtectedImages::SIZES))->middleware('throttle:media')->name('media.product-image');
+    ->whereIn('size', array_keys(ProtectedImages::SIZES))->middleware('throttle:media')->name('media.product-image');
 Route::post('/assistant/messages', [AssistantController::class, 'send'])->middleware('throttle:assistant')->name('assistant.send');
 Route::post('/assistant/reset', [AssistantController::class, 'reset'])->name('assistant.reset');
 Route::post('/newsletter', [NewsletterController::class, 'store'])->middleware('throttle:newsletter')->name('newsletter.subscribe');
@@ -95,8 +98,11 @@ Route::middleware('auth')->prefix('account')->name('account.')->group(function (
 /*
 | Admin (custom Livewire admin; no Filament)
 */
-Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'can:admin.access', MarkAdminSectionSeen::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    // Navigation badge counts, polled by the admin layout.
+    Route::get('/activity', fn (AdminActivity $activity) => response()->json(['counts' => $activity->counts(request()->user())]))
+        ->middleware('throttle:sensitive')->name('activity');
 
     Route::get('/quotes', Livewire\Admin\QuoteIndex::class)->name('quotes.index');
     Route::get('/quotes/{quote:reference}', Livewire\Admin\QuoteWorkspace::class)->name('quotes.show');

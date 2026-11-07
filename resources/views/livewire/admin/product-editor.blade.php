@@ -108,7 +108,7 @@
             <section class="panel space-y-4">
                 <h2 class="text-2xl">Status &amp; visibility</h2>
                 <x-select-field name="form.status" model="form.status" label="Status" :options="['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived']"/>
-                @foreach (['quote_enabled' => 'Quote requests enabled', 'public_pricing' => 'Show prices publicly (otherwise approved trade accounts only)', 'price_on_request' => 'Price on request (hide all prices)', 'is_custom' => 'Custom / made-to-order product', 'customizable' => 'Offer “Request customisation”', 'is_featured' => 'Featured', 'is_bestseller' => 'Bestseller'] as $field => $label)
+                @foreach (['quote_enabled' => 'Quote requests enabled', 'public_pricing' => 'Show prices publicly (otherwise approved trade accounts only)', 'price_on_request' => 'Price on request (hide all prices)', 'is_custom' => 'Custom / made-to-order product', 'customizable' => 'Offer “Request customisation”', 'is_featured' => 'Featured', 'is_bestseller' => 'Bestseller', 'is_raw_leather' => 'Raw leather (homepage gallery; always quote-only, price on request)'] as $field => $label)
                     <label class="flex items-start gap-2 text-sm"><input type="checkbox" class="checkbox mt-0.5" wire:model="form.{{ $field }}"> {{ $label }}</label>
                 @endforeach
             </section>

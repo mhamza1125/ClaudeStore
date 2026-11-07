@@ -7,6 +7,7 @@ use App\Models\Company;
 use App\Models\CustomerGroup;
 use App\Models\User;
 use App\Pricing\PriceAccess;
+use App\Rules\TrustedEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -23,7 +24,7 @@ class CreateNewUser implements CreatesNewUsers
     {
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class)],
+            'email' => ['required', 'string', 'email:rfc', 'max:255', new TrustedEmail, Rule::unique(User::class)],
             'company_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:40'],
             'country' => ['nullable', 'string', Rule::in(array_keys(countries()))],

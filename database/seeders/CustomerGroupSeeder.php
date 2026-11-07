@@ -16,7 +16,8 @@ class CustomerGroupSeeder extends Seeder
             ['slug' => 'vip', 'name' => 'VIP / negotiated', 'discount_bps' => 0, 'description' => 'Accounts with negotiated, company-specific prices.'],
         ];
         foreach ($groups as $g) {
-            CustomerGroup::query()->updateOrCreate(['slug' => $g['slug']], $g);
+            // Create-only: groups edited in admin (discounts, names) are never overwritten.
+            CustomerGroup::query()->firstOrCreate(['slug' => $g['slug']], $g);
         }
     }
 }

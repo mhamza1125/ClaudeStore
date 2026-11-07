@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\NewsletterSubscriber;
+use App\Rules\TrustedEmail;
 use Illuminate\Http\Request;
 
 class NewsletterController extends Controller
@@ -16,7 +17,7 @@ class NewsletterController extends Controller
             return back()->with('status', 'Thank you for subscribing.');
         }
 
-        $data = $request->validateWithBag('newsletter', ['email' => ['required', 'email:rfc', 'max:255']]);
+        $data = $request->validateWithBag('newsletter', ['email' => ['required', 'email:rfc', 'max:255', new TrustedEmail]]);
         NewsletterSubscriber::query()->updateOrCreate(
             ['email' => strtolower($data['email'])],
             ['ip_address' => $request->ip(), 'unsubscribed_at' => null],

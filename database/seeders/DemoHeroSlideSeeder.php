@@ -41,9 +41,13 @@ class DemoHeroSlideSeeder extends Seeder
         ];
 
         foreach ($slides as $i => $s) {
+            // Create-only: slides that already exist (and any admin edits to them) are left alone.
+            if (HeroSlide::query()->where('title', $s['title'])->exists()) {
+                continue;
+            }
             $path = "demo/hero/slide-{$i}.svg";
             Storage::disk('public')->put($path, DemoImage::banner($s['shape'], $s['color'], $s['title'], $s['tone']));
-            HeroSlide::query()->updateOrCreate(['title' => $s['title']], [
+            HeroSlide::query()->create([
                 ...collect($s)->except(['shape', 'color', 'tone', 'sku'])->all(),
                 'image_path' => $path,
                 'image_alt' => $s['title'].' (demo illustration)',

@@ -18,6 +18,18 @@ return [
     'sales_notification_email' => env('SALES_NOTIFICATION_EMAIL', 'info@leamate.com'),
     'quote_rate_limit_per_hour' => (int) env('QUOTE_RATE_LIMIT_PER_HOUR', 5),
 
+    /*
+    | Email acceptance (App\Rules\TrustedEmail) for registration, quotes, contact and newsletter.
+    | Disposable / temporary domains are rejected (resources/data/disposable-email-domains.txt,
+    | refreshed with `php artisan emails:update-blocklist`), plus any domains listed here; and the
+    | domain must have a mail server (MX record).
+    */
+    'email' => [
+        'verify_mx' => (bool) env('EMAIL_VERIFY_MX', true),
+        'blocked_domains' => array_filter(array_map('trim', explode(',', (string) env('EMAIL_BLOCKED_DOMAINS', '')))),
+        'allowed_domains' => array_filter(array_map('trim', explode(',', (string) env('EMAIL_ALLOWED_DOMAINS', '')))),
+    ],
+
     // Shorter labels for categories in the header menus only (slug => label). Category pages,
     // breadcrumbs, titles and the footer keep the full category name.
     'nav_labels' => [

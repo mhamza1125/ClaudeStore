@@ -39,6 +39,10 @@ class Catalog extends Component
     #[Url(except: '')]
     public string $priceMax = '';
 
+    /** Raw leather listing (/products?raw=1), linked from the homepage gallery. */
+    #[Url(except: false)]
+    public bool $raw = false;
+
     #[Url(except: 'featured')]
     public string $sort = 'featured';
 
@@ -116,7 +120,7 @@ class Catalog extends Component
 
     public function render(PriceAccess $priceAccess)
     {
-        $base = Product::published();
+        $base = Product::published()->when($this->raw, fn (Builder $q) => $q->where('is_raw_leather', true));
         $query = (clone $base)
             ->with(['approvedImages', 'priceTiers', 'category', 'activeVariants'])
             ->when($this->category, fn (Builder $q) => $q->whereIn('category_id', $this->category->selfAndChildIds()))
@@ -157,7 +161,7 @@ class Catalog extends Component
             'availabilities' => Availability::options(),
             'access' => $access,
         ])->layout('components.layouts.store', [
-            'title' => $this->category?->name ?? (trim($this->q) !== '' ? 'Search: '.$this->q : 'All products'),
+            'title' => $this->category?->name ?? (trim($this->q) !== '' ? 'Search: '.$this->q : ($this->raw ? 'Raw leather' : 'All products')),
             'description' => $this->category?->description ?? 'Wholesale leather bags, wallets, belts and accessories with volume pricing.',
             'canonical' => $this->category ? route('catalog.category', $this->category) : route('catalog'),
         ]);

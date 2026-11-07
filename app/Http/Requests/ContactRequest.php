@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\TrustedEmail;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
@@ -22,7 +23,7 @@ class ContactRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:120'],
-            'email' => ['required', 'email:rfc', 'max:255'],
+            'email' => ['required', 'email:rfc', 'max:255', new TrustedEmail],
             'phone' => ['nullable', 'string', 'max:40', 'regex:/^\+?[0-9 ()\-.]{6,40}$/'],
             'company' => ['nullable', 'string', 'max:160'],
             'subject' => ['nullable', 'string', 'max:150'],

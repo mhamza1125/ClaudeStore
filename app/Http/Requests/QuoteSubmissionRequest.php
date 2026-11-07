@@ -3,9 +3,10 @@
 namespace App\Http\Requests;
 
 use App\Pricing\PriceAccess;
+use App\Rules\TrustedEmail;
 use Illuminate\Contracts\Encryption\DecryptException;
-use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
@@ -33,7 +34,7 @@ class QuoteSubmissionRequest extends FormRequest
         return [
             'company_name' => ['required', 'string', 'max:255'],
             'contact_name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email:rfc', 'max:255'],
+            'email' => ['required', 'email:rfc', 'max:255', new TrustedEmail],
             'phone' => ['required', 'string', 'max:40', 'regex:/^\+?[0-9 ()\-.]{6,40}$/'],
             'country' => ['required', Rule::in(array_keys(countries()))],
             'delivery_destination' => ['required', 'string', 'max:255'],

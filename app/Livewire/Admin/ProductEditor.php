@@ -19,7 +19,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use InvalidArgumentException;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -87,6 +86,7 @@ class ProductEditor extends Component
             'stock_quantity' => $product?->stock_quantity,
             'is_featured' => $product?->is_featured ?? false,
             'is_bestseller' => $product?->is_bestseller ?? false,
+            'is_raw_leather' => $product?->is_raw_leather ?? false,
             'meta_title' => $product?->meta_title ?? '',
             'meta_description' => $product?->meta_description ?? '',
         ];
@@ -251,12 +251,13 @@ class ProductEditor extends Component
                 'stock_quantity' => $f['stock_quantity'] === '' ? null : $f['stock_quantity'],
                 'is_featured' => (bool) $f['is_featured'],
                 'is_bestseller' => (bool) $f['is_bestseller'],
+                'is_raw_leather' => (bool) $f['is_raw_leather'],
                 'specifications' => array_values($this->specs) ?: null,
             ]);
             if ($product->status === 'published' && ! $product->published_at) {
                 $product->published_at = now();
             }
-            $changes = AuditLogger::diff($product, ['name', 'sku', 'base_price_cents', 'moq', 'order_multiple', 'status', 'public_pricing', 'price_on_request', 'quote_enabled']);
+            $changes = AuditLogger::diff($product, ['name', 'sku', 'base_price_cents', 'moq', 'order_multiple', 'status', 'public_pricing', 'price_on_request', 'quote_enabled', 'is_raw_leather']);
             $product->save();
 
             // Variants

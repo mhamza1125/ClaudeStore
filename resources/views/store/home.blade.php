@@ -43,6 +43,9 @@
         </section>
     @endif
 
+    {{-- Raw leather gallery (products flagged "Raw leather"; always quote-only) --}}
+    @include('store.partials.raw-leather-gallery', ['products' => $rawLeather])
+
     {{-- Bestsellers --}}
     @if ($bestsellers->isNotEmpty())
         <section class="border-y border-border bg-surface py-20" aria-labelledby="best-heading">
