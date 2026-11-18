@@ -35,6 +35,10 @@ explicitly. Do not do this in production.
 
 ## Subsequent deploys
 
+On Hostinger shared hosting you can deploy from the browser instead: see
+[deploy/README.md](../deploy/README.md).
+
+
 ```bash
 php artisan down --render="errors::503"
 git pull
