@@ -55,7 +55,7 @@ class HomepageBannerTest extends TestCase
         $this->assertLessThan(strpos($html, '>Second<'), strpos($html, '>First<'));
         $this->assertSame(1, substr_count($html, '<h1'));
         $this->assertStringContainsString('object-position: top', $html);
-        $this->assertStringContainsString('href="/products" class="btn btn-primary sm:px-7 sm:py-3.5 sm:text-base">Go', $html);
+        $this->assertMatchesRegularExpression('#href="/products" class="btn btn-primary[^"]*">Go#', $html);
         // Inactive slides are inert (no focusable hidden links); the first is not.
         $this->assertMatchesRegularExpression('#<div class="hero-slide[^>]*\sinert\s[^>]*data-slide="1"#', $html);
         $this->assertDoesNotMatchRegularExpression('#<div class="hero-slide[^>]*\sinert\s[^>]*data-slide="0"#', $html);

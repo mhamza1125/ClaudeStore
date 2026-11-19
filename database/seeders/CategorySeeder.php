@@ -104,7 +104,7 @@ class CategorySeeder extends Seeder
             ]);
             // Clearly labelled demo artwork outside production, only where no image was chosen.
             if (! app()->isProduction() && ! $parent->image_path) {
-                Storage::disk('public')->put($path = "demo/categories/{$slug}.svg", DemoImage::svg($shape, '#7B3F22', 'lifestyle', $name));
+                Storage::disk('public')->put($path = "demo/categories/{$slug}.svg", DemoImage::forCategory($slug, $shape, $name));
                 $parent->update(['image_path' => $path]);
             }
 

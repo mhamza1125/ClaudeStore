@@ -1,4 +1,33 @@
-<x-layouts.store :description="'Wholesale and private-label leather bags, wallets, belts and accessories. Volume pricing and fast quotations for trade buyers.'">
+<x-layouts.store :description="'Wholesale and private-label leather bags, wallets, belts and accessories from a Sialkot manufacturer. Volume pricing and fast quotations for trade buyers.'" :canonical="route('home')">
+    @push('head')
+        {{-- Organization + WebSite (with catalogue search) structured data. --}}
+        <script type="application/ld+json">{!! json_encode([
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                array_filter([
+                    '@type' => 'Organization',
+                    '@id' => url('/').'#organization',
+                    'name' => $brand['name'],
+                    'url' => url('/'),
+                    'logo' => $brand['logo'] ?? asset(str_replace('.png', '@2x.png', config('brand.default_logo'))),
+                    'description' => config('brand.description'),
+                    'email' => $brand['email'],
+                    'telephone' => preg_replace('/[^\d+]/', '', $brand['phone']),
+                    'address' => ['@type' => 'PostalAddress', 'streetAddress' => $brand['address'], 'addressCountry' => 'PK'],
+                    'sameAs' => array_values(array_filter([setting('social.instagram'), setting('social.linkedin'), setting('social.facebook')])) ?: null,
+                ]),
+                [
+                    '@type' => 'WebSite',
+                    '@id' => url('/').'#website',
+                    'url' => url('/'),
+                    'name' => $brand['name'],
+                    'publisher' => ['@id' => url('/').'#organization'],
+                    'potentialAction' => ['@type' => 'SearchAction', 'target' => route('catalog').'?q={search_term_string}', 'query-input' => 'required name=search_term_string'],
+                ],
+            ],
+        ], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) !!}</script>
+    @endpush
+
     {{-- Notices from redirects to home (e.g. "You have been signed out.") --}}
     @if (session('status') || session('warning') || session('error'))
         <div class="container-page pt-6"><x-flash/></div>
@@ -7,44 +36,68 @@
     {{-- 1. Hero (Admin → Homepage slides) --}}
     @include('store.partials.hero-banner', ['slides' => $heroSlides, 'autoplay' => $heroAutoplaySeconds])
 
-    {{-- 2. Trade advantages: one compact line, not four cards --}}
-    <div class="border-b border-border bg-surface">
-        <ul class="container-page grid grid-cols-2 divide-border py-5 text-sm sm:grid-cols-4 sm:divide-x" role="list">
-            @foreach ([['box', 'Wholesale supply'], ['tag', 'Private label'], ['scissors', 'Custom manufacturing'], ['folder', 'Raw leather']] as [$icon, $label])
-                <li class="flex items-center gap-3 px-1 py-2 sm:justify-center sm:px-4">
-                    <x-icon :name="$icon" class="h-5 w-5 shrink-0 text-brass"/>
-                    <span class="font-medium tracking-wide">{{ $label }}</span>
+    {{-- 2. Ways to work with us: routes each kind of buyer in one glance. --}}
+    <section class="container-page pb-4 pt-2" aria-labelledby="services-heading">
+        <h2 id="services-heading" class="sr-only">Ways to work with {{ $brand['name'] }}</h2>
+        <ul class="reveal card grid grid-cols-2 overflow-hidden lg:grid-cols-4" role="list">
+            @foreach ([
+                ['box', 'Wholesale supply', 'Catalogue styles with volume price breaks.', route('catalog'), 'Browse products'],
+                ['tag', 'Private label', 'Your logo, colours and packaging.', route('pages.show', 'custom-manufacturing'), 'How it works'],
+                ['scissors', 'Custom manufacturing', 'Bespoke patterns from your tech pack.', route('quote.basket'), 'Start a request'],
+                ['layers', 'Raw leather', 'Hides and skins, quoted by lot.', route('catalog', ['raw' => 1]), 'See leathers'],
+            ] as [$icon, $title, $text, $url, $cta])
+                <li class="relative border-border p-4 transition-colors hover:bg-bg sm:p-7 [&:nth-child(-n+2)]:border-b [&:nth-child(odd)]:border-r lg:[&:nth-child(-n+2)]:border-b-0 lg:[&:not(:last-child)]:border-r">
+                    <span class="stat-icon mb-4 rounded-full bg-clay-soft sm:mb-5"><x-icon :name="$icon" class="h-[18px] w-[18px]"/></span>
+                    <h3 class="font-sans text-[15px] font-semibold tracking-normal sm:text-base">{{ $title }}</h3>
+                    <p class="mt-1 hidden text-sm text-muted sm:block">{{ $text }}</p>
+                    <a href="{{ $url }}" class="link-arrow mt-3 text-[13px] after:absolute after:inset-0 sm:mt-4 sm:text-sm">{{ $cta }} <x-icon name="arrow-right" class="h-4 w-4"/></a>
                 </li>
             @endforeach
         </ul>
-    </div>
+    </section>
 
-    {{-- 3. Explore collections (categories marked "featured" in Admin → Categories) --}}
+    {{-- 3. Collections (categories marked "featured" in Admin → Categories). Bento layout; every
+         label sits on a solid card so it reads on any photograph. --}}
     @if ($categories->isNotEmpty())
-        @php $cols = [1 => 'lg:grid-cols-1', 2 => 'lg:grid-cols-2', 3 => 'lg:grid-cols-3'][$categories->count()] ?? 'lg:grid-cols-4'; @endphp
+        @php
+            $n = $categories->count();
+            // Grid spans per position so the bento always closes neatly (4-column grid on desktop).
+            $span = fn (int $i) => match (true) {
+                $n === 1 => 'col-span-2 lg:col-span-4 lg:row-span-2',
+                $n === 2 => 'col-span-2 lg:col-span-2 lg:row-span-2',
+                $i === 0 => 'col-span-2 lg:col-span-2 lg:row-span-2',
+                $n === 3 => 'col-span-2 lg:col-span-2',
+                $n === 4 && $i === 1 => 'col-span-2 lg:col-span-2',
+                default => 'col-span-1',
+            };
+        @endphp
         <section class="section-y container-page" aria-labelledby="cat-heading">
-            <div class="mb-10 flex flex-wrap items-end justify-between gap-4 lg:mb-14">
-                <div>
-                    <p class="eyebrow mb-3">The collection</p>
+            <div class="mb-10 flex flex-wrap items-end justify-between gap-6 lg:mb-14">
+                <div class="max-w-2xl">
+                    <p class="eyebrow eyebrow-stitch mb-4">The collections</p>
                     <h2 id="cat-heading" class="h-section">Explore collections</h2>
+                    <p class="lead mt-4 !text-base sm:!text-lg">Bags, belts, wallets and small leather goods, made in our Sialkot workshops for retail, corporate and private-label programmes.</p>
                 </div>
-                <a href="{{ route('catalog') }}" class="link hidden text-sm sm:inline">View all products</a>
+                <a href="{{ route('catalog') }}" class="btn btn-secondary">View all products <x-icon name="arrow-right" class="h-4 w-4"/></a>
             </div>
-            {{-- Staggered columns on desktop give the grid an editorial rhythm without extra markup. --}}
-            <ul class="reveal grid grid-cols-2 gap-3 sm:gap-5 {{ $cols }}" role="list">
+            <ul class="reveal grid grid-cols-2 gap-3 sm:gap-4 lg:auto-rows-[17.5rem] lg:grid-cols-4 lg:gap-5" role="list">
                 @foreach ($categories as $category)
-                    @php $img = $category->imageUrl(); @endphp
-                    <li @class(['lg:mt-12' => $loop->even && $categories->count() > 2])>
-                        <a href="{{ route('catalog.category', $category) }}" class="group relative block aspect-[4/5] overflow-hidden rounded-sm {{ $img ? 'bg-elevated' : 'bg-band text-on-band' }}">
+                    @php $img = $category->imageUrl(); $big = $loop->first && $n > 1; $kids = $category->children; @endphp
+                    <li class="{{ $span($loop->index) }}">
+                        <a href="{{ route('catalog.category', $category) }}" class="tile h-full {{ $big ? 'min-h-[22rem]' : 'min-h-[15rem] sm:min-h-[17.5rem]' }}">
                             @if ($img)
-                                <img src="{{ $img }}" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04] motion-reduce:transition-none">
-                                <div class="absolute inset-x-0 bottom-0 bg-linear-to-t from-black/75 via-black/25 to-transparent p-4 pt-20 text-white sm:p-6 sm:pt-24">
-                            @else
-                                <div class="absolute inset-x-0 bottom-0 p-4 sm:p-6">
+                                <img src="{{ $img }}" alt="" loading="lazy" class="absolute inset-0 h-full w-full object-cover motion-reduce:transition-none">
                             @endif
-                                <h3 class="font-serif text-2xl leading-tight sm:text-3xl">{{ $category->name }}</h3>
-                                @if ($category->description)<p class="mt-1 line-clamp-2 hidden text-sm opacity-85 sm:block">{{ $category->description }}</p>@endif
-                                <p class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em]">Explore <x-icon name="arrow-right" class="h-3.5 w-3.5 transition-transform group-hover:translate-x-1"/></p>
+                            <div class="tile-label">
+                                <div class="min-w-0">
+                                    <h3 class="font-serif leading-tight {{ $big ? 'text-[1.75rem] sm:text-[2.125rem]' : 'text-xl sm:text-2xl' }}">{{ $category->name }}</h3>
+                                    @if ($big && $kids->isNotEmpty())
+                                        <p class="mt-1.5 line-clamp-2 text-sm text-muted">{{ $kids->take(4)->pluck('name')->implode(' · ') }}@if ($kids->count() > 4) · +{{ $kids->count() - 4 }} more @endif</p>
+                                    @elseif ($kids->isNotEmpty())
+                                        <p class="mt-1 hidden text-xs text-muted sm:block">{{ $kids->count() }} {{ \Illuminate\Support\Str::plural('range', $kids->count()) }}</p>
+                                    @endif
+                                </div>
+                                <span class="tile-arrow" aria-hidden="true"><x-icon name="arrow-right" class="h-4 w-4"/></span>
                             </div>
                         </a>
                     </li>
@@ -53,128 +106,97 @@
         </section>
     @endif
 
-    {{-- Raw leather (products flagged "Raw leather"; always quote-only). Hidden when there are none. --}}
+    {{-- 4. Featured products: one section; tabs only when more than one group has products --}}
+    @include('store.partials.featured-products', ['tabs' => $productTabs, 'autoplay' => $productsAutoplaySeconds])
+
+    {{-- 5. Raw leather (products flagged "Raw leather"; always quote-only). Hidden when there are none. --}}
     @include('store.partials.raw-leather-gallery', ['products' => $rawLeather])
 
-    {{-- 4. Manufacturing and private label --}}
-    <section class="bg-band text-on-band" aria-labelledby="custom-heading">
-        <div class="container-page section-y grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
+    {{-- 6. Private label and manufacturing: the dark band, with a stitched process timeline. --}}
+    <section class="band grain" aria-labelledby="custom-heading">
+        <div class="container-page section-y grid gap-14 lg:grid-cols-12 lg:gap-20">
             <div class="lg:col-span-6">
-                <span class="brass-rule mb-6"></span>
-                <h2 id="custom-heading" class="h-section sm:text-5xl lg:text-6xl">Your Brand. Our Craftsmanship.</h2>
-                <p class="mt-6 max-w-lg text-lg leading-relaxed text-on-band/80">Private-label programmes from pattern to packaging. Share a tech pack or reference photos and we will quote to your specification.</p>
-                <ul class="mt-8 grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2">
+                <p class="eyebrow eyebrow-stitch mb-5">Private label &amp; manufacturing</p>
+                <h2 id="custom-heading" class="h-section">Your brand. <span class="italic text-hide">Our craftsmanship.</span></h2>
+                <p class="mt-6 max-w-lg text-lg leading-relaxed text-on-band/75">Private-label programmes from pattern to packaging. Share a tech pack or reference photos and we will quote to your specification.</p>
+                <ul class="mt-8 flex flex-wrap gap-2" role="list">
                     @foreach (config('store.manufacturing.capabilities') as $item)
-                        <li class="flex gap-3"><x-icon name="check" class="mt-0.5 h-4 w-4 shrink-0 text-brass"/>{{ $item }}</li>
+                        <li class="inline-flex items-center gap-2 rounded-full border border-on-band/15 bg-band-2 px-3.5 py-1.5 text-[13px] text-on-band/85"><x-icon name="check" class="h-3.5 w-3.5 text-thread"/>{{ $item }}</li>
                     @endforeach
                 </ul>
                 <div class="mt-10 flex flex-wrap gap-3">
-                    <a href="{{ route('pages.show', 'custom-manufacturing') }}" class="btn btn-lg border-on-band text-on-band hover:bg-on-band hover:text-band">Private label &amp; manufacturing <x-icon name="arrow-right" class="h-4 w-4"/></a>
+                    <a href="{{ route('pages.show', 'custom-manufacturing') }}" class="btn btn-primary btn-lg">Private label &amp; manufacturing <x-icon name="arrow-right" class="h-4 w-4"/></a>
+                    <a href="{{ route('quote.basket') }}" class="btn btn-outline-light btn-lg">Send a brief</a>
                 </div>
             </div>
-            <ol class="grid gap-x-8 gap-y-8 sm:grid-cols-2 lg:col-span-6 lg:pt-4">
+            <ol class="relative lg:col-span-6 lg:pt-2">
                 @foreach (config('store.manufacturing.process') as $i => [$step, $text])
-                    <li class="border-t border-on-band/25 pt-5">
-                        <span class="font-serif text-4xl text-brass">0{{ $i + 1 }}</span>
-                        <p class="mt-2 font-medium">{{ $step }}</p>
-                        <p class="mt-1.5 text-sm leading-relaxed text-on-band/70">{{ $text }}</p>
+                    <li class="relative flex gap-6 pb-10 last:pb-0">
+                        @unless ($loop->last)<span class="stitch-v absolute bottom-0 left-[1.4375rem] top-14" aria-hidden="true"></span>@endunless
+                        <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-[1.5px] border-dashed border-thread/60 font-serif text-lg text-thread tabular-nums">0{{ $i + 1 }}</span>
+                        <div class="pt-2.5">
+                            <h3 class="font-sans text-base font-semibold tracking-normal text-on-band">{{ $step }}</h3>
+                            <p class="mt-1.5 max-w-md text-sm leading-relaxed text-on-band/65">{{ $text }}</p>
+                        </div>
                     </li>
                 @endforeach
             </ol>
         </div>
     </section>
 
-    {{-- 5. Featured products: one section; tabs only when more than one group has products --}}
-    @include('store.partials.featured-products', ['tabs' => $productTabs, 'autoplay' => $productsAutoplaySeconds])
-
-    {{-- 6. Why Leamate --}}
-    <section class="border-y border-border bg-surface" aria-labelledby="benefits-heading">
-        <div class="container-page section-y">
-            <div class="mb-10 max-w-2xl lg:mb-14">
-                <h2 id="benefits-heading" class="h-section">Why {{ $brand['name'] }}</h2>
-                <p class="mt-4 text-muted">Every product shows its minimum order quantity and price breaks. Approved trade accounts see their own group and negotiated pricing automatically.</p>
-            </div>
-            <div class="reveal grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-                @foreach ([
-                    ['scissors', 'Manufacturing capabilities', 'Bags, wallets, belts and accessories made in Sialkot, from existing styles to bespoke patterns.'],
-                    ['shield', 'Quality control', 'Goods are checked before dispatch, with samples available on request before volume orders.'],
-                    ['box', 'Wholesale supply', 'Transparent volume pricing, with price breaks shown on every product page.'],
-                    ['tag', 'Private-label solutions', 'Embossing, custom colours, branded hardware and retail packaging for your brand.'],
-                ] as [$icon, $heading, $text])
-                    <div class="border-t border-border-strong pt-6">
-                        <x-icon :name="$icon" class="mb-4 h-6 w-6 text-brass"/>
-                        <h3 class="font-serif text-2xl">{{ $heading }}</h3>
-                        <p class="mt-2 text-sm leading-relaxed text-muted">{{ $text }}</p>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    {{-- 7. Company and craftsmanship (copy: Admin → Settings → company introduction, else the brand description) --}}
+    {{-- 7. The company and the standard it trades on (one section: no repeated claims). Copy:
+         Admin → Settings → company introduction, else the brand description. --}}
     <section class="section-y container-page" aria-labelledby="craft-heading">
-        <div class="reveal grid items-center gap-10 lg:grid-cols-12 lg:gap-16">
-            <div class="lg:col-span-6">
-                <p class="eyebrow mb-3">The company</p>
+        <div class="reveal grid items-start gap-12 lg:grid-cols-12 lg:gap-16">
+            <div class="lg:sticky lg:top-32 lg:col-span-5">
+                <p class="eyebrow eyebrow-stitch mb-4">The company</p>
                 <h2 id="craft-heading" class="h-section">About {{ $brand['name'] }}</h2>
-                <p class="mt-5 max-w-xl text-lg leading-relaxed text-muted">{{ setting('company.intro') ?: config('brand.description') }}</p>
-                <p class="mt-4 flex items-center gap-2 text-sm text-muted"><x-icon name="pin" class="h-4 w-4 text-brass"/> {{ $brand['address'] }}</p>
-                <a href="{{ route('pages.show', 'about') }}" class="btn btn-secondary mt-8">About {{ $brand['name'] }} <x-icon name="arrow-right" class="h-4 w-4"/></a>
+                <p class="lead mt-6 !text-lg">{{ setting('company.intro') ?: config('brand.description') }}</p>
+                <p class="mt-5 flex items-center gap-2 text-sm text-muted"><x-icon name="pin" class="h-4 w-4 text-clay"/> {{ $brand['address'] }}</p>
+                <div class="mt-8 flex flex-wrap gap-3">
+                    <a href="{{ route('pages.show', 'about') }}" class="btn btn-secondary">About {{ $brand['name'] }} <x-icon name="arrow-right" class="h-4 w-4"/></a>
+                    <a href="{{ route('contact') }}" class="btn btn-ghost">Contact us</a>
+                </div>
             </div>
-            <ul class="grid gap-6 border-t border-border-strong pt-8 sm:grid-cols-2 lg:col-span-6 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0" role="list">
-                @foreach ([
-                    ['Materials stated plainly', 'Each product page lists the leather type, hardware, finishing and packaging we have verified for that item.'],
-                    ['Specifications on request', 'Specification sheets and lead times are available for catalogue products.'],
-                    ['Samples before volume', 'Samples are available on request before you commit to a volume order.'],
-                    ['Quality checks', 'Goods are checked before dispatch.'],
-                ] as [$heading, $text])
-                    <li>
-                        <h3 class="font-serif text-xl">{{ $heading }}</h3>
-                        <p class="mt-1.5 text-sm leading-relaxed text-muted">{{ $text }}</p>
-                    </li>
-                @endforeach
-            </ul>
+            <div class="card overflow-hidden lg:col-span-7">
+                <div class="flex items-center justify-between gap-4 bg-elevated px-6 py-4 sm:px-8">
+                    <h3 class="font-sans text-xs font-semibold uppercase tracking-[0.16em] text-muted">The {{ $brand['name'] }} standard</h3>
+                    <span class="text-xs text-muted">Trade terms at a glance</span>
+                </div>
+                <dl class="divide-y divide-border">
+                    @foreach ([
+                        ['Made in Sialkot', 'Bags, wallets, belts and accessories made in our workshops, from existing styles to bespoke patterns.'],
+                        ['Pricing you can see', 'Every product shows its minimum order quantity and price breaks. Approved trade accounts see their own group and negotiated pricing.'],
+                        ['Materials stated plainly', 'Each product page lists the leather type, hardware, finishing and packaging we have verified for that item.'],
+                        ['Samples before volume', 'Samples are available on request before you commit to a volume order, with specification sheets for catalogue products.'],
+                        ['Checked before dispatch', 'Goods are quality-checked before they leave us and shipped on the terms in your quotation.'],
+                    ] as $i => [$heading, $text])
+                        <div class="grid gap-2 px-6 py-5 sm:grid-cols-[3rem_13rem_1fr] sm:gap-6 sm:px-8">
+                            <span class="font-serif text-lg text-clay tabular-nums">0{{ $i + 1 }}</span>
+                            <dt class="font-serif text-xl leading-snug">{{ $heading }}</dt>
+                            <dd class="text-sm leading-relaxed text-muted">{{ $text }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
+            </div>
         </div>
     </section>
 
     {{-- 8. Testimonials: only rendered when genuine content is configured in settings --}}
     @if ($testimonials->isNotEmpty())
-        <section class="border-y border-border bg-elevated/60" aria-labelledby="testimonials-heading">
+        <section class="border-t border-border bg-elevated" aria-labelledby="testimonials-heading">
             <div class="container-page section-y">
-                <h2 id="testimonials-heading" class="h-section mb-10">What our trade customers say</h2>
-                <div class="grid gap-10 md:grid-cols-3">
+                <p class="eyebrow eyebrow-stitch mb-4">Trade customers</p>
+                <h2 id="testimonials-heading" class="h-section mb-12">What our trade customers say</h2>
+                <div class="grid gap-5 md:grid-cols-3">
                     @foreach ($testimonials as $t)
-                        <figure class="border-t border-brass pt-6">
-                            <blockquote class="font-serif text-2xl leading-snug">“{{ $t['quote'] }}”</blockquote>
-                            <figcaption class="mt-5 text-sm text-muted">{{ $t['name'] ?? '' }}@if (! empty($t['company'])), {{ $t['company'] }}@endif</figcaption>
+                        <figure @class(['flex flex-col rounded-lg p-7 sm:p-8', 'band md:col-span-2' => $loop->first && $testimonials->count() % 3 !== 0, 'bg-surface border border-border' => ! ($loop->first && $testimonials->count() % 3 !== 0)])>
+                            <span class="font-serif text-5xl leading-none text-clay" aria-hidden="true">“</span>
+                            <blockquote class="mt-2 flex-1 font-serif text-xl leading-snug sm:text-2xl">{{ $t['quote'] }}</blockquote>
+                            <figcaption class="mt-6 text-sm opacity-75">{{ $t['name'] ?? '' }}@if (! empty($t['company'])), {{ $t['company'] }}@endif</figcaption>
                         </figure>
                     @endforeach
                 </div>
-            </div>
-        </section>
-    @endif
-
-    {{-- 9. Final wholesale CTA --}}
-    <section class="bg-elevated" aria-labelledby="cta-heading">
-        <div class="container-page section-y grid items-center gap-8 lg:grid-cols-12">
-            <div class="lg:col-span-8">
-                <span class="brass-rule mb-6"></span>
-                <h2 id="cta-heading" class="h-section sm:text-5xl lg:text-6xl">Let's Build Something Together.</h2>
-                <p class="mt-5 max-w-2xl text-lg leading-relaxed text-muted">Tell us about your products, quantities and customization requirements. Our team will help you explore the right wholesale solution.</p>
-            </div>
-            <div class="flex flex-col gap-3 lg:col-span-4 lg:items-end">
-                <a href="{{ route('quote.basket') }}" class="btn btn-primary btn-lg">Request a Wholesale Quote</a>
-                <a href="mailto:{{ $brand['email'] }}" class="link text-sm">or email {{ $brand['email'] }}</a>
-            </div>
-        </div>
-    </section>
-
-    {{-- Newsletter: optional and visually secondary to the quotation CTA --}}
-    @if (setting('newsletter.enabled'))
-        <section class="border-t border-border" aria-label="Newsletter">
-            <div class="container-page flex flex-col items-start justify-between gap-5 py-10 md:flex-row md:items-center">
-                <div><h2 class="text-2xl">Trade newsletter</h2><p class="mt-1 text-sm text-muted">New collections, restocks and production slots. No spam.</p></div>
-                <div class="w-full md:w-auto md:min-w-96">@include('partials.newsletter-form')</div>
             </div>
         </section>
     @endif

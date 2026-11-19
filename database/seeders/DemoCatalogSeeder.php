@@ -22,7 +22,7 @@ use Illuminate\Support\Str;
  */
 class DemoCatalogSeeder extends Seeder
 {
-    private const COLORS = [
+    public const COLORS = [
         'Espresso' => '#3E2619', 'Chestnut' => '#7B3F22', 'Tan' => '#A0673A', 'Cognac' => '#9A4E1F',
         'Black' => '#1E1A18', 'Oxblood' => '#5E1F1E', 'Olive' => '#5B5A3A', 'Navy' => '#23304A',
     ];
@@ -34,7 +34,7 @@ class DemoCatalogSeeder extends Seeder
         $cats = $this->categories();
         $wholesale = CustomerGroup::query()->where('slug', 'wholesale')->first();
 
-        foreach ($this->products() as $data) {
+        foreach (self::products() as $data) {
             $variants = $data['variants'] ?? [];
             $tiers = $data['tiers'] ?? [];
             $groupTiers = $data['group_tiers'] ?? [];
@@ -107,7 +107,8 @@ class DemoCatalogSeeder extends Seeder
         }
     }
 
-    private function products(): array
+    /** The demo catalogue definition (also used by demo:refresh-artwork). */
+    public static function products(): array
     {
         $colors = fn (array $names) => array_map(fn ($n) => ['name' => $n, 'color' => $n], $names);
 

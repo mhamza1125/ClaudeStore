@@ -164,6 +164,10 @@ class Catalog extends Component
             'title' => $this->category?->name ?? (trim($this->q) !== '' ? 'Search: '.$this->q : ($this->raw ? 'Raw leather' : 'All products')),
             'description' => $this->category?->description ?? 'Wholesale leather bags, wallets, belts and accessories with volume pricing.',
             'canonical' => $this->category ? route('catalog.category', $this->category) : route('catalog'),
+            // Search results and filtered/sorted views are thin duplicates of the category pages:
+            // keep them out of the index (links are still followed).
+            'noindex' => trim($this->q) !== '' || $this->material || $this->color || $this->availability
+                || trim($this->priceMin) !== '' || trim($this->priceMax) !== '' || $this->sort !== 'featured',
         ]);
     }
 

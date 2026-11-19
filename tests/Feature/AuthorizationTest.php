@@ -4,9 +4,9 @@ namespace Tests\Feature;
 
 use App\Livewire\Admin\QuoteWorkspace;
 use App\Models\Company;
-use App\Models\Product;
 use App\Models\Quote;
 use App\Models\SalesOrder;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -122,27 +122,15 @@ class AuthorizationTest extends TestCase
             'name' => 'New Buyer', 'email' => 'new@buyer.test', 'company_name' => 'Buyer Co', 'country' => 'US',
             'password' => 'Str0ng-Passw0rd!', 'password_confirmation' => 'Str0ng-Passw0rd!',
         ])->assertRedirect();
-        $user = \App\Models\User::query()->where('email', 'new@buyer.test')->sole();
+        $user = User::query()->where('email', 'new@buyer.test')->sole();
         $this->assertTrue($user->hasRole('customer'));
         $this->assertSame('Buyer Co', $user->company->name);
         $this->assertSame('none', $user->company->wholesale_status);
         $this->assertTrue($user->isCompanyOwner());
     }
 
-    public function test_theme_preference_is_saved_and_rendered(): void
+    public function test_customers_cannot_open_the_admin(): void
     {
-        $user = $this->customer();
-        $this->actingAs($user)->putJson('/preferences/theme', ['theme' => 'dark'])->assertNoContent();
-        $this->assertSame('dark', $user->fresh()->theme);
-        $this->putJson('/preferences/theme', ['theme' => 'neon'])->assertUnprocessable();
-        $this->get('/')->assertSee('data-user-theme="dark"', false);
-        $this->get('/admin')->assertForbidden();
-    }
-
-    public function test_head_script_prevents_theme_flash(): void
-    {
-        Product::factory()->create();
-        $html = $this->get('/')->getContent();
-        $this->assertLessThan(strpos($html, 'build/assets'), strpos($html, "localStorage.getItem('ah-theme')"));
+        $this->actingAs($this->customer())->get('/admin')->assertForbidden();
     }
 }

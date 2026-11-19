@@ -4,9 +4,15 @@ use App\Assistant\AssistantUnavailable;
 use App\Assistant\Contracts\ChatProvider;
 use App\Images\ImageStorage;
 use App\Images\ProtectedImages;
+use App\Models\Category;
+use App\Models\HeroSlide;
 use App\Models\ProductImage;
 use App\Rules\TrustedEmail;
 use App\Services\QuoteWorkflow;
+use Database\Seeders\CategorySeeder;
+use Database\Seeders\DemoCatalogSeeder;
+use Database\Seeders\DemoHeroSlideSeeder;
+use Database\Seeders\Support\DemoImage;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schedule;
@@ -91,3 +97,57 @@ Artisan::command('emails:update-blocklist', function () {
 })->purpose('Refresh the list of disposable / temporary email domains');
 
 Schedule::command('emails:update-blocklist')->weekly();
+
+// Re-draw the demo illustrations in the current art direction (database/seeders/Support/DemoImage.php).
+// Files only: it rewrites existing demo SVGs at their current paths and never creates, edits or
+// deletes database rows. Uploaded (non-demo) images are never touched.
+Artisan::command('demo:refresh-artwork {--force : Run in production}', function () {
+    if (app()->isProduction() && ! $this->option('force')) {
+        $this->error('Refusing to run in production without --force.');
+
+        return 1;
+    }
+    $demo = DemoImage::class;
+    $colors = DemoCatalogSeeder::COLORS;
+    $shapes = collect(DemoCatalogSeeder::products())->pluck('shape', 'sku');
+    $rootShape = fn (?string $slug) => CategorySeeder::TREE[$slug][2] ?? null;
+    $written = ['products' => 0, 'categories' => 0, 'slides' => 0];
+
+    ProductImage::query()->where('source', 'demo')->where('path', 'like', '%.svg')->with('product.category.parent', 'product.variants', 'variant')
+        ->each(function (ProductImage $image) use ($demo, $colors, $shapes, $rootShape, &$written) {
+            $product = $image->product;
+            $disk = Storage::disk($image->disk);
+            if (! $product || ! $disk->exists($image->path)) {
+                return;
+            }
+            $root = $product->category?->parent?->slug ?? $product->category?->slug;
+            $shape = $shapes[$product->sku] ?? $rootShape($root) ?? 'tote';
+            $colorName = $image->variant?->color ?? $product->variants->sortBy('sort_order')->first()?->color;
+            $color = $colors[$colorName] ?? $colors['Chestnut'];
+            $view = $image->view_type?->value ?? 'front';
+            $title = $product->name.($image->variant ? ' '.$image->variant->name : '');
+            $disk->put($image->path, $demo::svg($shape, $color, in_array($view, ['front', 'side', 'back', 'detail', 'lifestyle'], true) ? $view : 'front', $title));
+            $written['products']++;
+        });
+
+    Category::query()->where('image_path', 'like', 'demo/categories/%.svg')->each(function ($category) use ($demo, $rootShape, &$written) {
+        if (! Storage::disk('public')->exists($category->image_path)) {
+            return;
+        }
+        $slug = basename($category->image_path, '.svg');
+        Storage::disk('public')->put($category->image_path, $demo::forCategory($slug, $rootShape($slug) ?? 'tote', $category->name));
+        $written['categories']++;
+    });
+
+    HeroSlide::query()->where('image_path', 'like', 'demo/hero/slide-%.svg')->each(function ($slide) use ($demo, &$written) {
+        $i = (int) preg_replace('/\D+/', '', basename($slide->image_path, '.svg'));
+        $def = DemoHeroSlideSeeder::SLIDES[$i] ?? null;
+        if (! $def || ! Storage::disk('public')->exists($slide->image_path)) {
+            return;
+        }
+        Storage::disk('public')->put($slide->image_path, $demo::banner($def['shape'], $def['color'], $slide->title, $def['tone']));
+        $written['slides']++;
+    });
+
+    $this->info("Redrawn: {$written['products']} product, {$written['categories']} category and {$written['slides']} banner illustration(s). No database rows were changed.");
+})->purpose('Redraw demo illustrations in the current art direction (files only)');

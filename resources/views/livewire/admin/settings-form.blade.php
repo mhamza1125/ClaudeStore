@@ -1,6 +1,6 @@
 <div>
     <x-page-header title="Settings" eyebrow="Store configuration"/>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm">{{ session('status') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success">{{ session('status') }}</div>@endif
     <form wire:submit="save" class="grid gap-6 xl:grid-cols-2">
         <section class="panel grid gap-4 sm:grid-cols-2">
             <h2 class="text-2xl sm:col-span-2">Brand identity</h2>
@@ -35,23 +35,6 @@
             <x-textarea-field name="s.payment_terms" model="s.payment_terms" label="Default payment terms" rows="3" class="sm:col-span-2"/>
             <x-textarea-field name="s.delivery_terms" model="s.delivery_terms" label="Default delivery terms" rows="3" class="sm:col-span-2"/>
             <x-textarea-field name="s.acceptance" model="s.acceptance" label="Acceptance instructions" rows="3" class="sm:col-span-2"/>
-        </section>
-        <section class="panel space-y-4 xl:col-span-2" aria-labelledby="theme-h">
-            <h2 id="theme-h" class="text-2xl">Appearance</h2>
-            <div class="grid gap-4 md:grid-cols-3">
-                <x-select-field name="s.theme_default" model="s.theme_default" label="Default theme" :options="collect(\App\Support\Theme::CHOICES)->map(fn ($c, $k) => $c[0].($k === 'system' ? ' (follow the visitor’s device)' : ''))->all()" help="Used for new visitors and whenever switching is turned off."/>
-                <x-select-field name="s.theme_system_light" model="s.theme_system_light" label="Light palette for “System”" :options="['white' => 'White', 'mid' => 'Mid']" help="Devices in light mode get this palette; dark mode gets Dark."/>
-                <label class="flex items-center gap-2 pt-7 text-sm"><input type="checkbox" class="checkbox" wire:model="s.theme_allow_switch"> Let visitors switch theme</label>
-            </div>
-            <div class="grid gap-3 sm:grid-cols-3" aria-hidden="true">
-                @foreach (['white' => ['#ffffff', '#261a14', '#a78657', '#f5f4f1'], 'mid' => ['#e6dccd', '#261a14', '#6b4a22', '#d9ccb8'], 'dark' => ['#19130f', '#f4ede3', '#c0a272', '#30231b']] as $key => [$bg, $fg, $ac, $el])
-                    {{-- Fixed swatches so admins can compare palettes regardless of the admin's own theme. --}}
-                    <div class="rounded-sm border border-border p-3 text-xs" style="background: {{ $bg }}; color: {{ $fg }}">
-                        <p class="font-semibold">{{ \App\Support\Theme::PALETTES[$key] }}</p>
-                        <p class="mt-1 flex items-center gap-2"><span class="inline-block h-4 w-8 rounded-sm" style="background: {{ $fg }}"></span><span class="inline-block h-4 w-8 rounded-sm" style="background: {{ $ac }}"></span><span class="inline-block h-4 w-8 rounded-sm border" style="background: {{ $el }}"></span></p>
-                    </div>
-                @endforeach
-            </div>
         </section>
         <section class="panel space-y-4" aria-labelledby="wa-h">
             <h2 id="wa-h" class="text-2xl">WhatsApp button</h2>

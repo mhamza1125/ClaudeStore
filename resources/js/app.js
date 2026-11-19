@@ -1,11 +1,9 @@
 import './bootstrap';
 import { Livewire, Alpine } from '../../vendor/livewire/livewire/dist/livewire.esm';
-import { registerTheme } from './theme';
 import { registerChat } from './chat';
 import { registerSearch } from './search';
 import { registerCarousels } from './carousels';
 
-registerTheme(Alpine);
 registerChat(Alpine);
 registerSearch(Alpine);
 registerCarousels(Alpine);
@@ -37,5 +35,9 @@ function initReveal() {
     els.forEach((el) => io.observe(el));
 }
 document.addEventListener('DOMContentLoaded', initReveal);
+
+// Self-hosted fonts and images referenced from Blade (e.g. <link rel="preload">) must be
+// processed by Vite so Vite::asset() can resolve their fingerprinted URLs.
+import.meta.glob(['../fonts/web/*.woff2']);
 
 Livewire.start();

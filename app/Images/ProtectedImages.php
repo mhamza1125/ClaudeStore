@@ -29,7 +29,7 @@ class ProtectedImages
     public const FONT = 'fonts/DejaVuSans-Bold.ttf';
 
     /** Bump when the rendering changes, so cached renditions and browser copies are replaced. */
-    private const RENDER_VERSION = 2; // 2: single centred mark (was tiled)
+    private const RENDER_VERSION = 5; // 2: single centred mark (was tiled); 3–5: redrawn demo artwork
 
     public function url(ProductImage $image, string $size = 'card', bool $raw = false): ?string
     {

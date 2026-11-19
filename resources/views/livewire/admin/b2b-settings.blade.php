@@ -6,7 +6,7 @@
             </a>
         </x-slot:actions>
     </x-page-header>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm">{{ session('status') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success">{{ session('status') }}</div>@endif
 
     <form wire:submit="save" class="grid gap-6 xl:grid-cols-2">
         <section class="panel space-y-5 xl:col-span-2" aria-labelledby="b2b-h">

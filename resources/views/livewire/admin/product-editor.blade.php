@@ -10,9 +10,9 @@
             @endif
         </x-slot:actions>
     </x-page-header>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm" role="status">{{ session('status') }}</div>@endif
-    @if ($errors->any())<div class="mb-4 badge badge-danger w-full justify-start px-4 py-3 text-sm" role="alert">Please fix the highlighted fields ({{ $errors->count() }}).</div>@endif
-    @if ($product?->is_demo)<div class="mb-4 badge badge-warning w-full justify-start px-4 py-3 text-sm">Demonstration product — replace its data before launch or archive it.</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success" role="status">{{ session('status') }}</div>@endif
+    @if ($errors->any())<div class="mb-4 alert badge-danger" role="alert">Please fix the highlighted fields ({{ $errors->count() }}).</div>@endif
+    @if ($product?->is_demo)<div class="mb-4 alert badge-warning">Demonstration product — replace its data before launch or archive it.</div>@endif
 
     <form wire:submit="save" class="grid gap-6 xl:grid-cols-12">
         <div class="space-y-6 xl:col-span-8">

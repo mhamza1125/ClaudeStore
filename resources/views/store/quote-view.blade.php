@@ -1,5 +1,5 @@
 @php $component = $layout === 'account' ? 'layouts.account' : 'layouts.store'; @endphp
-<x-dynamic-component :component="$component" :title="'Quotation '.$quote->reference">
+<x-dynamic-component :component="$component" :title="'Quotation '.$quote->reference" :noindex="true">
     <div class="{{ $layout === 'account' ? '' : 'container-page max-w-5xl py-12' }}">
         <x-page-header :title="'Quotation '.$quote->reference" eyebrow="{{ $quote->company_name }}">
             <x-slot:actions>
@@ -8,7 +8,7 @@
             </x-slot:actions>
         </x-page-header>
         <x-flash/>
-        @error('response')<div class="mb-6 badge badge-danger w-full justify-start px-4 py-3 text-sm" role="alert">{{ $message }}</div>@enderror
+        @error('response')<div class="alert badge-danger mb-6" role="alert">{{ $message }}</div>@enderror
 
         @if ($quote->version === 0)
             <div class="panel">
@@ -22,7 +22,7 @@
             </div>
         @else
             @if ($quote->has_unsent_changes && $quote->status !== \App\Enums\QuoteStatus::Accepted)
-                <div class="mb-6 badge badge-warning w-full justify-start px-4 py-3 text-sm">This quotation is being revised. You will receive the updated version by email.</div>
+                <div class="alert badge-warning mb-6">This quotation is being revised. You will receive the updated version by email.</div>
             @endif
             <div class="grid gap-6 md:grid-cols-3">
                 <div class="panel text-sm"><p class="eyebrow mb-2">Prepared for</p><p class="font-medium">{{ $quote->company_name }}</p><p class="text-muted">{{ $quote->contact_name }} · {{ $quote->email }}</p></div>

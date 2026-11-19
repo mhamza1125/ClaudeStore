@@ -18,11 +18,12 @@ variant images, verified-only specifications, variants, MOQ/multiples, live serv
 pricing, next-tier hint, customisation request, favourites, spec-sheet download, related products,
 SEO meta/canonical/JSON-LD), policy and company pages, newsletter signup (toggle in Settings).
 
-**Design system.** Semantic tokens in Tailwind v4 `@theme` (the default palette is disabled, so
-hard-coded colours don't compile). Light/dark/system themes with a no-flash head script; the
-choice is stored in localStorage and on the user record. A toggle sits in the storefront, portal
-and admin. Contrast was checked to WCAG AA for the token pairs. Emails and PDFs always use the
-light theme.
+**Design system.** "Workshop Modern" (docs/DESIGN.md): one light theme for the storefront, portal
+and admin, with semantic tokens in Tailwind v4 `@theme` (the default palette is disabled, so
+hard-coded colours don't compile). 60-30-10 palette (canvas / espresso + saddle / deep walnut actions, the logo tan for identity and for buttons on dark bands),
+self-hosted Fraunces + Instrument Sans, and a saddle-stitch signature motif. Contrast was checked
+to WCAG AA for the token pairs. Emails and PDFs use the same palette. Theme switching was removed;
+the unused `users.theme` column and old `theme.*` settings rows are left in place (never deleted).
 
 **Pricing.** The full precedence chain, group discounts, MOQ, order multiples, minimum order
 value, price-on-request, trade-only visibility, integer money. See PRICING.md.
@@ -58,9 +59,8 @@ Audit log for product, price, settings, customer, staff and order changes.
 product image with focal point, eyebrow/title/subtitle, two CTAs, scheduling, ordering), crossfade
 with progress-timed autoplay, pause, arrows, dots, swipe and reduced-motion support. Featured
 product carousel (scroll-snap, autoplay that pauses on hover/focus/touch, arrows). Live header
-search suggestions (`/search/suggest`, same matching as the catalogue). Three themes — White, Mid
-(default, brand mustard/brown) and Dark — plus System, configurable in Admin → Settings →
-Appearance. Informational pages at root URLs (`/about`, `/custom-manufacturing`) with 301
+search suggestions (`/search/suggest`, same matching as the catalogue). One light theme throughout
+(the earlier White / Mid / Dark switcher was removed in the redesign). Informational pages at root URLs (`/about`, `/custom-manufacturing`) with 301
 redirects from `/pages/…`. Configurable floating WhatsApp button (bottom-left) and optional AI
 chatbot (bottom-right) with Cloudflare Workers AI as the default provider (Anthropic optional),
 public-data-only business context and an honest offline mode (docs/CHATBOT.md).

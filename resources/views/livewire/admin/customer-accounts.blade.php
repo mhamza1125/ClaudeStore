@@ -4,7 +4,7 @@
             <x-slot:actions><a href="{{ route('admin.b2b') }}" class="btn btn-secondary btn-sm"><x-icon name="settings" class="h-4 w-4"/> B2B settings</a></x-slot:actions>
         @endcan
     </x-page-header>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm" role="status">{{ session('status') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success" role="status">{{ session('status') }}</div>@endif
 
     <p class="mb-6 text-sm text-muted" data-testid="access-summary">
         @if ($method)

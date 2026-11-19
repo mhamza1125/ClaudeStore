@@ -1,6 +1,6 @@
 <div>
     <x-page-header title="Customer groups" eyebrow="Pricing"/>
-    @if (session('error'))<div class="mb-4 badge badge-danger w-full justify-start px-4 py-3 text-sm">{{ session('error') }}</div>@endif
+    @if (session('error'))<div class="mb-4 alert badge-danger">{{ session('error') }}</div>@endif
     <div class="grid gap-6 xl:grid-cols-3">
         <div class="card overflow-x-auto xl:col-span-2">
             <table class="table">

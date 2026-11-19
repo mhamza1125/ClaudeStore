@@ -1,4 +1,4 @@
-<div class="grid gap-10 lg:grid-cols-12">
+<div class="grid gap-10 lg:grid-cols-12 lg:gap-14">
     {{-- Gallery --}}
     <div class="lg:col-span-7" wire:key="gallery-{{ $variant?->id ?? 'all' }}">
         @if ($images->isNotEmpty())
@@ -8,23 +8,23 @@
                 <div class="flex gap-3 overflow-x-auto sm:w-20 sm:flex-col" role="tablist" aria-label="Product images">
                     @foreach ($images as $i => $img)
                         <button type="button" role="tab" :aria-selected="active === {{ $i }}" @click="go({{ $i }})"
-                                class="relative shrink-0 overflow-hidden rounded-sm border-2 transition" :class="active === {{ $i }} ? 'border-accent' : 'border-transparent opacity-70 hover:opacity-100'">
+                                class="relative shrink-0 overflow-hidden rounded-md border-2 transition" :class="active === {{ $i }} ? 'border-accent' : 'border-transparent opacity-65 hover:opacity-100'">
                             <img src="{{ $img->url('thumb') }}" alt="{{ $img->view_type?->label() ?? 'Image '.($i + 1) }}" class="protected-img h-20 w-16 object-cover" loading="lazy" draggable="false">
                             <x-image-watermark size="xs"/>
                         </button>
                     @endforeach
                 </div>
-                <div class="relative flex-1 overflow-hidden rounded-sm bg-elevated" tabindex="0" aria-roledescription="carousel" aria-label="Product images, use arrow keys">
+                <div class="relative flex-1 overflow-hidden rounded-xl bg-elevated" tabindex="0" aria-roledescription="carousel" aria-label="Product images, use arrow keys">
                     @foreach ($images as $i => $img)
                         <figure x-show="active === {{ $i }}" @if ($i > 0) x-cloak @endif>
                             <img src="{{ $img->url('card') }}" srcset="{{ $img->url('card') }} 800w, {{ $img->url('large') }} 1600w" sizes="(min-width: 1024px) 50vw, 100vw"
                                  alt="{{ $img->alt ?: $product->name.($img->view_type ? ' — '.$img->view_type->label() : '') }}" class="protected-img aspect-[4/5] w-full cursor-zoom-in object-cover" draggable="false"
                                  @click="open({{ $i }})" @if ($i === 0) fetchpriority="high" @else loading="lazy" @endif width="800" height="1000">
-                            @if ($img->view_type)<figcaption class="absolute bottom-3 left-3"><x-badge>{{ $img->view_type->label() }}</x-badge></figcaption>@endif
+                            @if ($img->view_type)<figcaption class="absolute bottom-4 left-4 z-[2]"><x-badge class="bg-surface/95 shadow-sm backdrop-blur">{{ $img->view_type->label() }}</x-badge></figcaption>@endif
                         </figure>
                     @endforeach
                     <x-image-watermark size="lg"/>
-                    <button type="button" @click="open(active)" class="absolute right-3 top-3 rounded-full bg-surface/90 p-2 shadow-sm hover:text-accent" aria-label="Zoom image"><x-icon name="search" class="h-4 w-4"/></button>
+                    <button type="button" @click="open(active)" class="absolute right-4 top-4 z-[2] flex h-10 w-10 items-center justify-center rounded-full bg-surface/95 shadow-md backdrop-blur transition hover:text-accent" aria-label="Zoom image"><x-icon name="search" class="h-4 w-4"/></button>
                 </div>
 
                 {{-- Zoom view: the large watermarked rendition, loaded only when opened. --}}
@@ -46,16 +46,16 @@
                 </template>
             </div>
         @else
-            <div class="flex aspect-[4/5] items-center justify-center rounded-sm bg-elevated text-muted"><x-icon name="image" class="h-12 w-12"/><span class="sr-only">No image available</span></div>
+            <div class="flex aspect-[4/5] items-center justify-center rounded-xl bg-elevated text-muted"><x-icon name="image" class="h-12 w-12"/><span class="sr-only">No image available</span></div>
         @endif
     </div>
 
     {{-- Purchase panel --}}
     <div class="lg:col-span-5">
         <div class="lg:sticky lg:top-28">
-            @if ($product->category)<p class="eyebrow mb-3"><a href="{{ route('catalog.category', $product->category) }}" class="hover:underline">{{ $product->category->name }}</a></p>@endif
-            <h1 class="text-4xl leading-tight sm:text-5xl">{{ $product->name }}</h1>
-            <p class="mt-3 text-sm text-muted">SKU <span class="font-medium text-text" data-testid="sku">{{ $variant?->sku ?? $product->sku }}</span>@if ($product->product_code) · Code {{ $product->product_code }}@endif</p>
+            @if ($product->category)<p class="eyebrow mb-4"><a href="{{ route('catalog.category', $product->category) }}" class="hover:underline">{{ $product->category->name }}</a></p>@endif
+            <h1 class="text-[2.25rem] leading-[1.04] sm:text-5xl" style="letter-spacing:-0.03em">{{ $product->name }}</h1>
+            <p class="mt-3 text-sm text-muted tabular-nums">SKU <span class="font-medium text-text" data-testid="sku">{{ $variant?->sku ?? $product->sku }}</span>@if ($product->product_code) · Code {{ $product->product_code }}@endif</p>
             <div class="mt-4 flex flex-wrap items-center gap-2">
                 <x-badge :tone="($variant?->effectiveAvailability() ?? $product->availability)->tone()">{{ ($variant?->effectiveAvailability() ?? $product->availability)->label() }}</x-badge>
                 @if ($product->is_custom)<x-badge tone="accent">Custom / made to order</x-badge>@endif
@@ -71,7 +71,7 @@
                             @foreach ($product->activeVariants as $v)
                                 <label class="cursor-pointer">
                                     <input type="radio" class="peer sr-only" wire:model.live="variantId" value="{{ $v->id }}" name="variant">
-                                    <span class="inline-block rounded-sm border border-border-strong px-3 py-2 text-sm transition peer-checked:border-accent peer-checked:bg-accent-soft peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-focus">{{ $v->name }}</span>
+                                    <span class="inline-block rounded-full border border-border-strong bg-surface px-4 py-2 text-sm font-medium transition hover:border-text peer-checked:border-accent peer-checked:bg-accent-soft peer-checked:text-accent peer-focus-visible:outline-2 peer-focus-visible:outline-focus">{{ $v->name }}</span>
                                 </label>
                             @endforeach
                         </div>
@@ -82,7 +82,7 @@
                 <p class="flex items-center justify-between border-b border-border pb-3 text-sm"><span class="text-muted">Minimum order quantity</span><span class="font-medium">{{ $price->moq }} units @if ($price->orderMultiple > 1) <span class="font-normal text-muted">(multiples of {{ $price->orderMultiple }})</span>@endif</span></p>
 
                 {{-- Live price --}}
-                <div class="rounded-sm border border-border-strong bg-surface p-5" aria-live="polite">
+                <div class="rounded-lg border border-border bg-surface p-5 shadow-sm sm:p-6" aria-live="polite">
                     @if ($price->source === \App\Pricing\PriceSource::OnRequest)
                         <p class="font-serif text-3xl">Price on request</p>
                         <p class="mt-1 text-sm text-muted">Add to your quote list with the quantity and specification you need — we will quote within one business day.</p>
@@ -98,12 +98,12 @@
                         <div class="flex flex-wrap items-end justify-between gap-4">
                             <div>
                                 <p class="text-xs uppercase tracking-wider text-muted">Unit price</p>
-                                <p class="font-serif text-4xl" data-testid="unit-price">{{ money($price->unitCents) }}</p>
+                                <p class="font-serif text-[2.5rem] leading-tight tabular-nums" data-testid="unit-price">{{ money($price->unitCents) }}</p>
                                 <p class="mt-1 text-xs font-medium text-accent" data-testid="price-source">{{ $price->source->label() }}@if ($price->groupDiscountBps) · includes {{ \App\Support\Money::bpsToPercentString($price->groupDiscountBps) }}% account discount @endif</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-xs uppercase tracking-wider text-muted">Line total</p>
-                                <p class="font-serif text-2xl" data-testid="line-total">{{ $price->isValidQuantity() ? money($price->lineTotalCents()) : '—' }}</p>
+                                <p class="font-serif text-2xl tabular-nums" data-testid="line-total">{{ $price->isValidQuantity() ? money($price->lineTotalCents()) : '—' }}</p>
                             </div>
                         </div>
                         @if ($next = $price->nextTier())
@@ -115,7 +115,7 @@
                 </div>
 
                 @if ($price->visible && count($price->ladder) > 1)
-                    <table class="table text-sm" aria-label="Quantity price breaks">
+                    <div class="card overflow-hidden"><table class="table text-sm" aria-label="Quantity price breaks">
                         <thead><tr><th>Quantity</th><th class="text-right">Unit price</th></tr></thead>
                         <tbody>
                         @foreach ($price->ladder as $row)
@@ -125,15 +125,15 @@
                             </tr>
                         @endforeach
                         </tbody>
-                    </table>
+                    </table></div>
                 @endif
 
                 <div>
                     <label for="qty" class="field-label">Quantity <span class="font-normal text-muted">· MOQ {{ $price->moq }}@if ($price->orderMultiple > 1), multiples of {{ $price->orderMultiple }}@endif</span></label>
                     <div class="flex items-stretch gap-2">
-                        <button type="button" wire:click="increment(-1)" class="btn btn-secondary !px-3" aria-label="Decrease quantity"><x-icon name="minus" class="h-4 w-4"/></button>
-                        <input id="qty" type="number" inputmode="numeric" min="{{ $price->orderMultiple }}" step="{{ $price->orderMultiple }}" wire:model.live.debounce.300ms="quantity" class="input w-28 text-center text-base" aria-describedby="qty-help">
-                        <button type="button" wire:click="increment(1)" class="btn btn-secondary !px-3" aria-label="Increase quantity"><x-icon name="plus" class="h-4 w-4"/></button>
+                        <button type="button" wire:click="increment(-1)" class="btn btn-secondary btn-icon !min-h-11 !min-w-11" aria-label="Decrease quantity"><x-icon name="minus" class="h-4 w-4"/></button>
+                        <input id="qty" type="number" inputmode="numeric" min="{{ $price->orderMultiple }}" step="{{ $price->orderMultiple }}" wire:model.live.debounce.300ms="quantity" class="input w-28 rounded-full text-center text-base tabular-nums" aria-describedby="qty-help">
+                        <button type="button" wire:click="increment(1)" class="btn btn-secondary btn-icon !min-h-11 !min-w-11" aria-label="Increase quantity"><x-icon name="plus" class="h-4 w-4"/></button>
                     </div>
                     <p id="qty-help" class="sr-only">Prices update automatically when the quantity changes.</p>
                     @foreach ($price->errors as $err)<p class="field-error">{{ $err }}</p>@endforeach
@@ -169,14 +169,14 @@
                 @endif
             </form>
 
-            <div class="mt-6 flex items-center gap-4 text-sm">
+            <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
                 @auth
                     <form method="POST" action="{{ $isFavorite ? route('account.favorites.destroy', $product) : route('account.favorites.store', $product) }}">
                         @csrf @if ($isFavorite) @method('DELETE') @endif
                         <button class="inline-flex items-center gap-1.5 hover:text-accent"><x-icon name="heart" class="h-4 w-4 {{ $isFavorite ? 'fill-current text-accent' : '' }}"/> {{ $isFavorite ? 'Saved' : 'Save product' }}</button>
                     </form>
                 @endauth
-                @if ($product->lead_time)<span class="text-muted">· {{ $product->lead_time }}</span>@endif
+                @if ($product->lead_time)<span class="inline-flex items-center gap-1.5 text-muted"><x-icon name="clock" class="h-4 w-4 text-clay"/>{{ $product->lead_time }}</span>@endif
             </div>
             <p class="mt-4 text-xs text-muted">Indicative prices in {{ config('store.currency') }}, excluding tax and shipping. Final prices are confirmed in your formal quotation.</p>
         </div>

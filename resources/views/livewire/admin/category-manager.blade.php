@@ -1,7 +1,7 @@
 <div>
     <x-page-header title="Categories" eyebrow="Catalogue"/>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm">{{ session('status') }}</div>@endif
-    @if (session('error'))<div class="mb-4 badge badge-danger w-full justify-start px-4 py-3 text-sm">{{ session('error') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success">{{ session('status') }}</div>@endif
+    @if (session('error'))<div class="mb-4 alert badge-danger">{{ session('error') }}</div>@endif
     <div class="grid gap-6 xl:grid-cols-3">
         <div class="card overflow-x-auto xl:col-span-2">
             <table class="table">

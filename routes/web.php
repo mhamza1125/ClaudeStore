@@ -9,11 +9,11 @@ use App\Http\Controllers\CustomerQuoteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\QuoteSubmissionController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SeoController;
 use App\Http\Middleware\MarkAdminSectionSeen;
 use App\Images\ProtectedImages;
 use App\Livewire;
@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 | Storefront
 */
 Route::get('/', HomeController::class)->name('home');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/products', Livewire\Store\Catalog::class)->name('catalog');
 Route::get('/categories/{category:slug}', Livewire\Store\Catalog::class)->name('catalog.category');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
@@ -55,7 +57,6 @@ Route::middleware('throttle:quote-response')->group(function () {
 Route::get('/logout', fn () => redirect()->route('home'));
 
 Route::middleware('auth')->group(function () {
-    Route::put('/preferences/theme', [PreferenceController::class, 'theme'])->name('preferences.theme');
     Route::get('/attachments/{attachment}', [AttachmentController::class, 'show'])->name('attachments.show');
 });
 

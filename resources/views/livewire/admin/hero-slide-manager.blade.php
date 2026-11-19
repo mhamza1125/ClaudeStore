@@ -5,7 +5,7 @@
             <button type="button" wire:click="create" class="btn btn-primary btn-sm"><x-icon name="plus" class="h-4 w-4"/> New slide</button>
         </x-slot:actions>
     </x-page-header>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm" role="status">{{ session('status') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success" role="status">{{ session('status') }}</div>@endif
 
     <div class="grid gap-6 xl:grid-cols-5">
         <section class="space-y-3 xl:col-span-3" aria-label="Slides">

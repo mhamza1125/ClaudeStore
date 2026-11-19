@@ -13,7 +13,7 @@
     </div>
 
     @if ($notice)
-        <div class="mb-4 flex items-start justify-between gap-4 rounded-sm border border-current/20 px-4 py-3 text-sm badge-success" role="status">
+        <div class="mb-4 flex items-start justify-between gap-4 alert badge-success" role="status">
             <p>{{ $notice }}</p>
             <button type="button" wire:click="$set('notice', '')" class="shrink-0" aria-label="Dismiss"><x-icon name="x" class="h-4 w-4"/></button>
         </div>

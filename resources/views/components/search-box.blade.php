@@ -13,13 +13,13 @@
            @keydown.arrow-down.prevent="move(1)" @keydown.arrow-up.prevent="move(-1)" @keydown.tab="close()"
            role="combobox" aria-autocomplete="list" :aria-expanded="open" aria-controls="{{ $id }}-listbox"
            :aria-activedescendant="active >= 0 ? '{{ $id }}-option-' + active : null"
-           class="input pl-8 pr-8 {{ $inputClass }}">
-    <x-icon name="search" class="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted"/>
-    <span x-show="state === 'loading'" x-cloak class="absolute right-2.5 top-2.5 h-4 w-4 animate-spin rounded-full border-2 border-border-strong border-t-accent" aria-hidden="true"></span>
+           class="input rounded-full pl-10 pr-9 {{ $inputClass }}">
+    <x-icon name="search" class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"/>
+    <span x-show="state === 'loading'" x-cloak class="absolute right-3.5 top-1/2 -mt-2 h-4 w-4 animate-spin rounded-full border-2 border-border-strong border-t-accent" aria-hidden="true"></span>
     <button type="submit" class="sr-only">Search</button>
 
     <div x-show="open" x-cloak x-transition.opacity.duration.100ms
-         class="absolute top-full z-50 mt-2 overflow-hidden rounded-md border border-border bg-surface text-sm shadow-xl {{ $dropdownClass }}">
+         class="absolute top-full z-50 mt-2 overflow-hidden rounded-lg border border-border bg-surface text-sm shadow-lg {{ $dropdownClass }}">
         <p class="sr-only" role="status" aria-live="polite" x-text="announcement"></p>
         <template x-if="state === 'loading' && !results.length">
             <p class="px-4 py-3 text-muted">Searching…</p>
@@ -34,8 +34,8 @@
             <template x-for="(item, i) in results" :key="item.url">
                 <li :id="'{{ $id }}-option-' + i" role="option" :aria-selected="active === i">
                     <a :href="item.url" @mouseenter="active = i" tabindex="-1"
-                       class="flex items-center gap-3 px-3 py-2" :class="active === i ? 'bg-elevated' : ''">
-                        <span class="relative h-12 w-10 shrink-0 overflow-hidden rounded-sm bg-elevated">
+                       class="flex items-center gap-3 px-3 py-2.5" :class="active === i ? 'bg-elevated' : ''">
+                        <span class="relative h-12 w-10 shrink-0 overflow-hidden rounded-md bg-elevated">
                             <img x-show="item.image" :src="item.image" alt="" class="protected-img h-full w-full object-cover" loading="lazy" draggable="false">
                             <template x-if="item.image"><x-image-watermark size="xs"/></template>
                         </span>
