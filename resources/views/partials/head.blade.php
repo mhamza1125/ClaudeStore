@@ -24,12 +24,13 @@
 <script>
     (function () {
         var d = document.documentElement, ds = d.dataset, valid = { white: 1, mid: 1, dark: 1, system: 1 }, stored = null;
-        var norm = function (v) { v = v === 'light' ? 'mid' : v; return valid[v] ? v : null; };
+        d.classList.add('js');
+        var norm = function (v) { v = v === 'light' ? 'white' : v; return valid[v] ? v : null; };
         try { stored = norm(localStorage.getItem('ah-theme')); } catch (e) {}
-        var fallback = norm(ds.themeDefault) || 'mid';
+        var fallback = norm(ds.themeDefault) || 'white';
         var choice = ds.themeSwitch === '1' ? (norm(ds.userTheme) || stored || fallback) : fallback;
         if (ds.themeSwitch === '1' && norm(ds.userTheme)) { try { localStorage.setItem('ah-theme', choice); } catch (e) {} }
-        var palette = choice === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : (ds.themeLight || 'mid')) : choice;
+        var palette = choice === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : (ds.themeLight || 'white')) : choice;
         ds.theme = choice;
         ds.palette = palette;
         d.classList.toggle('dark', palette === 'dark');

@@ -53,16 +53,17 @@
     {{-- Purchase panel --}}
     <div class="lg:col-span-5">
         <div class="lg:sticky lg:top-28">
-            <div class="flex flex-wrap items-center gap-2">
+            @if ($product->category)<p class="eyebrow mb-3"><a href="{{ route('catalog.category', $product->category) }}" class="hover:underline">{{ $product->category->name }}</a></p>@endif
+            <h1 class="text-4xl leading-tight sm:text-5xl">{{ $product->name }}</h1>
+            <p class="mt-3 text-sm text-muted">SKU <span class="font-medium text-text" data-testid="sku">{{ $variant?->sku ?? $product->sku }}</span>@if ($product->product_code) · Code {{ $product->product_code }}@endif</p>
+            <div class="mt-4 flex flex-wrap items-center gap-2">
                 <x-badge :tone="($variant?->effectiveAvailability() ?? $product->availability)->tone()">{{ ($variant?->effectiveAvailability() ?? $product->availability)->label() }}</x-badge>
                 @if ($product->is_custom)<x-badge tone="accent">Custom / made to order</x-badge>@endif
                 @if ($product->is_demo)<x-badge>Demo product</x-badge>@endif
             </div>
-            <h1 class="mt-3 text-4xl leading-tight sm:text-5xl">{{ $product->name }}</h1>
-            <p class="mt-2 text-sm text-muted">SKU <span class="font-medium text-text" data-testid="sku">{{ $variant?->sku ?? $product->sku }}</span>@if ($product->product_code) · Code {{ $product->product_code }}@endif</p>
             @if ($product->short_description)<p class="mt-5 text-muted">{{ $product->short_description }}</p>@endif
 
-            <form wire:submit="addToQuote" class="mt-8 space-y-6">
+            <form wire:submit="addToQuote" class="mt-8 space-y-6 border-t border-border pt-8">
                 @if ($product->activeVariants->isNotEmpty())
                     <fieldset>
                         <legend class="field-label">Option <span class="font-normal text-muted">({{ $product->activeVariants->count() }} available)</span></legend>
@@ -78,8 +79,10 @@
                     </fieldset>
                 @endif
 
+                <p class="flex items-center justify-between border-b border-border pb-3 text-sm"><span class="text-muted">Minimum order quantity</span><span class="font-medium">{{ $price->moq }} units @if ($price->orderMultiple > 1) <span class="font-normal text-muted">(multiples of {{ $price->orderMultiple }})</span>@endif</span></p>
+
                 {{-- Live price --}}
-                <div class="rounded-sm border border-border bg-surface p-5" aria-live="polite">
+                <div class="rounded-sm border border-border-strong bg-surface p-5" aria-live="polite">
                     @if ($price->source === \App\Pricing\PriceSource::OnRequest)
                         <p class="font-serif text-3xl">Price on request</p>
                         <p class="mt-1 text-sm text-muted">Add to your quote list with the quantity and specification you need — we will quote within one business day.</p>
@@ -96,7 +99,7 @@
                             <div>
                                 <p class="text-xs uppercase tracking-wider text-muted">Unit price</p>
                                 <p class="font-serif text-4xl" data-testid="unit-price">{{ money($price->unitCents) }}</p>
-                                <p class="mt-1 text-xs text-accent" data-testid="price-source">{{ $price->source->label() }}@if ($price->groupDiscountBps) · includes {{ \App\Support\Money::bpsToPercentString($price->groupDiscountBps) }}% account discount @endif</p>
+                                <p class="mt-1 text-xs font-medium text-accent" data-testid="price-source">{{ $price->source->label() }}@if ($price->groupDiscountBps) · includes {{ \App\Support\Money::bpsToPercentString($price->groupDiscountBps) }}% account discount @endif</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-xs uppercase tracking-wider text-muted">Line total</p>

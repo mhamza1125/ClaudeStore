@@ -81,13 +81,13 @@ class HeroSlide extends Model
     public static function defaultSlide(?Product $product = null): self
     {
         $slide = new static([
-            'eyebrow' => 'Manufacturer · Wholesaler · Private label',
-            'title' => 'Leather goods, made for trade.',
-            'subtitle' => 'Bags, wallets, belts and small leather goods for retailers, distributors and brands — with transparent volume pricing and quotations within one business day.',
-            'primary_label' => 'Explore Products',
+            'eyebrow' => 'Premium leather goods · Wholesale · Private label',
+            'title' => 'Leather Goods, Made for Business.',
+            'subtitle' => 'Premium leather products, wholesale supply and private-label manufacturing for businesses worldwide.',
+            'primary_label' => 'Explore Collections',
             'primary_url' => '/products',
-            'secondary_label' => 'Request a Wholesale Quote',
-            'secondary_url' => '/quote',
+            'secondary_label' => 'Private Label / Manufacturing',
+            'secondary_url' => '/custom-manufacturing',
             'image_focus' => 'center',
         ]);
         $slide->setRelation('product', $product);

@@ -10,20 +10,20 @@ namespace App\Support;
  */
 final class Theme
 {
-    public const PALETTES = ['white' => 'White', 'mid' => 'Mid', 'dark' => 'Dark'];
+    public const PALETTES = ['white' => 'Light', 'mid' => 'Mid', 'dark' => 'Dark'];
 
     /** choice => [label, icon] for the visitor toggle */
     public const CHOICES = [
-        'white' => ['White', 'sun'],
+        'white' => ['Light', 'sun'],
         'mid' => ['Mid', 'swatch'],
         'dark' => ['Dark', 'moon'],
         'system' => ['System', 'monitor'],
     ];
 
-    /** Earlier versions stored "light" (today's Mid palette). */
+    /** Earlier versions stored "light" (the cream palette, now the Light/ivory one). */
     public static function normalize(?string $choice): ?string
     {
-        $choice = $choice === 'light' ? 'mid' : $choice;
+        $choice = $choice === 'light' ? 'white' : $choice;
 
         return array_key_exists((string) $choice, self::CHOICES) ? $choice : null;
     }
@@ -38,8 +38,8 @@ final class Theme
     {
         $user = auth()->user();
         $attrs = [
-            'data-theme-default' => self::normalize(setting('theme.default')) ?? 'mid',
-            'data-theme-light' => in_array(setting('theme.system_light'), ['white', 'mid'], true) ? setting('theme.system_light') : 'mid',
+            'data-theme-default' => self::normalize(setting('theme.default')) ?? 'white',
+            'data-theme-light' => in_array(setting('theme.system_light'), ['white', 'mid'], true) ? setting('theme.system_light') : 'white',
             'data-theme-switch' => ($forceSwitch || self::allowSwitch()) ? '1' : '0',
             'data-user-theme' => $user ? (string) self::normalize($user->theme) : null,
             'data-theme-url' => $user ? route('preferences.theme') : null,

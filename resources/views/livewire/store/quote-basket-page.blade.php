@@ -90,6 +90,8 @@
                     <div class="hidden" aria-hidden="true"><label>Fax number<input type="text" name="fax_number" tabindex="-1" autocomplete="off"></label></div>
                     @error('items')<p class="field-error" role="alert">{{ $message }}</p>@enderror
                     @error('form')<p class="field-error" role="alert">{{ $message }}</p>@enderror
+                    <fieldset class="space-y-4">
+                    <legend class="mb-1 flex items-baseline gap-3"><span class="font-serif text-2xl text-brass">01</span><span class="text-lg font-medium">Business information</span></legend>
                     <x-field name="company_name" label="Company name" required :value="$company?->name" autocomplete="organization"/>
                     <x-field name="contact_name" label="Contact person" required :value="$user?->name" autocomplete="name"/>
                     <div class="grid gap-4 sm:grid-cols-2">
@@ -104,6 +106,9 @@
                         <x-field name="website" type="url" label="Company website" placeholder="https://" :value="$company?->website"/>
                         <x-select-field name="business_type" label="Business type" placeholder="Select…" :value="$company?->business_type" :options="array_combine(\App\Http\Requests\QuoteSubmissionRequest::BUSINESS_TYPES, \App\Http\Requests\QuoteSubmissionRequest::BUSINESS_TYPES)"/>
                     </div>
+                    </fieldset>
+                    <fieldset class="space-y-4 border-t border-border pt-6">
+                    <legend class="mb-1 flex items-baseline gap-3"><span class="font-serif text-2xl text-brass">02</span><span class="text-lg font-medium">Order requirements</span></legend>
                     <div class="grid gap-4 sm:grid-cols-3">
                         <x-field name="expected_volume" label="Expected volume" placeholder="e.g. 500 units / quarter" class="sm:col-span-2"/>
                         <x-select-field name="preferred_currency" label="Currency" :options="array_combine(config('store.display_currencies'), config('store.display_currencies'))" value="USD" help="Quotes are issued in USD."/>
@@ -111,17 +116,21 @@
                     <x-field name="target_delivery_date" type="date" label="Target delivery date" :min="now()->addDay()->toDateString()"/>
                     <x-textarea-field name="specifications" label="Required product specifications" rows="3" placeholder="Materials, colours, sizes, branding, packaging…"/>
                     <x-textarea-field name="message" label="Message" rows="3"/>
+                    </fieldset>
+                    <fieldset class="space-y-4 border-t border-border pt-6">
+                    <legend class="mb-1 flex items-baseline gap-3"><span class="font-serif text-2xl text-brass">03</span><span class="text-lg font-medium">Attachments</span></legend>
                     <div>
-                        <label for="attachments" class="field-label">Attachments</label>
+                        <label for="attachments" class="field-label">Technical documents, reference images or design files</label>
                         <input id="attachments" type="file" name="attachments[]" multiple accept=".pdf,.jpg,.jpeg,.png,.webp" class="input file:mr-3 file:border-0 file:bg-elevated file:px-3 file:py-1 file:text-sm">
                         <p class="field-help">Artwork, reference photos or specs. Up to 5 files, 10 MB each (PDF, JPG, PNG, WebP).</p>
                         @error('attachments')<p class="field-error">{{ $message }}</p>@enderror
                         @error('attachments.*')<p class="field-error">{{ $message }}</p>@enderror
                     </div>
+                    </fieldset>
                     @guest
                         <p class="text-xs text-muted">Have a trade account? <a href="{{ route('login') }}" class="link">Sign in</a> to save this quote to your history and see your account pricing.</p>
                     @endguest
-                    <button type="submit" class="btn btn-primary btn-lg w-full">Submit quote request</button>
+                    <div class="border-t border-border pt-6"><button type="submit" class="btn btn-primary btn-lg w-full">Submit quote request</button></div>
                     <p class="text-xs text-muted">By submitting you agree that we may contact you about this request. See our <a class="link" href="{{ route('pages.show', 'privacy') }}">privacy policy</a>.</p>
                 </form>
             </div>

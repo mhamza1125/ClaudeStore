@@ -30,6 +30,16 @@
             </table>
         </section>
         <div class="space-y-6">
+            @if (! empty($contentGaps))
+                <div class="panel text-sm" data-testid="content-gaps">
+                    <p class="font-medium">Content still needed on the public site</p>
+                    <ul class="mt-3 space-y-2">
+                        @foreach ($contentGaps as $gap)
+                            <li class="flex gap-2"><x-icon name="chevron-right" class="mt-0.5 h-4 w-4 shrink-0 text-brass"/><a href="{{ $gap['url'] }}" class="hover:text-accent hover:underline">{{ $gap['label'] }}</a></li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
             @if ($pendingWholesale !== null)
                 <a href="{{ route('admin.companies.index', ['wholesale' => 'pending']) }}" class="panel block hover:border-accent"><p class="text-sm text-muted">Wholesale applications to review</p><p class="mt-2 font-serif text-4xl">{{ $pendingWholesale }}</p></a>
             @endif

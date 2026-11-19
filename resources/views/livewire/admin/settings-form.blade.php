@@ -9,6 +9,8 @@
             <x-field name="s.brand_email" model="s.brand_email" type="email" label="Contact email" required/>
             <x-field name="s.brand_phone" model="s.brand_phone" label="Phone"/>
             <x-field name="s.brand_address" model="s.brand_address" label="Address" class="sm:col-span-2"/>
+            <x-textarea-field name="s.company_intro" model="s.company_intro" label="Company introduction" rows="3" class="sm:col-span-2" help="Shown on the homepage and About page. Leave blank to use the brand description. Only state verified facts."/>
+            <x-textarea-field name="s.company_story" model="s.company_story" label="Company story (optional)" rows="5" class="sm:col-span-2" help="Longer text for the About page: workshop, location, materials sourcing, certifications. Leave blank to hide."/>
             <x-field name="s.social_instagram" model="s.social_instagram" label="Instagram URL"/>
             <x-field name="s.social_linkedin" model="s.social_linkedin" label="LinkedIn URL"/>
             <x-field name="s.social_facebook" model="s.social_facebook" label="Facebook URL"/>
@@ -38,11 +40,11 @@
             <h2 id="theme-h" class="text-2xl">Appearance</h2>
             <div class="grid gap-4 md:grid-cols-3">
                 <x-select-field name="s.theme_default" model="s.theme_default" label="Default theme" :options="collect(\App\Support\Theme::CHOICES)->map(fn ($c, $k) => $c[0].($k === 'system' ? ' (follow the visitor’s device)' : ''))->all()" help="Used for new visitors and whenever switching is turned off."/>
-                <x-select-field name="s.theme_system_light" model="s.theme_system_light" label="Light palette for “System”" :options="['white' => 'White', 'mid' => 'Mid']" help="Devices in light mode get this palette; dark mode gets Dark."/>
+                <x-select-field name="s.theme_system_light" model="s.theme_system_light" label="Light palette for “System”" :options="['white' => 'Light', 'mid' => 'Mid']" help="Devices in light mode get this palette; dark mode gets Dark."/>
                 <label class="flex items-center gap-2 pt-7 text-sm"><input type="checkbox" class="checkbox" wire:model="s.theme_allow_switch"> Let visitors switch theme</label>
             </div>
             <div class="grid gap-3 sm:grid-cols-3" aria-hidden="true">
-                @foreach (['white' => ['#ffffff', '#1f1c19', '#8a5a2b', '#f5f4f1'], 'mid' => ['#f5efe6', '#2a1f18', '#7a5726', '#ede4d6'], 'dark' => ['#141110', '#f1ebe2', '#d2a85c', '#262019']] as $key => [$bg, $fg, $ac, $el])
+                @foreach (['white' => ['#f7f4ee', '#261a14', '#a78657', '#eae1d5'], 'mid' => ['#e6dccd', '#261a14', '#6b4a22', '#d9ccb8'], 'dark' => ['#19130f', '#f4ede3', '#c0a272', '#30231b']] as $key => [$bg, $fg, $ac, $el])
                     {{-- Fixed swatches so admins can compare palettes regardless of the admin's own theme. --}}
                     <div class="rounded-sm border border-border p-3 text-xs" style="background: {{ $bg }}; color: {{ $fg }}">
                         <p class="font-semibold">{{ \App\Support\Theme::PALETTES[$key] }}</p>

@@ -26,4 +26,16 @@ const isProtected = (el) => el instanceof Element && (el.matches('img.protected-
 document.addEventListener('contextmenu', (e) => { if (isProtected(e.target)) e.preventDefault(); });
 document.addEventListener('dragstart', (e) => { if (isProtected(e.target)) e.preventDefault(); });
 
+// Gentle section reveal: elements with .reveal fade up once as they scroll into view. Without
+// IntersectionObserver (or with reduced motion, handled in CSS) they are simply visible.
+function initReveal() {
+    const els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window)) { els.forEach((el) => el.classList.add('is-in')); return; }
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -8% 0px' });
+    els.forEach((el) => io.observe(el));
+}
+document.addEventListener('DOMContentLoaded', initReveal);
+
 Livewire.start();

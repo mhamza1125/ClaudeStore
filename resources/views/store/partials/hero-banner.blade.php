@@ -12,19 +12,19 @@
          @focusin="focused = true" @focusout="focused = $el.contains($event.relatedTarget)"
          @keydown.arrow-right="next()" @keydown.arrow-left="prev()"
          role="region" aria-roledescription="carousel" aria-label="Highlights" data-testid="hero-banner">
-    <div class="container-page pb-6 pt-5 sm:pt-6 lg:pb-8 lg:pt-8">
+    <div class="container-page pb-8 pt-6 lg:pb-12 lg:pt-12">
         <div class="hero-stack" @touchstart.passive="touchStart($event)" @touchend.passive="touchEnd($event)">
             @foreach ($slides as $i => $slide)
                 @php $image = $slide->imageUrl(); $tag = $i === 0 ? 'h1' : 'h2'; @endphp
-                <div class="hero-slide grid items-center gap-6 md:grid-cols-2 lg:gap-12 {{ $i === 0 ? 'is-active' : '' }}"
+                <div class="hero-slide grid items-center gap-6 md:grid-cols-12 lg:gap-14 {{ $i === 0 ? 'is-active' : '' }}"
                      :class="{ 'is-active': active === {{ $i }} }" x-effect="$el.inert = active !== {{ $i }}" @if ($i > 0) inert @endif
                      role="group" aria-roledescription="slide" aria-label="{{ $i + 1 }} of {{ $count }}: {{ $slide->title }}" data-slide="{{ $i }}">
-                    <div class="hero-copy order-2 md:order-1">
+                    <div class="hero-copy order-2 md:order-1 md:col-span-5">
                         @if ($slide->eyebrow)<p class="eyebrow mb-3 sm:mb-4">{{ $slide->eyebrow }}</p>@endif
-                        <{{ $tag }} class="text-[2rem] leading-[1.08] sm:text-5xl lg:text-6xl">{{ $slide->title }}</{{ $tag }}>
-                        @if ($slide->subtitle)<p class="mt-3 line-clamp-3 max-w-xl text-[15px] text-muted sm:mt-4 sm:line-clamp-none sm:text-lg">{{ $slide->subtitle }}</p>@endif
+                        <{{ $tag }} class="h-hero">{{ $slide->title }}</{{ $tag }}>
+                        @if ($slide->subtitle)<p class="mt-4 line-clamp-3 max-w-md text-[15px] leading-relaxed text-muted sm:mt-5 sm:line-clamp-none sm:text-lg">{{ $slide->subtitle }}</p>@endif
                         @if ($slide->primary_label || $slide->secondary_label)
-                            <div class="mt-5 flex flex-wrap gap-2 sm:mt-8 sm:gap-3">
+                            <div class="mt-6 flex flex-wrap gap-2 sm:mt-9 sm:gap-3">
                                 @if ($slide->primary_label && $slide->primary_url)
                                     <a href="{{ $slide->primary_url }}" class="btn btn-primary sm:px-7 sm:py-3.5 sm:text-base">{{ $slide->primary_label }} <x-icon name="arrow-right" class="h-4 w-4"/></a>
                                 @endif
@@ -33,9 +33,10 @@
                                 @endif
                             </div>
                         @endif
+                        <p class="mt-6 hidden items-center gap-2 text-xs text-muted sm:flex"><x-icon name="check" class="h-4 w-4 text-brass"/> MOQ and volume price breaks shown on every product</p>
                     </div>
-                    <div class="order-1 md:order-2">
-                        <div class="hero-media relative aspect-[16/10] overflow-hidden sm:aspect-[4/3] rounded-md bg-elevated shadow-sm">
+                    <div class="order-1 md:order-2 md:col-span-7">
+                        <div class="hero-media relative aspect-[4/3] overflow-hidden rounded-sm bg-elevated">
                             @if ($image)
                                 <img src="{{ $image }}" alt="{{ $slide->imageAlt() }}" width="1200" height="900" draggable="false"
                                      class="protected-img absolute inset-0 h-full w-full object-cover" style="object-position: {{ array_key_exists($slide->image_focus, \App\Models\HeroSlide::FOCUS) ? $slide->image_focus : 'center' }}"

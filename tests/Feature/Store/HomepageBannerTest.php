@@ -35,11 +35,11 @@ class HomepageBannerTest extends TestCase
         $this->productWithImage(['name' => 'Featured Tote', 'is_featured' => true], 'lifestyle');
         $html = $this->get('/')->assertOk()
             ->assertSee('data-testid="hero-banner"', false)
-            ->assertSee('Leather goods, made for trade.')->assertSee('Explore Products')->assertSee('Request a Wholesale Quote')
+            ->assertSee('Leather Goods, Made for Business.')->assertSee('Explore Collections')->assertSee('Private Label / Manufacturing')
             ->getContent();
         $this->assertSame(1, substr_count($html, 'aria-roledescription="slide"'));
         $this->assertStringNotContainsString('aria-label="Next slide"', $html);
-        $this->assertMatchesRegularExpression('#<h1[^>]*>Leather goods, made for trade.</h1>#', $html);
+        $this->assertMatchesRegularExpression('#<h1[^>]*>Leather Goods, Made for Business.</h1>#', $html);
     }
 
     public function test_live_slides_render_in_order_with_one_h1_and_inert_inactive_slides(): void

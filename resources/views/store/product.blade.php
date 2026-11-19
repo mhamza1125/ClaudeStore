@@ -17,13 +17,13 @@
         <livewire:store.product-purchase :product="$product" :is-favorite="$isFavorite"/>
 
         {{-- Details --}}
-        <div class="mt-16 grid gap-12 border-t border-border pt-12 lg:grid-cols-12">
+        <div class="mt-16 grid gap-12 border-t border-border pt-14 lg:mt-24 lg:grid-cols-12">
             <section class="lg:col-span-7" aria-labelledby="desc-heading">
-                <h2 id="desc-heading" class="mb-4 text-3xl">Description</h2>
+                <h2 id="desc-heading" class="h-product mb-5">Description</h2>
                 <div class="prose-store whitespace-pre-line text-muted">{{ $product->description ?: $product->short_description }}</div>
             </section>
             <section class="lg:col-span-5" aria-labelledby="spec-heading">
-                <h2 id="spec-heading" class="mb-4 text-3xl">Specifications</h2>
+                <h2 id="spec-heading" class="h-product mb-5">Specifications</h2>
                 @php
                     $specs = array_filter([
                         'Material' => $product->material, 'Leather type' => $product->leather_type, 'Dimensions' => $product->dimensions,
@@ -52,9 +52,9 @@
         </div>
 
         @if ($related->isNotEmpty())
-            <section class="mt-20" aria-labelledby="related-heading">
-                <h2 id="related-heading" class="mb-8 text-3xl">Related products</h2>
-                <div class="grid grid-cols-2 gap-x-5 gap-y-10 lg:grid-cols-4">
+            <section class="mt-20 border-t border-border pt-14 lg:mt-24" aria-labelledby="related-heading">
+                <h2 id="related-heading" class="h-section mb-10">Related products</h2>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
                     @foreach ($related as $item)<x-product-card :product="$item"/>@endforeach
                 </div>
             </section>

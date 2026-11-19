@@ -30,6 +30,28 @@ return [
         'allowed_domains' => array_filter(array_map('trim', explode(',', (string) env('EMAIL_ALLOWED_DOMAINS', '')))),
     ],
 
+    /*
+    | Manufacturing and private-label content shown on the homepage and /custom-manufacturing.
+    | Edit these lists if the business process or services differ; nothing here is a claim about
+    | capacity, certification or history.
+    */
+    'manufacturing' => [
+        'capabilities' => [
+            'Logo embossing or debossing (blind or foil)',
+            'Custom colours and leather types',
+            'Branded hardware and zip pulls',
+            'Linings, stitching and edge finishes',
+            'Retail packaging and swing tags',
+            'Sample development before production',
+        ],
+        'process' => [
+            ['Brief & requirements', 'Share a tech pack, reference photos or artwork, with target quantities and delivery dates.'],
+            ['Design & sampling', 'We develop samples to your specification so materials, colours and branding are approved before production.'],
+            ['Production', 'Approved samples go into production with your pricing, quantities and lead time confirmed in a formal quotation.'],
+            ['Quality control & delivery', 'Goods are checked before dispatch and shipped to your destination on the agreed terms.'],
+        ],
+    ],
+
     // Shorter labels for categories in the header menus only (slug => label). Category pages,
     // breadcrumbs, titles and the footer keep the full category name.
     'nav_labels' => [

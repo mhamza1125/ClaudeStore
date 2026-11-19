@@ -55,9 +55,11 @@ class Settings
             'images.watermark_opacity' => 22, // percent
             'images.watermark_personalized' => false, // adds the signed-in customer's email or ID
             'images.watermark_identifier' => 'email', // email | id
-            'theme.default' => 'mid', // white | mid | dark | system
-            'theme.system_light' => 'mid', // palette used by "system" when the OS is in light mode
+            'theme.default' => 'white', // white | mid | dark | system
+            'theme.system_light' => 'white', // palette used by "system" when the OS is in light mode
             'theme.allow_switch' => true, // show the theme switcher to visitors
+            'company.intro' => null, // short company introduction for the homepage and About page (falls back to the brand description)
+            'company.story' => null, // optional longer company story shown on the About page
             'homepage.testimonials' => [],
             'homepage.hero_autoplay_seconds' => 6, // banner slider; 0 = manual navigation only
             'homepage.products_autoplay_seconds' => 5, // featured products carousel; 0 = manual // [{quote, name, company}] — only genuine, supplied content

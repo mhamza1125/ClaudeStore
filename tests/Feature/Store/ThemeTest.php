@@ -16,7 +16,7 @@ class ThemeTest extends TestCase
     public function test_defaults_render_on_html_with_switcher(): void
     {
         $this->get('/')->assertOk()
-            ->assertSee('data-theme-default="mid" data-theme-light="mid" data-theme-switch="1"', false)
+            ->assertSee('data-theme-default="white" data-theme-light="white" data-theme-switch="1"', false)
             ->assertSee('aria-label="Colour theme"', false)
             ->assertSee('role="menuitemradio"', false);
     }
@@ -34,13 +34,13 @@ class ThemeTest extends TestCase
         $this->get('/')->assertSee('data-user-theme="white"', false)->assertSee('data-theme-url=', false);
     }
 
-    public function test_legacy_light_preference_maps_to_mid(): void
+    public function test_legacy_light_preference_maps_to_light_palette(): void
     {
-        $this->assertSame('mid', Theme::normalize('light'));
+        $this->assertSame('white', Theme::normalize('light'));
         $this->assertNull(Theme::normalize('neon'));
         $user = $this->customer();
         $user->forceFill(['theme' => 'light'])->save();
-        $this->actingAs($user)->get('/')->assertSee('data-user-theme="mid"', false);
+        $this->actingAs($user)->get('/')->assertSee('data-user-theme="white"', false);
     }
 
     public function test_admin_sets_default_and_can_lock_the_theme(): void

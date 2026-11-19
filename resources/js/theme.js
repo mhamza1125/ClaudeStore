@@ -11,7 +11,7 @@ function store(value) {
 
 export function resolveTheme(choice) {
     if (choice !== 'system') return choice;
-    return media.matches ? 'dark' : (root.dataset.themeLight || 'mid');
+    return media.matches ? 'dark' : (root.dataset.themeLight || 'white');
 }
 
 export function applyTheme(choice) {
@@ -23,7 +23,7 @@ export function applyTheme(choice) {
 
 export function registerTheme(Alpine) {
     Alpine.data('themeToggle', () => ({
-        choice: root.dataset.theme || 'mid',
+        choice: root.dataset.theme || 'white',
         open: false,
         set(choice) {
             this.choice = choice;
@@ -39,6 +39,6 @@ export function registerTheme(Alpine) {
     }));
 
     media.addEventListener('change', () => {
-        if ((root.dataset.theme || 'mid') === 'system') applyTheme('system');
+        if ((root.dataset.theme || 'white') === 'system') applyTheme('system');
     });
 }

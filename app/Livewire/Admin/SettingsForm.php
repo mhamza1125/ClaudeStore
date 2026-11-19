@@ -30,6 +30,7 @@ class SettingsForm extends Component
         $this->s = [
             'brand_name' => $all['brand.name'], 'brand_tagline' => $all['brand.tagline'], 'brand_email' => $all['brand.email'],
             'brand_phone' => $all['brand.phone'], 'brand_address' => $all['brand.address'],
+            'company_intro' => (string) $all['company.intro'], 'company_story' => (string) $all['company.story'],
             'social_instagram' => (string) $all['social.instagram'], 'social_linkedin' => (string) $all['social.linkedin'], 'social_facebook' => (string) $all['social.facebook'],
             'sales_email' => (string) $all['sales.notification_email'],
             'tax_rate' => Money::bpsToPercentString((int) $all['tax.rate_bps']), 'tax_label' => $all['tax.label'], 'tax_on_shipping' => (bool) $all['tax.on_shipping'],
@@ -41,7 +42,7 @@ class SettingsForm extends Component
             'newsletter' => (bool) $all['newsletter.enabled'],
             'hero_autoplay' => (int) $all['homepage.hero_autoplay_seconds'],
             'products_autoplay' => (int) $all['homepage.products_autoplay_seconds'],
-            'theme_default' => (string) (Theme::normalize($all['theme.default']) ?? 'mid'),
+            'theme_default' => (string) (Theme::normalize($all['theme.default']) ?? 'white'),
             'theme_system_light' => (string) $all['theme.system_light'],
             'theme_allow_switch' => (bool) $all['theme.allow_switch'],
             'whatsapp_enabled' => (bool) $all['whatsapp.enabled'],
@@ -66,6 +67,7 @@ class SettingsForm extends Component
         $this->validate([
             's.brand_name' => ['required', 'string', 'max:80'], 's.brand_tagline' => ['nullable', 'string', 'max:160'],
             's.brand_email' => ['required', 'email'], 's.brand_phone' => ['nullable', 'string', 'max:40'], 's.brand_address' => ['nullable', 'string', 'max:255'],
+            's.company_intro' => ['nullable', 'string', 'max:600'], 's.company_story' => ['nullable', 'string', 'max:6000'],
             's.social_instagram' => ['nullable', 'url:https'], 's.social_linkedin' => ['nullable', 'url:https'], 's.social_facebook' => ['nullable', 'url:https'],
             's.sales_email' => ['nullable', 'email'],
             's.tax_rate' => ['required', 'regex:/^\d{1,2}(\.\d{1,2})?$/'], 's.tax_label' => ['required', 'string', 'max:40'],
@@ -99,6 +101,8 @@ class SettingsForm extends Component
         $values = [
             'brand.name' => $s['brand_name'], 'brand.tagline' => $s['brand_tagline'], 'brand.email' => $s['brand_email'],
             'brand.phone' => $s['brand_phone'], 'brand.address' => $s['brand_address'],
+            'company.intro' => filled($s['company_intro'] ?? null) ? trim($s['company_intro']) : null,
+            'company.story' => filled($s['company_story'] ?? null) ? trim($s['company_story']) : null,
             'social.instagram' => $s['social_instagram'] ?: null, 'social.linkedin' => $s['social_linkedin'] ?: null, 'social.facebook' => $s['social_facebook'] ?: null,
             'sales.notification_email' => $s['sales_email'] ?: null,
             'tax.rate_bps' => Money::parsePercentToBps($s['tax_rate']), 'tax.label' => $s['tax_label'], 'tax.on_shipping' => (bool) $s['tax_on_shipping'],
