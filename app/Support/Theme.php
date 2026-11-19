@@ -10,11 +10,11 @@ namespace App\Support;
  */
 final class Theme
 {
-    public const PALETTES = ['white' => 'Light', 'mid' => 'Mid', 'dark' => 'Dark'];
+    public const PALETTES = ['white' => 'White', 'mid' => 'Mid', 'dark' => 'Dark'];
 
     /** choice => [label, icon] for the visitor toggle */
     public const CHOICES = [
-        'white' => ['Light', 'sun'],
+        'white' => ['White', 'sun'],
         'mid' => ['Mid', 'swatch'],
         'dark' => ['Dark', 'moon'],
         'system' => ['System', 'monitor'],

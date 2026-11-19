@@ -40,11 +40,11 @@
             <h2 id="theme-h" class="text-2xl">Appearance</h2>
             <div class="grid gap-4 md:grid-cols-3">
                 <x-select-field name="s.theme_default" model="s.theme_default" label="Default theme" :options="collect(\App\Support\Theme::CHOICES)->map(fn ($c, $k) => $c[0].($k === 'system' ? ' (follow the visitor’s device)' : ''))->all()" help="Used for new visitors and whenever switching is turned off."/>
-                <x-select-field name="s.theme_system_light" model="s.theme_system_light" label="Light palette for “System”" :options="['white' => 'Light', 'mid' => 'Mid']" help="Devices in light mode get this palette; dark mode gets Dark."/>
+                <x-select-field name="s.theme_system_light" model="s.theme_system_light" label="Light palette for “System”" :options="['white' => 'White', 'mid' => 'Mid']" help="Devices in light mode get this palette; dark mode gets Dark."/>
                 <label class="flex items-center gap-2 pt-7 text-sm"><input type="checkbox" class="checkbox" wire:model="s.theme_allow_switch"> Let visitors switch theme</label>
             </div>
             <div class="grid gap-3 sm:grid-cols-3" aria-hidden="true">
-                @foreach (['white' => ['#f7f4ee', '#261a14', '#a78657', '#eae1d5'], 'mid' => ['#e6dccd', '#261a14', '#6b4a22', '#d9ccb8'], 'dark' => ['#19130f', '#f4ede3', '#c0a272', '#30231b']] as $key => [$bg, $fg, $ac, $el])
+                @foreach (['white' => ['#ffffff', '#261a14', '#a78657', '#f5f4f1'], 'mid' => ['#e6dccd', '#261a14', '#6b4a22', '#d9ccb8'], 'dark' => ['#19130f', '#f4ede3', '#c0a272', '#30231b']] as $key => [$bg, $fg, $ac, $el])
                     {{-- Fixed swatches so admins can compare palettes regardless of the admin's own theme. --}}
                     <div class="rounded-sm border border-border p-3 text-xs" style="background: {{ $bg }}; color: {{ $fg }}">
                         <p class="font-semibold">{{ \App\Support\Theme::PALETTES[$key] }}</p>

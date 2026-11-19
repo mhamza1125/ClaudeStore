@@ -12,7 +12,7 @@
 
 /*
  * Design tokens — three palettes on one set of semantic names.
- *   white (:root[data-palette="white"], shown as "Light"): Warm Ivory page, white cards, espresso text
+ *   white (:root[data-palette="white"]): clean white page, espresso text, antique-brass accent
  *   mid   (default fallback palette): an in-between theme — warm taupe and sand surfaces
  *   dark  (.dark): deep espresso with ivory text
  * The resolved palette is set on <html> before CSS paints (partials/head.blade.php).
@@ -59,13 +59,13 @@
 }
 
 :root[data-palette="white"] {
-    --color-bg: #f7f4ee;          /* Warm Ivory */
+    --color-bg: #ffffff;          /* clean white page */
     --color-surface: #ffffff;
-    --color-elevated: #eae1d5;    /* Soft Sand */
+    --color-elevated: #f5f4f1;    /* light warm-grey panels */
     --color-text: #261a14;
     --color-muted: #6a5f55;
-    --color-border: #ded6ca;      /* Hairline Border */
-    --color-border-strong: #bcb0a0;
+    --color-border: #e5e2dd;
+    --color-border-strong: #c7c1b9;
     --color-primary: #261a14;     /* Deep Espresso */
     --color-on-primary: #f7f4ee;
     --color-accent: #7d6036;
