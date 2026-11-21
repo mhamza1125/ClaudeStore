@@ -73,7 +73,7 @@
     </section>
 
     {{-- 8–9. How to start + enquiry --}}
-    <section class="container-page pb-4" aria-labelledby="start-heading">
+    <section class="container-page pb-16 sm:pb-20 lg:pb-24" aria-labelledby="start-heading">
         <div class="grid items-center gap-10 rounded-xl border border-border bg-surface p-7 sm:p-10 lg:grid-cols-12">
             <div class="lg:col-span-7">
                 <h2 id="start-heading" class="h-product">How to start</h2>

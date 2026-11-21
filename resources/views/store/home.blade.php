@@ -14,7 +14,7 @@
                     'email' => $brand['email'],
                     'telephone' => preg_replace('/[^\d+]/', '', $brand['phone']),
                     'address' => ['@type' => 'PostalAddress', 'streetAddress' => $brand['address'], 'addressCountry' => 'PK'],
-                    'sameAs' => array_values(array_filter([setting('social.instagram'), setting('social.linkedin'), setting('social.facebook')])) ?: null,
+                    'sameAs' => \App\Support\Social::profileUrls() ?: null,
                 ]),
                 [
                     '@type' => 'WebSite',

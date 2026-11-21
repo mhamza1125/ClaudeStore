@@ -256,6 +256,12 @@
     }
     .floating-btn--left { left: var(--float-left); }
     .floating-btn--right { right: var(--float-right); }
+    /* Official WhatsApp green: recognition is the point of this button. */
+    .floating-btn--whatsapp { border-color: #25d366; background: #25d366; color: #fff; }
+    .floating-btn--whatsapp:hover { border-color: #1ebe5b; background: #1ebe5b; }
+    /* Back to top: smaller, centred over the WhatsApp button (or in its place when WhatsApp is off). */
+    .back-to-top { --btt-size: 2.75rem; height: var(--btt-size); min-width: var(--btt-size); left: calc(var(--float-left) + (var(--float-size) - var(--btt-size)) / 2); }
+    .back-to-top.above-whatsapp { bottom: calc(var(--float-bottom) + var(--float-size) + var(--float-gap)); }
     .chat-teaser {
         position: fixed;
         z-index: var(--z-float);
@@ -284,7 +290,7 @@
 
     /* ---------- Header ---------- */
     .site-header { @apply sticky top-0 z-(--z-header) border-b border-transparent transition-[background-color,border-color,box-shadow] duration-300;
-        background: color-mix(in srgb, var(--color-bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(14px); -webkit-backdrop-filter: saturate(1.4) blur(14px); }
+        background: var(--color-bg); } /* fully opaque: page content never shows through */
     .site-header.is-scrolled { @apply border-border; box-shadow: 0 8px 24px -18px rgb(34 23 16 / 0.35); }
     .nav-link { @apply relative flex items-center gap-1 whitespace-nowrap py-2 text-[14px] font-medium text-text/85 transition-colors hover:text-text; }
     .nav-link::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; transform: scaleX(0); transform-origin: left;
@@ -358,7 +364,7 @@
 
     /* ---------- Footer ---------- */
     .footer-bottom { padding-inline: calc(var(--float-size) + var(--float-gutter) + 0.5rem); }
-    @media (max-width: 639px) { .footer-bottom { justify-content: center; text-align: center; padding-bottom: calc(var(--float-size) + var(--float-gutter)); padding-inline: 0; } }
+    @media (max-width: 639px) { .footer-bottom { flex-direction: column; align-items: center; text-align: center; padding-bottom: calc(var(--float-size) + var(--float-gutter) * 2); padding-inline: 0; } }
     .footer-link { @apply text-on-band/75 transition-colors hover:text-on-band; }
     .footer-heading { @apply mb-4 font-sans text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-hide; }
 

@@ -6,11 +6,40 @@
     @endphp
     <section class="relative overflow-hidden border-b border-border">
         <div class="hero-backdrop !w-[34%] max-md:hidden" aria-hidden="true"></div>
-        <div class="container-page relative pb-12 pt-8 sm:pb-16 sm:pt-10">
-            <x-breadcrumbs :items="[['Home', route('home')], ['Contact us', route('contact')]]" class="mb-10"/>
-            <p class="eyebrow eyebrow-stitch mb-5">Contact us</p>
-            <h1 class="h-section max-w-3xl">Contact us for any questions</h1>
-            <p class="lead mt-5 max-w-2xl !text-lg">Product details, bulk and wholesale orders, customisation or private label: send us a message and our team will get back to you, usually within one business day.</p>
+        <div class="container-page relative grid gap-10 pb-12 pt-8 sm:pb-16 sm:pt-10 lg:grid-cols-12 lg:items-end">
+            <div class="lg:col-span-7">
+                <x-breadcrumbs :items="[['Home', route('home')], ['Contact us', route('contact')]]" class="mb-10"/>
+                <p class="eyebrow eyebrow-stitch mb-5">Contact us</p>
+                <h1 class="h-section max-w-3xl">Contact us for any questions</h1>
+                <p class="lead mt-5 max-w-2xl !text-lg">Product details, bulk and wholesale orders, customisation or private label: send us a message and our team will get back to you quickly. For an instant answer, call or message us on WhatsApp.</p>
+            </div>
+            {{-- Quick contact: Sialkot local time (live), reply time and one-tap actions. No opening
+                 hours are shown because none are configured. --}}
+            <aside class="lg:col-span-4 lg:col-start-9" aria-label="Quick contact">
+                <div class="card overflow-hidden shadow-md"
+                     x-data="{ time: @js(now('Asia/Karachi')->format('g:i a')), tick() { this.time = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' }).format(new Date()).toLowerCase() } }"
+                     x-init="tick(); setInterval(() => tick(), 30000)">
+                    <div class="flex items-center gap-4 bg-band px-6 py-5 text-on-band">
+                        <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-band-2 text-thread"><x-icon name="clock" class="h-5 w-5"/></span>
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-hide">Local time in Sialkot</p>
+                            <p class="mt-0.5 font-serif text-2xl leading-tight tabular-nums"><span x-text="time">{{ now('Asia/Karachi')->format('g:i a') }}</span> <span class="font-sans text-sm text-on-band/60">PKT · UTC+5</span></p>
+                        </div>
+                    </div>
+                    <div class="px-6 py-5">
+                        <p class="text-sm text-muted">Reach us directly</p>
+                        <div class="mt-3 grid gap-2 {{ $whatsapp ? 'grid-cols-3' : 'grid-cols-2' }} [&_.btn]:gap-1.5">
+                            <a href="tel:{{ $tel }}" class="btn btn-secondary btn-sm !px-2"><x-icon name="phone" class="h-4 w-4"/> Call</a>
+                            @if ($whatsapp)
+                                <a href="{{ $whatsapp }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm !px-2" aria-label="WhatsApp (opens in a new tab)">
+                                    <svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d="M12.04 2a9.9 9.9 0 0 0-8.5 15l-1.4 5 5.1-1.3A9.9 9.9 0 1 0 12.04 2Zm0 18.1a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3a8.2 8.2 0 1 1 6.9 3.8Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.5-.2Z"/></svg> WhatsApp
+                                </a>
+                            @endif
+                            <a href="mailto:{{ $brand['email'] }}" class="btn btn-primary btn-sm !px-2"><x-icon name="mail" class="h-4 w-4"/> Email</a>
+                        </div>
+                    </div>
+                </div>
+            </aside>
         </div>
     </section>
 
@@ -35,6 +64,12 @@
             @if ($whatsapp)
                 <a href="{{ $whatsapp }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary w-full">Chat with us on WhatsApp</a>
             @endif
+            @if (\App\Support\Social::visible())
+                <div class="panel flex flex-wrap items-center justify-between gap-4 !py-4">
+                    <p class="text-sm font-medium">Follow {{ $brand['name'] }}</p>
+                    <x-social-links/>
+                </div>
+            @endif
             <div class="band grain stitch-frame rounded-lg p-6 text-sm" style="--stitch-color: rgb(217 154 99 / .4); --stitch-inset: 8px">
                 <p class="font-serif text-xl text-on-band">Planning an order?</p>
                 <p class="mt-2 text-on-band/75">For pricing on specific products and quantities, add them to your <a href="{{ route('quote.basket') }}" class="link">quote list</a> and send a quote request. For your own designs or branding, see <a href="{{ route('pages.show', 'custom-manufacturing') }}" class="link">custom &amp; private label</a>.</p>
@@ -48,7 +83,7 @@
                     <div class="py-6 text-center" role="status" data-testid="contact-success">
                         <span class="mx-auto flex h-14 w-14 items-center justify-center rounded-full badge-success"><x-icon name="check" class="h-7 w-7"/></span>
                         <h2 id="contact-form-heading" class="mt-5 text-3xl">Thank you, your message has been sent</h2>
-                        <p class="mx-auto mt-2 max-w-md text-muted">We have received it and will reply to your email as soon as possible, usually within one business day.</p>
+                        <p class="mx-auto mt-2 max-w-md text-muted">We have received it and will reply to your email as soon as possible.</p>
                         <a href="{{ route('contact') }}" class="btn btn-secondary mt-6">Send another message</a>
                     </div>
                 @else

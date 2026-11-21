@@ -11,15 +11,30 @@
             <x-field name="s.brand_address" model="s.brand_address" label="Address" class="sm:col-span-2"/>
             <x-textarea-field name="s.company_intro" model="s.company_intro" label="Company introduction" rows="3" class="sm:col-span-2" help="Shown on the homepage and About page. Leave blank to use the brand description. Only state verified facts."/>
             <x-textarea-field name="s.company_story" model="s.company_story" label="Company story (optional)" rows="5" class="sm:col-span-2" help="Longer text for the About page: workshop, location, materials sourcing, certifications. Leave blank to hide."/>
-            <x-field name="s.social_instagram" model="s.social_instagram" label="Instagram URL"/>
-            <x-field name="s.social_linkedin" model="s.social_linkedin" label="LinkedIn URL"/>
-            <x-field name="s.social_facebook" model="s.social_facebook" label="Facebook URL"/>
             <div class="sm:col-span-2">
                 <label for="logo" class="field-label">Logo</label>
                 @if ($logoPath)<div class="mb-2 flex items-center gap-3"><img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($logoPath) }}" alt="Current logo" class="h-10"><button type="button" wire:click="removeLogo" class="link text-xs">Remove</button></div>@endif
                 <input id="logo" type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp" class="input">
                 <p class="field-help">Without a logo, a monogram placeholder is shown. Brand colours are design tokens in resources/css/app.css.</p>
                 @error('logo')<p class="field-error">{{ $message }}</p>@enderror
+            </div>
+        </section>
+        <section class="panel space-y-4" aria-labelledby="social-h">
+            <div>
+                <h2 id="social-h" class="text-2xl">Social profiles</h2>
+                <p class="mt-1 text-sm text-muted">Shown as icons in the footer and on the contact page. An icon appears only when it is switched on <em>and</em> has a link (on a local/staging copy, a switched-on icon without a link points to “#” for preview).</p>
+            </div>
+            <div class="divide-y divide-border rounded-md border border-border">
+                @foreach (\App\Support\Social::NETWORKS as $key => [$label, $icon])
+                    <div class="grid items-start gap-3 p-4 sm:grid-cols-[11rem_1fr]" wire:key="social-{{ $key }}">
+                        <label class="flex items-center gap-3 pt-2.5 text-sm font-medium">
+                            <input type="checkbox" class="checkbox" wire:model="s.social_{{ $key }}_show">
+                            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px] text-muted" fill="currentColor" aria-hidden="true"><path d="{{ $icon }}"/></svg>
+                            {{ $label }}
+                        </label>
+                        <x-field name="s.social_{{ $key }}" model="s.social_{{ $key }}" placeholder="https://" aria-label="{{ $label }} profile URL"/>
+                    </div>
+                @endforeach
             </div>
         </section>
         <section class="panel grid gap-4 sm:grid-cols-2">

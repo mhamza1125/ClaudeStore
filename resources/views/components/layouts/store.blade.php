@@ -8,11 +8,12 @@
 <body class="flex min-h-screen flex-col">
 <a href="#main" class="btn btn-primary sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50">Skip to content</a>
 @include('partials.store-header')
-<main id="main" class="flex-1">
+<main id="main" class="flex-1 focus:outline-none" tabindex="-1">
     {{ $slot }}
 </main>
 @include('partials.store-footer')
 <x-whatsapp-button/>
+<x-back-to-top/>
 <x-chat-widget/>
 @livewireScriptConfig
 @stack('scripts')

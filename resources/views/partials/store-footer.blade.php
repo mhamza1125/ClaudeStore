@@ -1,6 +1,6 @@
 @php
     $footerCategories = \App\Models\Category::active()->roots()->orderBy('sort_order')->limit(6)->get();
-    $socials = array_filter(['Instagram' => setting('social.instagram'), 'LinkedIn' => setting('social.linkedin'), 'Facebook' => setting('social.facebook')]);
+    $hasSocial = (bool) \App\Support\Social::visible();
     $tel = preg_replace('/[^\d+]/', '', $brand['phone']);
 @endphp
 <footer class="band grain mt-0" aria-label="Site footer">
@@ -67,17 +67,16 @@
                     <p class="mb-3 text-sm text-on-band/70">New collections, restocks and production slots.</p>
                     @include('partials.newsletter-form', ['compact' => true])
                 @endif
-                @if ($socials)
-                    <h2 class="footer-heading {{ setting('newsletter.enabled') ? 'mt-8' : '' }}">Follow</h2>
-                    <ul class="space-y-2.5 text-sm">
-                        @foreach ($socials as $label => $url)<li><a class="footer-link" href="{{ $url }}" rel="noopener" target="_blank">{{ $label }}</a></li>@endforeach
-                    </ul>
+                @if ($hasSocial)
+                    {{-- Social profiles: icon + name rows; the round icon badges set them apart from the text links. --}}
+                    <h2 class="footer-heading {{ setting('newsletter.enabled') ? 'mt-8' : '' }}">Follow us</h2>
+                    <x-social-links tone="dark" layout="list"/>
                 @endif
             </div>
         </nav>
     </div>
     <div class="border-t border-on-band/10">
-        <div class="container-page footer-bottom flex flex-wrap items-center justify-between gap-2 py-5 text-xs text-on-band/55">
+        <div class="container-page footer-bottom flex flex-wrap items-center justify-between gap-2 pb-24 pt-5 sm:pb-5 text-xs text-on-band/55">
             <p>© {{ now()->year }} {{ $brand['name'] }}. Prices exclude tax and shipping unless stated. Submitted quote requests are not orders.</p>
             <p>All prices in {{ config('store.currency') }}.</p>
         </div>

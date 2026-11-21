@@ -20,6 +20,9 @@ return [
         'instagram' => env('BRAND_INSTAGRAM'),
         'linkedin' => env('BRAND_LINKEDIN'),
         'facebook' => env('BRAND_FACEBOOK'),
+        'youtube' => env('BRAND_YOUTUBE'),
+        'tiktok' => env('BRAND_TIKTOK'),
+        'pinterest' => env('BRAND_PINTEREST'),
     ],
     // Reference prefixes: LM-Q-YYYY-000123 and LM-SO-YYYY-000123
     'reference_prefix' => env('BRAND_REFERENCE_PREFIX', 'LM'),
