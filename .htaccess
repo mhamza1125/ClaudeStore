@@ -1,0 +1,12 @@
+# Hostinger shared hosting: the project is deployed into public_html, so send
+# every request into Laravel's public/ directory. Nothing outside public/
+# (composer.json, storage/logs, .env, ...) can be reached from the web.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Never serve dotfiles (.env, .git) from the project root.
+    RewriteRule (^|/)\. - [F,L]
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,15 +12,18 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, HasRoles, Notifiable;
 
     public const STAFF_ROLES = ['super-admin', 'admin', 'sales-rep'];
 
+    public const PRICE_ACCESS = ['default' => 'Follow B2B rules', 'allow' => 'Always show prices', 'deny' => 'Never show prices'];
+
     protected $fillable = [
         'name', 'email', 'password', 'phone', 'job_title', 'company_id', 'company_role', 'theme', 'is_active',
+        'approval_status', 'approved_at', 'approved_by', 'price_access',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -29,9 +33,25 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'approved_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->approval_status === 'approved';
+    }
+
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new \App\Notifications\VerifyEmailQueued);
     }
 
     public function company(): BelongsTo

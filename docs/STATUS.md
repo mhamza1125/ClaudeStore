@@ -18,11 +18,12 @@ variant images, verified-only specifications, variants, MOQ/multiples, live serv
 pricing, next-tier hint, customisation request, favourites, spec-sheet download, related products,
 SEO meta/canonical/JSON-LD), policy and company pages, newsletter signup (toggle in Settings).
 
-**Design system.** Semantic tokens in Tailwind v4 `@theme` (the default palette is disabled, so
-hard-coded colours don't compile). Light/dark/system themes with a no-flash head script; the
-choice is stored in localStorage and on the user record. A toggle sits in the storefront, portal
-and admin. Contrast was checked to WCAG AA for the token pairs. Emails and PDFs always use the
-light theme.
+**Design system.** "Workshop Modern" (docs/DESIGN.md): one light theme for the storefront, portal
+and admin, with semantic tokens in Tailwind v4 `@theme` (the default palette is disabled, so
+hard-coded colours don't compile). 60-30-10 palette (canvas / espresso + saddle / deep walnut actions, the logo tan for identity and for buttons on dark bands),
+self-hosted Fraunces + Instrument Sans, and a saddle-stitch signature motif. Contrast was checked
+to WCAG AA for the token pairs. Emails and PDFs use the same palette. Theme switching was removed;
+the unused `users.theme` column and old `theme.*` settings rows are left in place (never deleted).
 
 **Pricing.** The full precedence chain, group discounts, MOQ, order multiples, minimum order
 value, price-on-request, trade-only visibility, integer money. See PRICING.md.
@@ -58,12 +59,24 @@ Audit log for product, price, settings, customer, staff and order changes.
 product image with focal point, eyebrow/title/subtitle, two CTAs, scheduling, ordering), crossfade
 with progress-timed autoplay, pause, arrows, dots, swipe and reduced-motion support. Featured
 product carousel (scroll-snap, autoplay that pauses on hover/focus/touch, arrows). Live header
-search suggestions (`/search/suggest`, same matching as the catalogue). Three themes — White, Mid
-(default, brand mustard/brown) and Dark — plus System, configurable in Admin → Settings →
-Appearance. Informational pages at root URLs (`/about`, `/custom-manufacturing`) with 301
+search suggestions (`/search/suggest`, same matching as the catalogue). One light theme throughout
+(the earlier White / Mid / Dark switcher was removed in the redesign). Informational pages at root URLs (`/about`, `/custom-manufacturing`) with 301
 redirects from `/pages/…`. Configurable floating WhatsApp button (bottom-left) and optional AI
 chatbot (bottom-right) with Cloudflare Workers AI as the default provider (Anthropic optional),
 public-data-only business context and an honest offline mode (docs/CHATBOT.md).
+
+**B2B price access and image protection.** Admin → B2B settings: B2B pricing on/off, guest
+prices, registration requirement, four access methods (instant, verify email, approval, both),
+guest inquiries, company and personalised watermarks. Admin → Customer accounts: approve, reject,
+resend or mark verification, per-customer price override, suspend. Enforced server-side in every
+price channel. Product images are private and served as signed, watermarked renditions, with a
+zoom view. See docs/B2B.md and docs/IMAGES.md (`tests/Feature/B2b`, `tests/Feature/Images`).
+
+**Leamate pre-launch.** Branding (logo in header/footer/admin, favicons, "Leamate | Leather
+Goods & Accessories" title, Open Graph tags), official contact details (ribbon, footer, Contact
+page, emails, WhatsApp), Leamate category tree (`CategorySeeder`, idempotent), Contact Us page
+with stored messages, email alert and Admin → Messages, single centred image watermark
+(embedded or CSS overlay), prices hidden from guests by default, footer spacing fixed.
 
 ## Needs credentials or external setup
 
@@ -104,8 +117,8 @@ public-data-only business context and an honest offline mode (docs/CHATBOT.md).
 - **Quote versions:** snapshots are stored and listed with totals. There is no visual diff
   between versions, and PDFs always render the current state (which equals the last sent version
   unless there are unsent changes).
-- **Two-factor authentication and email verification** are disabled (Fortify supports both; they
-  need UI screens).
+- **Two-factor authentication** is disabled (Fortify supports it; it needs UI screens). Email
+  verification is enabled; whether it gates prices is a B2B setting (docs/B2B.md).
 - **Newsletter:** subscribers are stored only. There is no export UI or email-provider sync, and
   no double opt-in.
 - **Search** uses SQL `LIKE`. It's fine for a few thousand products; add Scout/Meilisearch for

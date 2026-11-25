@@ -164,10 +164,10 @@ return [
     'features' => [
         Features::registration(),
         Features::resetPasswords(),
-        // Features::emailVerification(),
+        // Verification links are always sent; whether verification gates prices is a B2B setting.
+        Features::emailVerification(),
         Features::updateProfileInformation(),
         Features::updatePasswords(),
-        
     ],
 
 ];

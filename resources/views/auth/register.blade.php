@@ -11,7 +11,19 @@
         <x-field name="password" type="password" label="Password" required autocomplete="new-password"/>
         <x-field name="password_confirmation" type="password" label="Confirm password" required autocomplete="new-password"/>
         <button class="btn btn-primary w-full">Create account</button>
-        <p class="text-xs text-muted">Wholesale pricing is available once your account is approved by our trade team.</p>
+        @php $priceAccess = app(\App\Pricing\PriceAccess::class); @endphp
+        <p class="text-xs text-muted" data-testid="access-method">
+            @if (! $priceAccess->enabled())
+                Wholesale pricing is available once your account is approved by our trade team.
+            @else
+                @switch ($priceAccess->method())
+                    @case('verify') You’ll see prices as soon as you verify your email address. @break
+                    @case('approval') Our trade team reviews new accounts; you’ll see prices once yours is approved. @break
+                    @case('verify_approval') Verify your email address, then you’ll see prices once our trade team approves your account. @break
+                    @default You’ll see prices straight after creating your account.
+                @endswitch
+            @endif
+        </p>
     </form>
     <x-slot:below>Already registered? <a href="{{ route('login') }}" class="link text-text">Sign in</a></x-slot:below>
 </x-auth-card>

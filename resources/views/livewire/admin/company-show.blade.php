@@ -8,7 +8,7 @@
             @endif
         </x-slot:actions>
     </x-page-header>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm">{{ session('status') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success">{{ session('status') }}</div>@endif
 
     <div class="grid gap-6 xl:grid-cols-3">
         <div class="space-y-6 xl:col-span-2">

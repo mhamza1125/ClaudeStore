@@ -1,6 +1,6 @@
 <div>
     <x-page-header title="Settings" eyebrow="Store configuration"/>
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm">{{ session('status') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success">{{ session('status') }}</div>@endif
     <form wire:submit="save" class="grid gap-6 xl:grid-cols-2">
         <section class="panel grid gap-4 sm:grid-cols-2">
             <h2 class="text-2xl sm:col-span-2">Brand identity</h2>
@@ -9,15 +9,32 @@
             <x-field name="s.brand_email" model="s.brand_email" type="email" label="Contact email" required/>
             <x-field name="s.brand_phone" model="s.brand_phone" label="Phone"/>
             <x-field name="s.brand_address" model="s.brand_address" label="Address" class="sm:col-span-2"/>
-            <x-field name="s.social_instagram" model="s.social_instagram" label="Instagram URL"/>
-            <x-field name="s.social_linkedin" model="s.social_linkedin" label="LinkedIn URL"/>
-            <x-field name="s.social_facebook" model="s.social_facebook" label="Facebook URL"/>
+            <x-textarea-field name="s.company_intro" model="s.company_intro" label="Company introduction" rows="3" class="sm:col-span-2" help="Shown on the homepage and About page. Leave blank to use the brand description. Only state verified facts."/>
+            <x-textarea-field name="s.company_story" model="s.company_story" label="Company story (optional)" rows="5" class="sm:col-span-2" help="Longer text for the About page: workshop, location, materials sourcing, certifications. Leave blank to hide."/>
             <div class="sm:col-span-2">
                 <label for="logo" class="field-label">Logo</label>
                 @if ($logoPath)<div class="mb-2 flex items-center gap-3"><img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($logoPath) }}" alt="Current logo" class="h-10"><button type="button" wire:click="removeLogo" class="link text-xs">Remove</button></div>@endif
                 <input id="logo" type="file" wire:model="logo" accept="image/png,image/jpeg,image/webp" class="input">
                 <p class="field-help">Without a logo, a monogram placeholder is shown. Brand colours are design tokens in resources/css/app.css.</p>
                 @error('logo')<p class="field-error">{{ $message }}</p>@enderror
+            </div>
+        </section>
+        <section class="panel space-y-4" aria-labelledby="social-h">
+            <div>
+                <h2 id="social-h" class="text-2xl">Social profiles</h2>
+                <p class="mt-1 text-sm text-muted">Shown as icons in the footer and on the contact page. An icon appears only when it is switched on <em>and</em> has a link (on a local/staging copy, a switched-on icon without a link points to “#” for preview).</p>
+            </div>
+            <div class="divide-y divide-border rounded-md border border-border">
+                @foreach (\App\Support\Social::NETWORKS as $key => [$label, $icon])
+                    <div class="grid items-start gap-3 p-4 sm:grid-cols-[11rem_1fr]" wire:key="social-{{ $key }}">
+                        <label class="flex items-center gap-3 pt-2.5 text-sm font-medium">
+                            <input type="checkbox" class="checkbox" wire:model="s.social_{{ $key }}_show">
+                            <svg viewBox="0 0 24 24" class="h-[18px] w-[18px] text-muted" fill="currentColor" aria-hidden="true"><path d="{{ $icon }}"/></svg>
+                            {{ $label }}
+                        </label>
+                        <x-field name="s.social_{{ $key }}" model="s.social_{{ $key }}" placeholder="https://" aria-label="{{ $label }} profile URL"/>
+                    </div>
+                @endforeach
             </div>
         </section>
         <section class="panel grid gap-4 sm:grid-cols-2">
@@ -33,23 +50,6 @@
             <x-textarea-field name="s.payment_terms" model="s.payment_terms" label="Default payment terms" rows="3" class="sm:col-span-2"/>
             <x-textarea-field name="s.delivery_terms" model="s.delivery_terms" label="Default delivery terms" rows="3" class="sm:col-span-2"/>
             <x-textarea-field name="s.acceptance" model="s.acceptance" label="Acceptance instructions" rows="3" class="sm:col-span-2"/>
-        </section>
-        <section class="panel space-y-4 xl:col-span-2" aria-labelledby="theme-h">
-            <h2 id="theme-h" class="text-2xl">Appearance</h2>
-            <div class="grid gap-4 md:grid-cols-3">
-                <x-select-field name="s.theme_default" model="s.theme_default" label="Default theme" :options="collect(\App\Support\Theme::CHOICES)->map(fn ($c, $k) => $c[0].($k === 'system' ? ' (follow the visitor’s device)' : ''))->all()" help="Used for new visitors and whenever switching is turned off."/>
-                <x-select-field name="s.theme_system_light" model="s.theme_system_light" label="Light palette for “System”" :options="['white' => 'White', 'mid' => 'Mid']" help="Devices in light mode get this palette; dark mode gets Dark."/>
-                <label class="flex items-center gap-2 pt-7 text-sm"><input type="checkbox" class="checkbox" wire:model="s.theme_allow_switch"> Let visitors switch theme</label>
-            </div>
-            <div class="grid gap-3 sm:grid-cols-3" aria-hidden="true">
-                @foreach (['white' => ['#ffffff', '#1f1c19', '#8a5a2b', '#f5f4f1'], 'mid' => ['#f5efe6', '#2a1f18', '#7a5726', '#ede4d6'], 'dark' => ['#141110', '#f1ebe2', '#d2a85c', '#262019']] as $key => [$bg, $fg, $ac, $el])
-                    {{-- Fixed swatches so admins can compare palettes regardless of the admin's own theme. --}}
-                    <div class="rounded-sm border border-border p-3 text-xs" style="background: {{ $bg }}; color: {{ $fg }}">
-                        <p class="font-semibold">{{ \App\Support\Theme::PALETTES[$key] }}</p>
-                        <p class="mt-1 flex items-center gap-2"><span class="inline-block h-4 w-8 rounded-sm" style="background: {{ $fg }}"></span><span class="inline-block h-4 w-8 rounded-sm" style="background: {{ $ac }}"></span><span class="inline-block h-4 w-8 rounded-sm border" style="background: {{ $el }}"></span></p>
-                    </div>
-                @endforeach
-            </div>
         </section>
         <section class="panel space-y-4" aria-labelledby="wa-h">
             <h2 id="wa-h" class="text-2xl">WhatsApp button</h2>
@@ -101,7 +101,7 @@
         </section>
         <section class="panel grid gap-4 xl:col-span-2 xl:grid-cols-2">
             <h2 class="text-2xl xl:col-span-2">Policies</h2>
-            <p class="text-sm text-muted xl:col-span-2">Plain text, shown on the footer policy pages. Must be supplied by the business (ideally legally reviewed).</p>
+            <p class="text-sm text-muted xl:col-span-2">Shown on the footer policy pages. Leave a field empty to use the standard text (resources/policies), or paste your own. Supports simple formatting: <code>## Heading</code>, <code>- bullet</code>, <code>**bold**</code>, and placeholders such as <code>{brand}</code>, <code>{email}</code>, <code>{phone}</code>, <code>{address}</code>. Have the final wording reviewed by a legal adviser.</p>
             <x-textarea-field name="s.policy_terms" model="s.policy_terms" label="Terms of trade" rows="6"/>
             <x-textarea-field name="s.policy_privacy" model="s.policy_privacy" label="Privacy policy" rows="6"/>
             <x-textarea-field name="s.policy_shipping" model="s.policy_shipping" label="Shipping & delivery" rows="6"/>

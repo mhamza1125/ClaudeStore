@@ -52,7 +52,7 @@ class ProcessImageWithProvider implements ShouldQueue
         [$path, $w, $h] = $storage->optimise($result->binary, $this->source->product_id);
         $this->draft->update([
             'original_disk' => ImageStorage::ORIGINALS_DISK, 'original_path' => $originalPath,
-            'path' => $path, 'width' => $w, 'height' => $h,
+            'disk' => ImageStorage::DISPLAY_DISK, 'path' => $path, 'width' => $w, 'height' => $h,
             'status' => 'pending_review', 'provider_notes' => $result->notes,
         ]);
     }

@@ -7,10 +7,10 @@ use App\Assistant\Contracts\ChatProvider;
 use App\Services\AuditLogger;
 use App\Services\Settings;
 use App\Support\Money;
-use App\Support\Theme;
+use App\Support\Social;
 use App\Support\WhatsApp;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 
@@ -30,7 +30,7 @@ class SettingsForm extends Component
         $this->s = [
             'brand_name' => $all['brand.name'], 'brand_tagline' => $all['brand.tagline'], 'brand_email' => $all['brand.email'],
             'brand_phone' => $all['brand.phone'], 'brand_address' => $all['brand.address'],
-            'social_instagram' => (string) $all['social.instagram'], 'social_linkedin' => (string) $all['social.linkedin'], 'social_facebook' => (string) $all['social.facebook'],
+            'company_intro' => (string) $all['company.intro'], 'company_story' => (string) $all['company.story'],
             'sales_email' => (string) $all['sales.notification_email'],
             'tax_rate' => Money::bpsToPercentString((int) $all['tax.rate_bps']), 'tax_label' => $all['tax.label'], 'tax_on_shipping' => (bool) $all['tax.on_shipping'],
             'shipping_flat' => Money::toDecimalString((int) $all['shipping.flat_cents']),
@@ -41,9 +41,6 @@ class SettingsForm extends Component
             'newsletter' => (bool) $all['newsletter.enabled'],
             'hero_autoplay' => (int) $all['homepage.hero_autoplay_seconds'],
             'products_autoplay' => (int) $all['homepage.products_autoplay_seconds'],
-            'theme_default' => (string) (Theme::normalize($all['theme.default']) ?? 'mid'),
-            'theme_system_light' => (string) $all['theme.system_light'],
-            'theme_allow_switch' => (bool) $all['theme.allow_switch'],
             'whatsapp_enabled' => (bool) $all['whatsapp.enabled'],
             'whatsapp_phone' => (string) $all['whatsapp.phone'],
             'whatsapp_preset' => (string) $all['whatsapp.message_preset'],
@@ -57,6 +54,10 @@ class SettingsForm extends Component
             'policy_terms' => (string) $all['policies.terms'], 'policy_privacy' => (string) $all['policies.privacy'],
             'policy_shipping' => (string) $all['policies.shipping'], 'policy_returns' => (string) $all['policies.returns'],
         ];
+        foreach (array_keys(Social::NETWORKS) as $key) {
+            $this->s["social_{$key}"] = (string) ($all["social.{$key}"] ?? '');
+            $this->s["social_{$key}_show"] = (bool) ($all["social.{$key}_show"] ?? true);
+        }
         $this->testimonials = collect($all['homepage.testimonials'] ?? [])->map(fn ($t) => implode(' | ', [$t['quote'] ?? '', $t['name'] ?? '', $t['company'] ?? '']))->implode("\n");
     }
 
@@ -66,7 +67,7 @@ class SettingsForm extends Component
         $this->validate([
             's.brand_name' => ['required', 'string', 'max:80'], 's.brand_tagline' => ['nullable', 'string', 'max:160'],
             's.brand_email' => ['required', 'email'], 's.brand_phone' => ['nullable', 'string', 'max:40'], 's.brand_address' => ['nullable', 'string', 'max:255'],
-            's.social_instagram' => ['nullable', 'url:https'], 's.social_linkedin' => ['nullable', 'url:https'], 's.social_facebook' => ['nullable', 'url:https'],
+            's.company_intro' => ['nullable', 'string', 'max:600'], 's.company_story' => ['nullable', 'string', 'max:6000'],
             's.sales_email' => ['nullable', 'email'],
             's.tax_rate' => ['required', 'regex:/^\d{1,2}(\.\d{1,2})?$/'], 's.tax_label' => ['required', 'string', 'max:40'],
             's.shipping_flat' => $money, 's.min_order' => $money,
@@ -77,9 +78,6 @@ class SettingsForm extends Component
             'testimonials' => ['nullable', 'string', 'max:10000'],
             's.hero_autoplay' => ['required', 'integer', 'min:0', 'max:60'],
             's.products_autoplay' => ['required', 'integer', 'min:0', 'max:60'],
-            's.theme_default' => ['required', Rule::in(array_keys(Theme::CHOICES))],
-            's.theme_system_light' => ['required', Rule::in(['white', 'mid'])],
-            's.theme_allow_switch' => ['boolean'],
             's.whatsapp_enabled' => ['boolean'],
             's.whatsapp_phone' => [$this->s['whatsapp_enabled'] ? 'required' : 'nullable', 'string', 'max:30',
                 fn ($attr, $value, $fail) => filled($value) && ! WhatsApp::isValidPhone($value)
@@ -93,13 +91,15 @@ class SettingsForm extends Component
             's.chatbot_knowledge' => ['nullable', 'string', 'max:6000'],
             's.whatsapp_custom' => [$this->s['whatsapp_preset'] === 'custom' ? 'required' : 'nullable', 'string', 'max:500'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            ...collect(Social::NETWORKS)->keys()->flatMap(fn ($k) => ["s.social_{$k}" => ['nullable', 'url:https', 'max:255'], "s.social_{$k}_show" => ['boolean']])->all(),
         ], ['s.tax_rate.regex' => 'Enter a percentage such as 8.25.', 's.shipping_flat.regex' => 'Enter an amount such as 25.00.', 's.min_order.regex' => 'Enter an amount such as 500.00.']);
 
         $s = $this->s;
         $values = [
             'brand.name' => $s['brand_name'], 'brand.tagline' => $s['brand_tagline'], 'brand.email' => $s['brand_email'],
             'brand.phone' => $s['brand_phone'], 'brand.address' => $s['brand_address'],
-            'social.instagram' => $s['social_instagram'] ?: null, 'social.linkedin' => $s['social_linkedin'] ?: null, 'social.facebook' => $s['social_facebook'] ?: null,
+            'company.intro' => filled($s['company_intro'] ?? null) ? trim($s['company_intro']) : null,
+            'company.story' => filled($s['company_story'] ?? null) ? trim($s['company_story']) : null,
             'sales.notification_email' => $s['sales_email'] ?: null,
             'tax.rate_bps' => Money::parsePercentToBps($s['tax_rate']), 'tax.label' => $s['tax_label'], 'tax.on_shipping' => (bool) $s['tax_on_shipping'],
             'shipping.flat_cents' => Money::parse($s['shipping_flat']) ?? 0, 'order.min_value_cents' => Money::parse($s['min_order']) ?? 0,
@@ -108,9 +108,6 @@ class SettingsForm extends Component
             'newsletter.enabled' => (bool) $s['newsletter'],
             'homepage.hero_autoplay_seconds' => (int) $s['hero_autoplay'],
             'homepage.products_autoplay_seconds' => (int) $s['products_autoplay'],
-            'theme.default' => $s['theme_default'],
-            'theme.system_light' => $s['theme_system_light'],
-            'theme.allow_switch' => (bool) $s['theme_allow_switch'],
             'whatsapp.enabled' => (bool) $s['whatsapp_enabled'],
             'whatsapp.phone' => WhatsApp::normalizePhone($s['whatsapp_phone']) ?: null,
             'whatsapp.message_preset' => $s['whatsapp_preset'],
@@ -129,6 +126,10 @@ class SettingsForm extends Component
                 return compact('quote', 'name', 'company');
             })->values()->all(),
         ];
+        foreach (array_keys(Social::NETWORKS) as $key) {
+            $values["social.{$key}"] = trim((string) ($s["social_{$key}"] ?? '')) ?: null;
+            $values["social.{$key}_show"] = (bool) ($s["social_{$key}_show"] ?? false);
+        }
         if ($this->logo) {
             $values['brand.logo_path'] = $this->logo->store('brand', 'public');
         }

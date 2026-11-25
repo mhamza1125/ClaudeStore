@@ -53,7 +53,7 @@ class StaffManager extends Component
     {
         return view('livewire.admin.staff-manager', [
             'staff' => User::staff()->with('roles')->orderBy('name')->get(),
-            'roles' => array_combine(User::STAFF_ROLES, User::STAFF_ROLES),
+            'roles' => collect(User::STAFF_ROLES)->mapWithKeys(fn ($r) => [$r => Str::headline($r)])->all(),
         ])->layout('components.layouts.admin', ['title' => 'Staff']);
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\WholesaleApplicationReceived;
 use App\Models\Company;
 use App\Models\CustomerGroup;
+use App\Rules\TrustedEmail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -28,7 +29,7 @@ class CompanyController extends Controller
         }
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['nullable', 'email', 'max:255'],
+            'email' => ['nullable', 'email', 'max:255', new TrustedEmail],
             'phone' => ['nullable', 'string', 'max:40'],
             'website' => ['nullable', 'url:http,https', 'max:255'],
             'country' => ['required', Rule::in(array_keys(countries()))],

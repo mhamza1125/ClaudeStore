@@ -21,12 +21,18 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'approval_status' => 'approved',
         ];
     }
 
     public function unverified(): static
     {
         return $this->state(fn (array $attributes) => ['email_verified_at' => null]);
+    }
+
+    public function pendingApproval(): static
+    {
+        return $this->state(fn (array $attributes) => ['approval_status' => 'pending']);
     }
 
     public function role(string $role): static

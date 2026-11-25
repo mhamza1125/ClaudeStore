@@ -33,7 +33,7 @@ class PageRoutesTest extends TestCase
     {
         $this->get('/pages/contact')->assertNotFound();
         $this->get('/pages/nonsense')->assertNotFound();
-        $this->get('/contact')->assertNotFound();
+        $this->get('/contacts')->assertNotFound();
         $this->get('/nonsense')->assertNotFound();
     }
 

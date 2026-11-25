@@ -35,11 +35,11 @@ class HomepageBannerTest extends TestCase
         $this->productWithImage(['name' => 'Featured Tote', 'is_featured' => true], 'lifestyle');
         $html = $this->get('/')->assertOk()
             ->assertSee('data-testid="hero-banner"', false)
-            ->assertSee('Leather goods, made for trade.')->assertSee('Explore Products')->assertSee('Request a Wholesale Quote')
+            ->assertSee('Leather Goods, Made for Business.')->assertSee('Explore Collections')->assertSee('Private Label / Manufacturing')
             ->getContent();
         $this->assertSame(1, substr_count($html, 'aria-roledescription="slide"'));
         $this->assertStringNotContainsString('aria-label="Next slide"', $html);
-        $this->assertMatchesRegularExpression('#<h1[^>]*>Leather goods, made for trade.</h1>#', $html);
+        $this->assertMatchesRegularExpression('#<h1[^>]*>Leather Goods, Made for Business.</h1>#', $html);
     }
 
     public function test_live_slides_render_in_order_with_one_h1_and_inert_inactive_slides(): void
@@ -55,7 +55,7 @@ class HomepageBannerTest extends TestCase
         $this->assertLessThan(strpos($html, '>Second<'), strpos($html, '>First<'));
         $this->assertSame(1, substr_count($html, '<h1'));
         $this->assertStringContainsString('object-position: top', $html);
-        $this->assertStringContainsString('href="/products" class="btn btn-primary sm:px-7 sm:py-3.5 sm:text-base">Go', $html);
+        $this->assertMatchesRegularExpression('#href="/products" class="btn btn-primary[^"]*">Go#', $html);
         // Inactive slides are inert (no focusable hidden links); the first is not.
         $this->assertMatchesRegularExpression('#<div class="hero-slide[^>]*\sinert\s[^>]*data-slide="1"#', $html);
         $this->assertDoesNotMatchRegularExpression('#<div class="hero-slide[^>]*\sinert\s[^>]*data-slide="0"#', $html);
@@ -69,7 +69,7 @@ class HomepageBannerTest extends TestCase
     {
         $p = $this->productWithImage(['name' => 'Weekender'], 'lifestyle');
         $this->slide(['title' => 'Travel', 'image_path' => null, 'product_id' => $p->id]);
-        $this->get('/')->assertSee("img/{$p->id}-lifestyle.webp", false)->assertSee(route('products.show', $p), false);
+        $this->get('/')->assertSee($p->images()->first()->url('large'), false)->assertSee(route('products.show', $p), false);
     }
 
     public function test_admin_manages_slides(): void

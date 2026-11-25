@@ -8,6 +8,7 @@
     $provider = app(\App\Assistant\Contracts\ChatProvider::class);
     $online = $provider->isConfigured();
     $assistantName = setting('chatbot.assistant_name') ?: $brand['name'].' assistant';
+    $initials = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($brand['name'], 0, 2));
     $intro = (string) setting('chatbot.intro_message');
     $whatsapp = \App\Support\WhatsApp::configuredLink();
     $config = [
@@ -41,7 +42,7 @@
                  class="chat-panel" role="dialog" aria-modal="false" aria-labelledby="chat-title">
             <header class="flex items-center justify-between gap-3 border-b border-border bg-elevated px-4 py-3">
                 <div class="flex items-center gap-3">
-                    <span class="relative flex h-9 w-9 items-center justify-center rounded-full border border-accent font-serif text-accent" aria-hidden="true">AH
+                    <span class="relative flex h-9 w-9 items-center justify-center rounded-full border border-accent font-serif text-accent" aria-hidden="true">{{ $initials }}
                         <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-elevated {{ $online ? 'bg-success' : 'bg-border-strong' }}"></span>
                     </span>
                     <div>

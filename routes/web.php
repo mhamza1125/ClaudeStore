@@ -4,29 +4,41 @@ use App\Http\Controllers\Account;
 use App\Http\Controllers\Admin;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AttachmentController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\CustomerQuoteController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\PageController;
-use App\Http\Controllers\PreferenceController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductImageController;
 use App\Http\Controllers\QuoteSubmissionController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SeoController;
+use App\Http\Middleware\MarkAdminSectionSeen;
+use App\Images\ProtectedImages;
 use App\Livewire;
+use App\Services\AdminActivity;
 use Illuminate\Support\Facades\Route;
 
 /*
 | Storefront
 */
 Route::get('/', HomeController::class)->name('home');
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap');
+Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/products', Livewire\Store\Catalog::class)->name('catalog');
 Route::get('/categories/{category:slug}', Livewire\Store\Catalog::class)->name('catalog.category');
 Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
 Route::get('/search/suggest', [SearchController::class, 'suggest'])->middleware('throttle:search')->name('search.suggest');
 Route::get('/products/{product:slug}/spec-sheet', [ProductController::class, 'specSheet'])->name('products.spec-sheet');
+// Watermarked product image renditions (signed URLs; originals are never public).
+Route::get('/media/products/{image}/{size}/{signature}', [ProductImageController::class, 'show'])
+    ->whereIn('size', array_keys(ProtectedImages::SIZES))->middleware('throttle:media')->name('media.product-image');
 Route::post('/assistant/messages', [AssistantController::class, 'send'])->middleware('throttle:assistant')->name('assistant.send');
 Route::post('/assistant/reset', [AssistantController::class, 'reset'])->name('assistant.reset');
 Route::post('/newsletter', [NewsletterController::class, 'store'])->middleware('throttle:newsletter')->name('newsletter.subscribe');
+Route::get('/contact', [ContactController::class, 'show'])->name('contact');
+Route::post('/contact', [ContactController::class, 'store'])->middleware('throttle:contact')->name('contact.store');
 
 // Quote basket and RFQ submission (guests allowed; rate limited + honeypot)
 Route::get('/quote', Livewire\Store\QuoteBasketPage::class)->name('quote.basket');
@@ -41,8 +53,10 @@ Route::middleware('throttle:quote-response')->group(function () {
     Route::post('/q/{quote:reference}/{token}/reject', [CustomerQuoteController::class, 'reject'])->name('quotes.public.reject');
 });
 
+// Signing out is POST-only (Fortify); opening /logout directly just goes home.
+Route::get('/logout', fn () => redirect()->route('home'));
+
 Route::middleware('auth')->group(function () {
-    Route::put('/preferences/theme', [PreferenceController::class, 'theme'])->name('preferences.theme');
     Route::get('/attachments/{attachment}', [AttachmentController::class, 'show'])->name('attachments.show');
 });
 
@@ -85,8 +99,11 @@ Route::middleware('auth')->prefix('account')->name('account.')->group(function (
 /*
 | Admin (custom Livewire admin; no Filament)
 */
-Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'can:admin.access', MarkAdminSectionSeen::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    // Navigation badge counts, polled by the admin layout.
+    Route::get('/activity', fn (AdminActivity $activity) => response()->json(['counts' => $activity->counts(request()->user())]))
+        ->middleware('throttle:sensitive')->name('activity');
 
     Route::get('/quotes', Livewire\Admin\QuoteIndex::class)->name('quotes.index');
     Route::get('/quotes/{quote:reference}', Livewire\Admin\QuoteWorkspace::class)->name('quotes.show');
@@ -111,6 +128,9 @@ Route::middleware(['auth', 'can:admin.access'])->prefix('admin')->name('admin.')
         Route::get('/customers/{company}', Livewire\Admin\CompanyShow::class)->name('companies.show');
     });
     Route::get('/customer-groups', Livewire\Admin\CustomerGroupManager::class)->middleware('can:customers.manage')->name('groups');
+    Route::get('/customer-accounts', Livewire\Admin\CustomerAccounts::class)->middleware('can:customers.view')->name('customer-accounts');
+    Route::get('/messages', Livewire\Admin\ContactMessages::class)->middleware('can:customers.view')->name('messages');
+    Route::get('/b2b-settings', Livewire\Admin\B2bSettings::class)->middleware('can:settings.manage')->name('b2b');
 
     Route::get('/homepage-slides', Livewire\Admin\HeroSlideManager::class)->middleware('can:settings.manage')->name('hero-slides');
     Route::get('/settings', Livewire\Admin\SettingsForm::class)->middleware('can:settings.manage')->name('settings');

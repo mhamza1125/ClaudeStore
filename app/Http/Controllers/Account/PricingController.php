@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Account;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerPrice;
 use App\Models\PriceTier;
+use App\Pricing\PriceAccess;
 
 /** Shows only the signed-in company's own group and negotiated prices. */
 class PricingController extends Controller
 {
-    public function index()
+    public function index(PriceAccess $access)
     {
         $company = auth()->user()->company?->load('customerGroup');
-        $approved = $company?->isWholesaleApproved() ?? false;
+        // B2B access (verification/approval) gates account prices as well as catalogue prices.
+        $approved = ($company?->isWholesaleApproved() ?? false) && $access->current()->allowed;
 
         return view('account.pricing', [
             'company' => $company,

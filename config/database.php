@@ -19,6 +19,12 @@ return [
     'default' => env('DB_CONNECTION', 'sqlite'),
 
     /*
+    | Data protection: migrate:fresh / refresh / reset / rollback and db:wipe are blocked unless
+    | this is explicitly enabled (see AppServiceProvider). Never enable it on the live site.
+    */
+    'allow_destructive_commands' => (bool) env('DB_ALLOW_DESTRUCTIVE_COMMANDS', false),
+
+    /*
     |--------------------------------------------------------------------------
     | Database Connections
     |--------------------------------------------------------------------------

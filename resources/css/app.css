@@ -7,103 +7,108 @@
 @source "../**/*.js";
 @source "../../app/**/*.php";
 
-/* Class-based dark mode: the "dark" class on <html> is set before CSS loads (see partials/head). */
-@custom-variant dark (&:where(.dark, .dark *));
-
 /*
- * Design tokens — three palettes on one set of semantic names.
- *   mid   (default, below): warm cream with espresso and restrained brass — the brand identity
- *   white (:root[data-palette="white"]): clean, bright and minimal
- *   dark  (.dark): deep espresso with ivory text
- * The resolved palette is set on <html> before CSS paints (partials/head.blade.php).
- * Components use these tokens only; the default Tailwind palette is disabled so a
- * hard-coded colour fails to compile. Every text/background pair meets WCAG AA.
+ * Leamate design system — "Workshop Modern". One light theme for the storefront and admin.
+ * Full rationale: docs/DESIGN.md.
+ *
+ *   60%  Canvas   warm off-white page, white surfaces, cream panels
+ *   30%  Saddle   espresso text, bands and footer; muted saddle brown for small details
+ *   10%  Walnut   deep walnut (#684333) for buttons, links and focus, with white text. On dark
+ *                 bands buttons switch to the logo tan (#d99a63) with espresso text, because a
+ *                 dark button would vanish against espresso. An all-leather palette.
+ *
+ * Signature: the saddle stitch (.stitch, .stitch-frame), used sparingly on key surfaces.
+ * Components use these semantic tokens only. The default Tailwind palette is disabled, so a
+ * hard-coded colour fails to compile. Every text pair meets WCAG AA (see docs/DESIGN.md).
  */
+
+/* Self-hosted variable fonts (resources/fonts/web; SIL Open Font Licence). */
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/web/fraunces-opsz-normal.woff2') format('woff2-variations'), url('../fonts/web/fraunces-opsz-normal.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Fraunces';
+    src: url('../fonts/web/fraunces-opsz-italic.woff2') format('woff2-variations'), url('../fonts/web/fraunces-opsz-italic.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: italic;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'Instrument Sans';
+    src: url('../fonts/web/instrument-sans-wght-normal.woff2') format('woff2-variations'), url('../fonts/web/instrument-sans-wght-normal.woff2') format('woff2');
+    font-weight: 400 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 @theme {
     --color-*: initial;
-    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-    --font-serif: 'Cormorant Garamond', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-serif: 'Fraunces', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
 
-    --color-bg: #f5efe6;          /* warm cream page background */
-    --color-surface: #fffcf7;     /* ivory cards, inputs */
-    --color-elevated: #ede4d6;    /* subtle panels, table headers */
-    --color-text: #2a1f18;        /* espresso */
-    --color-muted: #64523f;       /* secondary text */
-    --color-border: #dccfbd;
-    --color-border-strong: #b8a58c;
-    --color-primary: #2a1f18;     /* buttons */
-    --color-on-primary: #fbf6ec;
-    --color-accent: #7a5726;      /* antique brass — used sparingly */
-    --color-accent-soft: #f0e3cc;
-    --color-on-accent: #fffcf7;
-    --color-band: #2a1f18;        /* strong full-width strips (top bar, feature bands) */
-    --color-on-band: #f3e9d8;
-    --color-success: #3f6b3a;
-    --color-success-soft: #e3ecd9;
-    --color-warning: #875a0c;
-    --color-warning-soft: #f6e6c6;
-    --color-danger: #9b2c22;
-    --color-danger-soft: #f6dcd6;
-    --color-focus: #9c7426;
-    --color-overlay: rgb(28 20 14 / 0.55);
-    --color-on-overlay: #fbf6ec;  /* text over image overlays; light in every palette */
+    /* 60 — canvas */
+    --color-bg: #faf7f2;            /* page */
+    --color-surface: #ffffff;       /* cards, inputs, menus */
+    --color-elevated: #f2ece2;      /* cream panels, table heads, image placeholders */
+    --color-cream: #ebe2d4;         /* deeper cream for layered blocks */
+
+    /* 30 — saddle */
+    --color-text: #221710;          /* espresso, 16:1 on bg */
+    --color-muted: #6b5d52;         /* secondary text, 5.9:1 on bg */
+    --color-border: #e7dfd3;
+    --color-border-strong: #cdbfad;
+    --color-band: #221710;          /* dark bands: top bar, feature sections, footer */
+    --color-band-2: #2f2119;        /* raised surfaces on a band */
+    --color-on-band: #f4ede3;
+    --color-clay: #8a6a4f;          /* muted saddle: eyebrows, numerals, icons (4.6:1 on bg) */
+    --color-clay-soft: #efe6db;
+    --color-hide: #b69878;          /* muted tan details on dark bands (the buttons own the bright tan) */
+
+    /* 10 — deep walnut for actions; the logo tan stays the brand identity colour */
+    --color-primary: #684333;       /* primary CTA fill, white text (9.2:1) */
+    --color-primary-hover: #573729;
+    --color-on-primary: #ffffff;
+    --color-accent: #684333;        /* links, focus and active states (8.6:1 on bg) */
+    --color-accent-soft: #efe4dc;   /* selected rows, active chips, badges */
+    --color-on-accent: #ffffff;
+    --color-tan: #d99a63;           /* logo "Mate" tan: buttons on dark bands, with espresso text */
+    --color-tan-hover: #c4834a;
+    --color-thread: #d99a63;        /* tan thread: stitches and highlights on dark bands */
+
+    /* Legacy alias: earlier templates used "brass" for decorative details. */
+    --color-brass: #8a6a4f;
+
+    /* Status */
+    --color-success: #2f6b3a;
+    --color-success-soft: #e3f0e2;
+    --color-warning: #7d5208;
+    --color-warning-soft: #f8ecd0;
+    --color-danger: #a3261b;
+    --color-danger-soft: #f9e2dd;
+
+    --color-focus: #684333;
+    --color-overlay: rgb(24 16 11 / 0.55);
+    --color-on-overlay: #fbf6ec;
     --color-transparent: transparent;
     --color-current: currentColor;
+    --color-white: #ffffff;
+    --color-black: #000000;
 
-    --radius-sm: 2px;
-    --radius-md: 4px;
-    --radius-lg: 6px;
-}
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
 
-:root[data-palette="white"] {
-    --color-bg: #ffffff;
-    --color-surface: #ffffff;
-    --color-elevated: #f5f4f1;
-    --color-text: #1f1c19;
-    --color-muted: #5d5852;
-    --color-border: #e5e2dd;
-    --color-border-strong: #c7c1b9;
-    --color-primary: #1f1c19;
-    --color-on-primary: #ffffff;
-    --color-accent: #8a5a2b;      /* cognac */
-    --color-accent-soft: #f6eee4;
-    --color-on-accent: #ffffff;
-    --color-band: #1f1c19;
-    --color-on-band: #f5f2ee;
-    --color-success: #2f6b3a;
-    --color-success-soft: #e7f2e9;
-    --color-warning: #875a0c;
-    --color-warning-soft: #faf0da;
-    --color-danger: #a3261b;
-    --color-danger-soft: #fbe8e5;
-    --color-focus: #8a5a2b;
-    --color-overlay: rgb(20 18 16 / 0.5);
-}
+    --shadow-sm: 0 1px 2px rgb(34 23 16 / 0.06);
+    --shadow-md: 0 1px 2px rgb(34 23 16 / 0.05), 0 10px 28px -14px rgb(34 23 16 / 0.22);
+    --shadow-lg: 0 2px 6px rgb(34 23 16 / 0.06), 0 24px 48px -20px rgb(34 23 16 / 0.3);
+    --shadow-cta: 0 10px 24px -10px rgb(104 67 51 / 0.55);
 
-.dark {
-    --color-bg: #141110;          /* deep espresso, not pure black */
-    --color-surface: #1c1815;
-    --color-elevated: #262019;
-    --color-text: #f1ebe2;        /* warm ivory */
-    --color-muted: #b8aa97;
-    --color-border: #372e26;
-    --color-border-strong: #57493b;
-    --color-primary: #f1ebe2;     /* ivory buttons rather than brass */
-    --color-on-primary: #16120f;
-    --color-accent: #d2a85c;      /* brighter brass for contrast, used sparingly */
-    --color-accent-soft: #33281a;
-    --color-on-accent: #16120f;
-    --color-band: #0d0b0a;
-    --color-on-band: #e9e1d4;
-    --color-success: #9cc58f;
-    --color-success-soft: #22301d;
-    --color-warning: #e3b76a;
-    --color-warning-soft: #3a2c14;
-    --color-danger: #ef9a8c;
-    --color-danger-soft: #3d1f1a;
-    --color-focus: #e2bc74;
-    --color-overlay: rgb(0 0 0 / 0.6);
-    color-scheme: dark;
+    --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes hero-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
@@ -113,23 +118,27 @@
         background-color: var(--color-bg);
         color: var(--color-text);
         -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
         color-scheme: light;
+        text-rendering: optimizeLegibility;
     }
-    html.dark { color-scheme: dark; }
-    body { @apply bg-bg text-text font-sans; }
-    h1, h2, h3, .font-display { font-family: var(--font-serif); font-weight: 500; letter-spacing: -0.01em; }
+    body { @apply bg-bg text-text font-sans text-[15px] leading-relaxed; font-feature-settings: 'ss01', 'cv11'; }
+    h1, h2, h3, .font-display { font-family: var(--font-serif); font-weight: 450; letter-spacing: -0.02em; line-height: 1.08; font-optical-sizing: auto; }
+    /* Fraunces defaults to old-style figures (a zero reads as "O"): use lining figures everywhere. */
+    h1, h2, h3, .font-display, .font-serif { font-variant-numeric: lining-nums; }
+    .font-serif.tabular-nums, .tabular-nums.font-serif { font-variant-numeric: lining-nums tabular-nums; }
+    h3 { font-weight: 500; letter-spacing: -0.01em; }
     a { color: inherit; }
-    :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+    :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: 4px; }
     ::selection { background: var(--color-accent-soft); color: var(--color-text); }
     [x-cloak] { display: none !important; }
     input[type='number']::-webkit-inner-spin-button { opacity: 1; }
+    .tabular { font-variant-numeric: tabular-nums; }
 }
 
 /*
  * Layering and floating widgets. Every floating element is positioned against the
- * viewport from these variables only — no nested fixed/static switching and no
- * per-breakpoint magic numbers in templates. Safe-area insets keep widgets clear of
- * notches and home indicators.
+ * viewport from these variables only. Safe-area insets keep widgets clear of notches.
  */
 :root {
     --z-header: 30;
@@ -142,24 +151,117 @@
     --float-left: calc(var(--float-gutter) + env(safe-area-inset-left, 0px));
     --float-right: calc(var(--float-gutter) + env(safe-area-inset-right, 0px));
     --float-bottom: calc(var(--float-gutter) + env(safe-area-inset-bottom, 0px));
+    /* Saddle stitch: dash length / gap. */
+    --stitch-dash: 7px;
+    --stitch-gap: 6px;
 }
 @media (min-width: 640px) {
     :root { --float-gutter: 1.5rem; }
 }
 
 @layer components {
+    /* ---------- Layout & rhythm ---------- */
+    .container-page { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
+    .container-wide { @apply mx-auto w-full max-w-[88rem] px-4 sm:px-6 lg:px-8; }
+    /* Vertical rhythm: 56–96px on phones, 96–128px on desktop. */
+    .section-y { @apply py-16 sm:py-20 lg:py-28; }
+    .section-y-sm { @apply py-12 sm:py-14 lg:py-18; }
+
+    /* ---------- Typography ---------- */
+    .h-hero { @apply text-[2.75rem] leading-[1.02] sm:text-6xl lg:text-[5.25rem]; letter-spacing: -0.035em; font-weight: 420; }
+    .h-section { @apply text-[2.125rem] leading-[1.06] sm:text-[2.75rem] lg:text-[3.5rem]; letter-spacing: -0.03em; }
+    .h-product { @apply text-2xl leading-tight sm:text-[1.75rem]; }
+    .h-card { @apply font-serif text-xl leading-snug; font-weight: 500; letter-spacing: -0.01em; }
+    .lead { @apply text-lg leading-relaxed text-muted sm:text-xl; }
+    .eyebrow { @apply inline-flex items-center gap-2 text-[0.75rem] font-semibold uppercase tracking-[0.16em] text-clay; }
+    /* Eyebrow with a short stitched lead-in. */
+    .eyebrow-stitch::before { content: ''; width: 1.75rem; height: 2px; background: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 9px); }
+    .link { @apply font-medium text-accent underline decoration-accent/30 decoration-1 underline-offset-4 transition-colors hover:decoration-accent; }
+    .link-quiet { @apply underline decoration-border-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent; }
+    /* "Text + arrow" call to action; the arrow nudges on hover. */
+    .link-arrow { @apply inline-flex items-center gap-1.5 text-sm font-semibold text-accent; }
+    .link-arrow svg { transition: transform 200ms var(--ease-out-soft); }
+    .link-arrow:hover svg, .group:hover .link-arrow svg { transform: translateX(3px); }
+
+    /* ---------- Signature: saddle stitch ---------- */
+    .stitch { display: block; height: 2px; color: var(--color-border-strong);
+        background: repeating-linear-gradient(90deg, currentColor 0 var(--stitch-dash), transparent var(--stitch-dash) calc(var(--stitch-dash) + var(--stitch-gap))); }
+    .stitch-v { display: block; width: 2px; color: var(--color-border-strong);
+        background: repeating-linear-gradient(180deg, currentColor 0 var(--stitch-dash), transparent var(--stitch-dash) calc(var(--stitch-dash) + var(--stitch-gap))); }
+    /* Inset stitched border, like the seam on a leather patch. Needs a positioned parent. */
+    .stitch-frame { position: relative; }
+    .stitch-frame::after { content: ''; position: absolute; inset: var(--stitch-inset, 10px); pointer-events: none; z-index: 2;
+        border: 1.5px dashed var(--stitch-color, rgb(255 255 255 / 0.55)); border-radius: calc(var(--stitch-radius, 16px) - var(--stitch-inset, 10px) + 2px); }
+    .brass-rule { @apply block w-12 text-clay; height: 2px;
+        background: repeating-linear-gradient(90deg, currentColor 0 var(--stitch-dash), transparent var(--stitch-dash) calc(var(--stitch-dash) + var(--stitch-gap))); }
+
+    /* Fine leather-like grain for dark bands (decorative; sits behind content). */
+    .grain { position: relative; isolation: isolate; }
+    .grain::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: 0.22; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+    .band { @apply bg-band text-on-band; }
+    .band .eyebrow { color: var(--color-hide); }
+    .band .stitch, .band .stitch-v, .band .brass-rule { color: color-mix(in srgb, var(--color-thread) 70%, transparent); }
+    .band .link { @apply text-thread decoration-thread/40 hover:decoration-thread; }
+    .band .btn-primary { @apply border-tan bg-tan text-text hover:border-tan-hover hover:bg-tan-hover; }
+    .band .btn-primary:hover:not(:disabled) { box-shadow: 0 10px 24px -10px rgb(217 154 99 / 0.5); }
+
+    /* ---------- Buttons ---------- */
+    .btn { @apply inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border px-5 py-2.5 text-sm font-semibold tracking-[0.01em] whitespace-nowrap transition duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50; }
+    .btn svg { transition: transform 200ms var(--ease-out-soft); }
+    .btn:hover:not(:disabled) svg:last-child:not(:first-child) { transform: translateX(2px); }
+    .btn-sm { @apply min-h-9 px-3.5 py-1.5 text-[13px]; }
+    .btn-lg { @apply min-h-13 px-7 py-3.5 text-base; }
+    .btn-primary { @apply border-primary bg-primary text-on-primary hover:border-primary-hover hover:bg-primary-hover active:translate-y-px; }
+    .btn-primary:hover:not(:disabled) { box-shadow: var(--shadow-cta); }
+    .btn-secondary { @apply border-border-strong bg-surface text-text hover:border-text active:translate-y-px; }
+    .btn-dark { @apply border-band bg-band text-on-band hover:bg-band-2 active:translate-y-px; }
+    .btn-light { @apply border-on-band bg-on-band text-band hover:bg-white active:translate-y-px; }
+    .btn-outline-light { @apply border-on-band/40 bg-transparent text-on-band hover:border-on-band hover:bg-on-band/10; }
+    .btn-accent { @apply border-accent bg-accent text-on-accent hover:opacity-90; }
+    .btn-ghost { @apply border-transparent bg-transparent text-text hover:bg-elevated; }
+    .btn-danger { @apply border-danger/40 bg-surface text-danger hover:border-danger hover:bg-danger-soft; }
+    .btn-icon { @apply min-h-10 min-w-10 !px-0; }
+
+    /* ---------- Forms ---------- */
+    .field-label { @apply mb-1.5 block text-sm font-medium text-text; }
+    .field-help { @apply mt-1.5 text-xs text-muted; }
+    .field-error { @apply mt-1.5 text-xs font-medium text-danger; }
+    .input { @apply block min-h-11 w-full rounded-md border border-border-strong bg-surface px-3.5 py-2 text-sm text-text shadow-sm transition placeholder:text-muted/70 hover:border-muted focus:border-accent focus:outline-none disabled:bg-elevated disabled:opacity-70; }
+    .input:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 16%, transparent); }
+    select.input { @apply cursor-pointer appearance-none bg-no-repeat pr-10;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b5d52' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-size: 1rem; background-position: right 0.85rem center; }
+    textarea.input { @apply py-2.5 leading-relaxed; }
+    .input-invalid { @apply border-danger hover:border-danger focus:border-danger; }
+    .input-invalid:focus { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-danger) 14%, transparent); }
+    .checkbox { @apply h-4 w-4 cursor-pointer rounded-[4px] border-border-strong bg-surface accent-[var(--color-primary)]; }
+
+    /* ---------- Surfaces ---------- */
+    .card { @apply rounded-lg border border-border bg-surface; }
+    .panel { @apply rounded-lg border border-border bg-surface p-5 sm:p-6; }
+    .panel-cream { @apply rounded-lg bg-elevated p-5 sm:p-6; }
+    .card-hover { @apply transition duration-300 hover:-translate-y-0.5 hover:border-border-strong hover:shadow-md; }
+    .chip { @apply inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1 text-xs font-medium text-muted; }
+    .dot { @apply inline-block h-2 w-2 shrink-0 rounded-full; }
+
+    /* ---------- Floating widgets ---------- */
     .floating-btn {
         position: fixed;
         z-index: var(--z-float);
         bottom: var(--float-bottom);
         height: var(--float-size);
         min-width: var(--float-size);
-        @apply flex items-center justify-center gap-2 rounded-full border shadow-lg transition duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus;
+        @apply flex items-center justify-center gap-2 rounded-full border shadow-lg transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus;
     }
     .floating-btn--left { left: var(--float-left); }
     .floating-btn--right { right: var(--float-right); }
-
-    /* Teaser bubble above the chat launcher; never wide enough to reach the left widget. */
+    /* Official WhatsApp green: recognition is the point of this button. */
+    .floating-btn--whatsapp { border-color: #25d366; background: #25d366; color: #fff; }
+    .floating-btn--whatsapp:hover { border-color: #1ebe5b; background: #1ebe5b; }
+    /* Back to top: smaller, centred over the WhatsApp button (or in its place when WhatsApp is off). */
+    .back-to-top { --btt-size: 2.75rem; height: var(--btt-size); min-width: var(--btt-size); left: calc(var(--float-left) + (var(--float-size) - var(--btt-size)) / 2); }
+    .back-to-top.above-whatsapp { bottom: calc(var(--float-bottom) + var(--float-size) + var(--float-gap)); }
     .chat-teaser {
         position: fixed;
         z-index: var(--z-float);
@@ -167,8 +269,6 @@
         bottom: calc(var(--float-bottom) + var(--float-size) + var(--float-gap));
         width: min(18rem, calc(100vw - var(--float-left) - var(--float-right) - var(--float-size) - var(--float-gap)));
     }
-
-    /* Chat window: opens inward from the right edge, fully inside the viewport, scrolls internally. */
     .chat-panel {
         position: fixed;
         z-index: var(--z-float-panel);
@@ -177,10 +277,9 @@
         width: min(24rem, calc(100vw - var(--float-left) - var(--float-right)));
         max-height: min(40rem, calc(100dvh - var(--float-bottom) - var(--float-size) - var(--float-gap) - var(--float-gutter)));
         transform-origin: bottom right;
-        @apply flex flex-col overflow-hidden rounded-md border border-border bg-surface shadow-2xl;
+        @apply flex flex-col overflow-hidden rounded-xl border border-border bg-surface shadow-lg;
     }
     @media (max-width: 639px) {
-        /* Phones: a bottom sheet across the width; the launcher is hidden while it is open. */
         .chat-panel {
             left: var(--float-left);
             width: auto;
@@ -189,65 +288,136 @@
         }
     }
 
-    /* Homepage banner: slides share one grid cell, so the height never jumps between slides. */
+    /* ---------- Header ---------- */
+    .site-header { @apply sticky top-0 z-(--z-header) border-b border-transparent transition-[background-color,border-color,box-shadow] duration-300;
+        background: var(--color-bg); } /* fully opaque: page content never shows through */
+    .site-header.is-scrolled { @apply border-border; box-shadow: 0 8px 24px -18px rgb(34 23 16 / 0.35); }
+    .nav-link { @apply relative flex items-center gap-1 whitespace-nowrap py-2 text-[14px] font-medium text-text/85 transition-colors hover:text-text; }
+    .nav-link::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; transform: scaleX(0); transform-origin: left;
+        background: repeating-linear-gradient(90deg, var(--color-accent) 0 5px, transparent 5px 8px); transition: transform 250ms var(--ease-out-soft); }
+    .nav-link:hover::after, .group:focus-within > .nav-link::after, .nav-link.is-active::after { transform: scaleX(1); }
+    .nav-link.is-active { @apply text-text; }
+
+    /* ---------- Homepage hero ---------- */
     .hero-stack { display: grid; }
     .hero-stack > .hero-slide { grid-area: 1 / 1; transition: opacity 700ms ease, visibility 700ms; }
     .hero-slide:not(.is-active) { opacity: 0; visibility: hidden; }
-    .hero-media img { transform: scale(1.06); transition: transform 7s ease-out; }
+    .hero-media img { transform: scale(1.07); transition: transform 7s ease-out; }
     .hero-slide.is-active .hero-media img { transform: scale(1); }
-    .hero-copy > * { opacity: 0; transform: translateY(0.75rem); transition: opacity 600ms ease, transform 600ms ease; }
+    .hero-copy > * { opacity: 0; transform: translateY(0.9rem); transition: opacity 700ms var(--ease-out-soft), transform 700ms var(--ease-out-soft); }
     .hero-slide.is-active .hero-copy > * { opacity: 1; transform: none; }
-    .hero-slide.is-active .hero-copy > :nth-child(2) { transition-delay: 90ms; }
-    .hero-slide.is-active .hero-copy > :nth-child(3) { transition-delay: 180ms; }
-    .hero-slide.is-active .hero-copy > :nth-child(4) { transition-delay: 270ms; }
-    /* Active dot fills over the autoplay interval; its animationend advances the slide, and
-       pausing the animation pauses autoplay. */
+    .hero-slide.is-active .hero-copy > :nth-child(2) { transition-delay: 80ms; }
+    .hero-slide.is-active .hero-copy > :nth-child(3) { transition-delay: 160ms; }
+    .hero-slide.is-active .hero-copy > :nth-child(4) { transition-delay: 240ms; }
+    .hero-slide.is-active .hero-copy > :nth-child(5) { transition-delay: 320ms; }
     .hero-progress { transform-origin: left; transform: scaleX(0); }
     .hero-progress.is-running { animation: hero-progress var(--hero-interval, 6s) linear forwards; }
     .hero-progress.is-paused { animation-play-state: paused; }
     .hero-progress.is-static { transform: scaleX(1); }
+    /* Cream block behind the hero image that runs off the right edge (layered depth). */
+    .hero-backdrop { position: absolute; top: 0; bottom: 0; right: 0; width: 42%; background: var(--color-elevated); border-bottom-left-radius: 48px; }
+    @media (max-width: 767px) { .hero-backdrop { width: 100%; height: 13rem; bottom: auto; border-radius: 0; } }
     @media (prefers-reduced-motion: reduce) {
         .hero-media img, .hero-copy > *, .hero-stack > .hero-slide { transition: none; transform: none; }
     }
 
+    /* ---------- Category tiles ---------- */
+    .tile { @apply relative block overflow-hidden rounded-lg bg-elevated; isolation: isolate; }
+    .tile img { transition: transform 900ms var(--ease-out-soft); }
+    .tile:hover img { transform: scale(1.045); }
+    /* The label sits on a solid card (never over raw imagery), so it is readable on any photo. */
+    .tile-label { @apply absolute bottom-3 left-3 right-3 z-[3] flex items-end justify-between gap-3 rounded-md bg-surface/95 p-4 shadow-sm backdrop-blur-sm sm:bottom-4 sm:left-4 sm:right-4 sm:p-5; }
+    .tile-arrow { @apply flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-strong text-text transition duration-300; }
+    .tile:hover .tile-arrow, .tile:focus-visible .tile-arrow { @apply border-primary bg-primary text-on-primary; }
+
+    /* ---------- Product card ---------- */
+    .product-card { container-type: inline-size; }
+    .product-media { @apply relative block overflow-hidden rounded-lg bg-elevated; }
+    .product-media img { transition: transform 900ms var(--ease-out-soft); }
+    .group:hover .product-media img { transform: scale(1.045); }
+    @container (max-width: 13rem) { .product-card .pc-meta { display: none; } }
+
     .no-scrollbar { scrollbar-width: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
 
-    .container-page { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
-    .eyebrow { @apply text-xs font-semibold uppercase tracking-[0.18em] text-accent; }
-    .link { @apply underline decoration-border-strong underline-offset-4 hover:decoration-accent transition-colors; }
+    /* Gentle reveal on scroll (js adds .is-in); no motion for reduced-motion users or without JS. */
+    .js .reveal { opacity: 0; transform: translateY(18px); transition: opacity 800ms var(--ease-out-soft), transform 800ms var(--ease-out-soft); }
+    .js .reveal.is-in { opacity: 1; transform: none; }
+    @media (prefers-reduced-motion: reduce) { .js .reveal { opacity: 1; transform: none; transition: none; } }
+    /* Thin indeterminate bar for Livewire requests. */
+    .load-bar { height: 2px; overflow: hidden; background: var(--color-border); }
+    .load-bar::after { content: ''; display: block; height: 100%; width: 35%; background: var(--color-accent); animation: load-bar 1s ease-in-out infinite; }
+    @keyframes load-bar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+    .skeleton { @apply rounded-md bg-elevated; animation: skeleton 1.4s ease-in-out infinite; }
+    @keyframes skeleton { 50% { opacity: 0.55; } }
 
-    .btn { @apply inline-flex items-center justify-center gap-2 rounded-sm border px-5 py-2.5 text-sm font-medium tracking-wide transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer; }
-    .btn-sm { @apply px-3 py-1.5 text-xs; }
-    .btn-lg { @apply px-7 py-3.5 text-base; }
-    .btn-primary { @apply border-primary bg-primary text-on-primary hover:bg-accent hover:border-accent hover:text-on-accent; }
-    .btn-secondary { @apply border-border-strong bg-transparent text-text hover:border-text; }
-    .btn-accent { @apply border-accent bg-accent text-on-accent hover:opacity-90; }
-    .btn-ghost { @apply border-transparent bg-transparent text-text hover:bg-elevated; }
-    .btn-danger { @apply border-danger bg-transparent text-danger hover:bg-danger-soft; }
+    /* Product images: no drag-to-save, selection or iOS long-press "Save image" (deterrents). */
+    .protected-img, [data-protected] img { -webkit-user-drag: none; user-select: none; -webkit-touch-callout: none; }
 
-    .field-label { @apply mb-1.5 block text-sm font-medium text-text; }
-    .field-help { @apply mt-1 text-xs text-muted; }
-    .field-error { @apply mt-1 text-xs font-medium text-danger; }
-    .input { @apply block w-full rounded-sm border border-border-strong bg-surface px-3 py-2 text-sm text-text placeholder:text-muted/70 transition-colors focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-60; }
-    .input-invalid { @apply border-danger focus:border-danger focus:ring-danger; }
-    .checkbox { @apply h-4 w-4 rounded-sm border-border-strong bg-surface accent-[var(--color-accent)]; }
+    /* ---------- Catalogue ---------- */
+    .catalog-hero { @apply border-b border-border bg-elevated; }
+    .catalog-chip { @apply inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-border-strong bg-surface px-4 py-2 text-sm font-medium text-text transition hover:border-text; }
+    .catalog-chip.is-active { @apply border-band bg-band text-on-band; }
+    .catalog-chip--sub { @apply border-transparent bg-transparent px-3 py-1.5 text-[13px] text-muted hover:border-transparent hover:bg-surface hover:text-text; }
+    .catalog-chip--sub.is-active { @apply border-transparent bg-accent-soft text-accent; }
+    .filter-title { @apply text-xs font-semibold uppercase tracking-[0.14em] text-text; }
 
-    .card { @apply rounded-md border border-border bg-surface; }
-    .panel { @apply rounded-md border border-border bg-surface p-5 sm:p-6; }
+    /* ---------- Footer ---------- */
+    .footer-bottom { padding-inline: calc(var(--float-size) + var(--float-gutter) + 0.5rem); }
+    @media (max-width: 639px) { .footer-bottom { flex-direction: column; align-items: center; text-align: center; padding-bottom: calc(var(--float-size) + var(--float-gutter) * 2); padding-inline: 0; } }
+    .footer-link { @apply text-on-band/75 transition-colors hover:text-on-band; }
+    .footer-heading { @apply mb-4 font-sans text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-hide; }
 
+    /* ---------- Watermark overlay (<x-image-watermark>) ---------- */
+    .wm-overlay {
+        position: absolute; inset: 0; z-index: 1; overflow: hidden;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15em;
+        pointer-events: none; user-select: none; text-align: center; line-height: 1.1;
+        font-family: var(--font-sans); font-weight: 700; letter-spacing: 0.02em;
+        color: #fff; text-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
+    }
+    .wm-overlay .wm-personal { font-size: 0.45em; font-weight: 600; letter-spacing: 0; }
+    .wm-xs { font-size: 0.5rem; }
+    .wm-sm { font-size: 1.125rem; }
+    .wm-md { font-size: 2rem; }
+    .wm-lg { font-size: 3rem; }
+
+    /* ---------- Data ---------- */
     .table { @apply w-full text-left text-sm; }
-    .table thead th { @apply border-b border-border bg-elevated px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted; }
-    .table tbody td { @apply border-b border-border px-4 py-3 align-top; }
-    .table tbody tr:hover td { @apply bg-elevated/40; }
+    .table thead th { @apply border-b border-border bg-elevated/70 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.1em] whitespace-nowrap text-muted; }
+    .table tbody td { @apply border-b border-border px-4 py-3.5 align-top; }
+    .table tbody tr:last-child td { @apply border-b-0; }
+    .table tbody tr { @apply transition-colors; }
+    .table tbody tr:hover td { @apply bg-bg; }
 
-    .badge { @apply inline-flex items-center gap-1 rounded-sm px-2 py-0.5 text-xs font-medium whitespace-nowrap; }
+    .badge { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap; }
     .badge-neutral { @apply bg-elevated text-muted; }
     .badge-accent { @apply bg-accent-soft text-accent; }
+    .badge-clay { @apply bg-clay-soft text-clay; }
     .badge-success { @apply bg-success-soft text-success; }
     .badge-warning { @apply bg-warning-soft text-warning; }
     .badge-danger { @apply bg-danger-soft text-danger; }
+    .alert { @apply flex items-start gap-3 rounded-md border px-4 py-3 text-sm; border-color: color-mix(in srgb, currentColor 22%, transparent); }
 
-    .prose-store { @apply max-w-none text-[15px] leading-7 text-text; }
+    /* ---------- Long-form text ---------- */
+    .prose-store { @apply max-w-none text-[15.5px] leading-7 text-text; }
     .prose-store p { @apply mb-4; }
+    .policy-text h2 { @apply mt-12 mb-3 font-serif text-2xl leading-snug sm:text-[1.75rem]; }
+    .policy-text h2:first-child { @apply mt-0; }
+    .policy-text h3 { @apply mt-7 mb-2 font-sans text-base font-semibold tracking-normal; }
+    .policy-text ul { @apply mb-4 list-disc space-y-1.5 pl-5 marker:text-clay; }
+    .policy-text ol { @apply mb-4 list-decimal space-y-1.5 pl-5 marker:text-clay; }
+    .policy-text strong { @apply font-semibold; }
+    .policy-text a { @apply font-medium text-accent underline decoration-accent/30 underline-offset-4 hover:decoration-accent; }
+    .policy-text > p:first-child { @apply text-lg text-muted; }
+
+    /* ---------- Admin ---------- */
+    .admin-nav-link { @apply relative flex items-center gap-3 rounded-md px-3 py-2 text-[13.5px] text-muted transition-colors hover:bg-elevated hover:text-text; }
+    .admin-nav-link.is-active { @apply bg-accent-soft font-semibold text-accent; }
+    .admin-nav-link.is-active::before { content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-accent); }
+    .admin-nav-group { @apply px-3 pb-1.5 pt-5 text-[10.5px] font-semibold uppercase tracking-[0.16em] text-muted/80; }
+    .stat { @apply relative block rounded-lg border border-border bg-surface p-5 transition duration-200; }
+    a.stat:hover { @apply -translate-y-0.5 border-border-strong shadow-md; }
+    .stat-value { @apply mt-3 font-serif text-[2.5rem] leading-none; font-variant-numeric: lining-nums tabular-nums; font-weight: 450; letter-spacing: -0.03em; }
+    .stat-icon { @apply flex h-9 w-9 items-center justify-center rounded-md bg-elevated text-clay; }
 }

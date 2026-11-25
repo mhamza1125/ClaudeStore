@@ -20,6 +20,9 @@ class ChatbotTest extends TestCase
 {
     use RefreshDatabase;
 
+    /** Covers the pricing rules for guests with B2B price access switched off. */
+    protected bool $b2bPricing = false;
+
     /** Records every call; answers with a canned reply or throws. */
     private function fakeProvider(bool $fail = false): ChatProvider
     {

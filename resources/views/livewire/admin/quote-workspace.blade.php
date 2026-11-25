@@ -21,9 +21,9 @@
     </x-page-header>
 
     @foreach (['convert', 'send', 'status', 'response', 'assignee'] as $key)
-        @error($key)<div class="mb-4 badge badge-danger w-full justify-start px-4 py-3 text-sm" role="alert">{{ $message }}</div>@enderror
+        @error($key)<div class="mb-4 alert badge-danger" role="alert">{{ $message }}</div>@enderror
     @endforeach
-    @if (session('status'))<div class="mb-4 badge badge-success w-full justify-start px-4 py-3 text-sm" role="status">{{ session('status') }}</div>@endif
+    @if (session('status'))<div class="mb-4 alert badge-success" role="status">{{ session('status') }}</div>@endif
     @if ($sentLink)
         <div class="mb-6 panel text-sm" x-data>
             <p class="font-medium">Secure customer link (shown once — it is also in the email):</p>
@@ -31,7 +31,7 @@
         </div>
     @endif
     @if ($quote->has_unsent_changes)
-        <div class="mb-6 badge badge-warning w-full justify-start px-4 py-3 text-sm">This quote has changes that the customer has not received. Send a new version so they can respond.</div>
+        <div class="mb-6 alert badge-warning">This quote has changes that the customer has not received. Send a new version so they can respond.</div>
     @endif
 
     <div class="grid gap-6 xl:grid-cols-12">

@@ -33,13 +33,14 @@ class RolesAndPermissionsSeeder extends Seeder
         }
 
         // super-admin is granted everything via Gate::before (AppServiceProvider).
-        Role::findOrCreate('super-admin', 'web')->syncPermissions(self::PERMISSIONS);
-        Role::findOrCreate('admin', 'web')->syncPermissions(array_diff(self::PERMISSIONS, ['staff.manage']));
+        // Additive only (givePermissionTo): re-seeding never removes a permission from a role.
+        Role::findOrCreate('super-admin', 'web')->givePermissionTo(self::PERMISSIONS);
+        Role::findOrCreate('admin', 'web')->givePermissionTo(array_values(array_diff(self::PERMISSIONS, ['staff.manage'])));
         // Sales reps see quotes assigned to them plus unassigned ones (see Quote::scopeVisibleTo).
-        Role::findOrCreate('sales-rep', 'web')->syncPermissions([
+        Role::findOrCreate('sales-rep', 'web')->givePermissionTo([
             'admin.access', 'quotes.manage', 'quotes.convert', 'customers.view',
         ]);
-        Role::findOrCreate('customer', 'web')->syncPermissions([]);
+        Role::findOrCreate('customer', 'web');
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }

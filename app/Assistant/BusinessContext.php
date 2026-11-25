@@ -5,6 +5,7 @@ namespace App\Assistant;
 use App\Http\Controllers\PageController;
 use App\Models\Category;
 use App\Models\Product;
+use App\Pricing\PriceAccess;
 use App\Services\CatalogPricing;
 use App\Support\WhatsApp;
 use Illuminate\Support\Facades\Cache;
@@ -19,7 +20,7 @@ class BusinessContext
 {
     private const CACHE_KEY = 'assistant.context.v1';
 
-    public function __construct(private CatalogPricing $pricing) {}
+    public function __construct(private CatalogPricing $pricing, private PriceAccess $access) {}
 
     public static function forget(): void
     {
@@ -71,7 +72,7 @@ class BusinessContext
         if ($min = (int) setting('order.min_value_cents')) {
             $lines[] = 'Minimum order value: '.money($min).'.';
         }
-        $lines[] = 'Pages: catalogue /products; quote list and request form /quote; private label and custom manufacturing /custom-manufacturing; about /about; open a trade account /register; customer account /account.';
+        $lines[] = 'Pages: catalogue /products; quote list and request form /quote; private label and custom manufacturing /custom-manufacturing; about /about; contact form /contact; open a trade account /register; customer account /account.';
 
         $lines[] = "\nCategories:";
         foreach (Category::active()->roots()->orderBy('sort_order')->with(['children' => fn ($q) => $q->where('is_active', true)])->get() as $cat) {
@@ -82,8 +83,9 @@ class BusinessContext
         $lines[] = "\nProducts (published):";
         $products = Product::published()->with(['category', 'priceTiers', 'activeVariants'])->orderBy('name')
             ->limit((int) config('store.assistant.max_products_in_context', 150))->get();
+        $guest = $this->access->guest(); // B2B settings may hide all prices from visitors
         foreach ($products as $p) {
-            $price = $this->pricing->summary($p, null); // guest view only
+            $price = $this->pricing->summary($p, $guest); // anonymous view only
             $priceText = $price['cents'] !== null ? $price['label'].' '.money($price['cents']).' per unit (public list price)' : $price['label'];
             $facts = array_filter([
                 $p->category?->name,
@@ -102,7 +104,7 @@ class BusinessContext
         }
 
         foreach (PageController::POLICIES as $key => $label) {
-            if (filled($text = setting('policies.'.$key))) {
+            if (filled($text = \App\Support\Policies::text($key))) {
                 $lines[] = "\n{$label} (/{$key}):\n".Str::limit(trim($text), 2000);
             }
         }

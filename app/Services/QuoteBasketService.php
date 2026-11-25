@@ -8,6 +8,8 @@ use App\Models\ProductVariant;
 use App\Models\QuoteBasket;
 use App\Models\QuoteBasketItem;
 use App\Models\User;
+use App\Pricing\PriceAccess;
+use App\Pricing\PriceAccessDecision;
 use App\Pricing\PriceResolver;
 use App\Pricing\PriceResult;
 use Illuminate\Support\Collection;
@@ -23,7 +25,7 @@ class QuoteBasketService
 {
     private const SESSION_KEY = 'quote_basket_token';
 
-    public function __construct(private PriceResolver $resolver) {}
+    public function __construct(private PriceResolver $resolver, private PriceAccess $access) {}
 
     public function current(bool $create = false): ?QuoteBasket
     {
@@ -45,6 +47,12 @@ class QuoteBasketService
     public function company(): ?Company
     {
         return auth()->user()?->company;
+    }
+
+    /** The buyer's price access; the decision's company is null when prices are hidden. */
+    private function access(): PriceAccessDecision
+    {
+        return $this->access->current();
     }
 
     public function count(): int
@@ -116,13 +124,14 @@ class QuoteBasketService
         if (! $basket) {
             return collect();
         }
-        $company = $this->company()?->loadMissing('customerGroup');
+        $access = $this->access();
+        $company = $access->company?->loadMissing('customerGroup');
 
         return $basket->items()->with(['product.priceTiers', 'product.approvedImages', 'variant'])->get()
             ->filter(fn ($item) => $item->product !== null)
             ->map(fn (QuoteBasketItem $item) => [
                 'item' => $item,
-                'price' => $this->resolver->resolve($item->product, $item->variant, $item->quantity, $company),
+                'price' => $this->resolver->resolve($item->product, $item->variant, $item->quantity, $company, access: $access),
             ])->values();
     }
 
@@ -183,7 +192,8 @@ class QuoteBasketService
         if ($quantity > 1_000_000) {
             throw ValidationException::withMessages([$key => 'For quantities above 1,000,000 please contact us directly.']);
         }
-        $result = $this->resolver->resolve($product, $variant, $quantity, $this->company());
+        $access = $this->access();
+        $result = $this->resolver->resolve($product, $variant, $quantity, $access->company, access: $access);
         if (! $result->isValidQuantity()) {
             throw ValidationException::withMessages([$key => $result->errors[0]]);
         }

@@ -15,8 +15,48 @@ return [
     'shipping_flat_cents' => (int) env('STORE_SHIPPING_FLAT_CENTS', 0),
     'min_order_value_cents' => (int) env('STORE_MIN_ORDER_VALUE_CENTS', 0),
     'quote_validity_days' => 30,
-    'sales_notification_email' => env('SALES_NOTIFICATION_EMAIL', 'sales@atelierhide.test'),
+    'sales_notification_email' => env('SALES_NOTIFICATION_EMAIL', 'info@leamate.com'),
     'quote_rate_limit_per_hour' => (int) env('QUOTE_RATE_LIMIT_PER_HOUR', 5),
+
+    /*
+    | Email acceptance (App\Rules\TrustedEmail) for registration, quotes, contact and newsletter.
+    | Disposable / temporary domains are rejected (resources/data/disposable-email-domains.txt,
+    | refreshed with `php artisan emails:update-blocklist`), plus any domains listed here; and the
+    | domain must have a mail server (MX record).
+    */
+    'email' => [
+        'verify_mx' => (bool) env('EMAIL_VERIFY_MX', true),
+        'blocked_domains' => array_filter(array_map('trim', explode(',', (string) env('EMAIL_BLOCKED_DOMAINS', '')))),
+        'allowed_domains' => array_filter(array_map('trim', explode(',', (string) env('EMAIL_ALLOWED_DOMAINS', '')))),
+    ],
+
+    /*
+    | Manufacturing and private-label content shown on the homepage and /custom-manufacturing.
+    | Edit these lists if the business process or services differ; nothing here is a claim about
+    | capacity, certification or history.
+    */
+    'manufacturing' => [
+        'capabilities' => [
+            'Logo embossing or debossing (blind or foil)',
+            'Custom colours and leather types',
+            'Branded hardware and zip pulls',
+            'Linings, stitching and edge finishes',
+            'Retail packaging and swing tags',
+            'Sample development before production',
+        ],
+        'process' => [
+            ['Brief & requirements', 'Share a tech pack, reference photos or artwork, with target quantities and delivery dates.'],
+            ['Design & sampling', 'We develop samples to your specification so materials, colours and branding are approved before production.'],
+            ['Production', 'Approved samples go into production with your pricing, quantities and lead time confirmed in a formal quotation.'],
+            ['Quality control & delivery', 'Goods are checked before dispatch and shipped to your destination on the agreed terms.'],
+        ],
+    ],
+
+    // Shorter labels for categories in the header menus only (slug => label). Category pages,
+    // breadcrumbs, titles and the footer keep the full category name.
+    'nav_labels' => [
+        'leather-accessories' => 'Accessories',
+    ],
 
     // Selectable WhatsApp greeting messages (Admin → Settings → WhatsApp).
     // Administrators may also enter a custom message instead.

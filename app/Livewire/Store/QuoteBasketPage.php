@@ -71,6 +71,7 @@ class QuoteBasketPage extends Component
             'belowMinimum' => $minOrder > 0 && $total !== null && $total < $minOrder,
             'user' => $user,
             'company' => $user?->company,
+            'guestInquiries' => app(\App\Pricing\PriceAccess::class)->guestInquiriesAllowed(),
         ])->layout('components.layouts.store', ['title' => 'Quote list']);
     }
 }

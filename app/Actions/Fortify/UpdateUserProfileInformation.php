@@ -3,6 +3,7 @@
 namespace App\Actions\Fortify;
 
 use App\Models\User;
+use App\Rules\TrustedEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,8 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
                 'string',
                 'email',
                 'max:255',
+                // Existing addresses are grandfathered; a changed address must be a trusted one.
+                Rule::when(strtolower((string) ($input['email'] ?? '')) !== strtolower($user->email), [new TrustedEmail]),
                 Rule::unique('users')->ignore($user->id),
             ],
         ])->validateWithBag('updateProfileInformation');

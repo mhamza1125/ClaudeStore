@@ -7,7 +7,9 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\LoginResponse;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -33,6 +35,12 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::registerView(fn () => view('auth.register'));
         Fortify::requestPasswordResetLinkView(fn () => view('auth.forgot-password'));
         Fortify::resetPasswordView(fn (Request $request) => view('auth.reset-password', ['request' => $request]));
+        Fortify::verifyEmailView(fn () => view('auth.verify-email'));
+
+        // Branded verification email (signed link, expires per auth.verification.expire).
+        VerifyEmail::toMailUsing(fn ($user, string $url) => (new MailMessage)
+            ->subject('Verify your email address')
+            ->view('emails.verify-email', ['user' => $user, 'url' => $url]));
 
         // Deactivated accounts cannot sign in.
         Fortify::authenticateUsing(function (Request $request) {

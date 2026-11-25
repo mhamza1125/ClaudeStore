@@ -12,12 +12,12 @@
                     <tr>
                         <td>{{ $u->name }}<span class="block text-xs text-muted">{{ $u->email }}</span></td>
                         <td>
-                            @if ($u->id === auth()->id())<x-badge tone="accent">{{ $u->getRoleNames()->first() }}</x-badge>
+                            @if ($u->id === auth()->id())<x-badge tone="accent">{{ \Illuminate\Support\Str::headline($u->getRoleNames()->first()) }}</x-badge>
                             @else
                                 <label class="sr-only" for="role{{ $u->id }}">Role</label>
                                 <select id="role{{ $u->id }}" class="input py-1 text-xs" wire:change="setRole({{ $u->id }}, $event.target.value)">
-                                    @foreach ($roles as $r)<option value="{{ $r }}" @selected($u->hasRole($r))>{{ $r }}</option>@endforeach
-                                    <option value="customer">customer (remove staff access)</option>
+                                    @foreach ($roles as $r => $label)<option value="{{ $r }}" @selected($u->hasRole($r))>{{ $label }}</option>@endforeach
+                                    <option value="customer">Customer (remove staff access)</option>
                                 </select>
                             @endif
                         </td>

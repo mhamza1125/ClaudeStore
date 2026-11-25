@@ -5,20 +5,20 @@
 <title>Quotation {{ $quote->reference }}</title>
 <style>
     @page { margin: 36px 40px 60px; }
-    body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: #2b1e16; line-height: 1.45; }
+    body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: #221710; line-height: 1.45; }
     h1, .serif { font-family: 'DejaVu Serif', serif; font-weight: normal; }
     h1 { font-size: 22px; margin: 0; }
-    .muted { color: #66533f; }
-    .brass { color: #7a5a1f; }
-    .eyebrow { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: #7a5a1f; }
+    .muted { color: #6b5d52; }
+    .brass { color: #a4552a; }
+    .eyebrow { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: #a4552a; }
     table { width: 100%; border-collapse: collapse; }
-    .items th { background: #efe6d7; text-align: left; padding: 6px; font-size: 8px; text-transform: uppercase; letter-spacing: 1px; }
-    .items td { padding: 7px 6px; border-bottom: 1px solid #ddd0bc; vertical-align: top; }
+    .items th { background: #f2ece2; text-align: left; padding: 6px; font-size: 8px; text-transform: uppercase; letter-spacing: 1px; }
+    .items td { padding: 7px 6px; border-bottom: 1px solid #e7dfd3; vertical-align: top; }
     .right { text-align: right; }
     .totals td { padding: 4px 6px; }
-    .grand td { border-top: 2px solid #2b1e16; font-size: 13px; padding-top: 8px; }
-    .box { border: 1px solid #ddd0bc; background: #fffcf6; padding: 10px 12px; }
-    .footer { position: fixed; bottom: -40px; left: 0; right: 0; font-size: 8px; color: #66533f; border-top: 1px solid #ddd0bc; padding-top: 6px; }
+    .grand td { border-top: 2px solid #221710; font-size: 13px; padding-top: 8px; }
+    .box { border: 1px solid #e7dfd3; background: #ffffff; padding: 10px 12px; }
+    .footer { position: fixed; bottom: -40px; left: 0; right: 0; font-size: 8px; color: #6b5d52; border-top: 1px solid #e7dfd3; padding-top: 6px; }
 </style>
 </head>
 <body>

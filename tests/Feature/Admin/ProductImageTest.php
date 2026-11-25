@@ -47,12 +47,101 @@ class ProductImageTest extends TestCase
             ->call('uploadImages')->assertHasNoErrors();
 
         $image = ProductImage::query()->sole();
-        $this->assertSame('approved', $image->status); // queue is sync in tests
+        $this->assertSame('approved', $image->status); // processed in the request, no queue worker needed
         $this->assertSame('back', $image->view_type->value);
         Storage::disk('local')->assertExists($image->original_path);
-        Storage::disk('public')->assertExists($image->path);
+        // The display master is private too; visitors only get watermarked renditions.
+        $this->assertSame('local', $image->disk);
+        Storage::disk('local')->assertExists($image->path);
         $this->assertStringEndsWith('.webp', $image->path);
-        $this->assertFalse(Storage::disk('public')->exists($image->original_path), 'original is not public');
+        $this->assertSame([], Storage::disk('public')->allFiles(), 'nothing is written to the public disk');
+    }
+
+    public function test_upload_is_ready_immediately_without_a_queue_worker(): void
+    {
+        config(['queue.default' => 'database']); // as in local/production: nothing would run a queued job here
+        $product = Product::factory()->create();
+        Livewire::test(ProductEditor::class, ['product' => $product])
+            ->set('uploads', [UploadedFile::fake()->createWithContent('a.png', $this->png()), UploadedFile::fake()->createWithContent('b.png', $this->png())])
+            ->call('uploadImages')->assertHasNoErrors();
+
+        $this->assertSame(['approved', 'approved'], ProductImage::query()->pluck('status')->all());
+        $this->assertDatabaseCount('jobs', 0);
+    }
+
+    public function test_upload_processing_failure_is_reported(): void
+    {
+        $product = Product::factory()->create();
+        $this->mock(\App\Images\ImageStorage::class, function ($m) use ($product) {
+            $m->shouldReceive('storeUpload')->andReturnUsing(fn () => $product->images()->create(['disk' => 'public', 'original_disk' => 'local', 'original_path' => 'x.png', 'status' => 'processing', 'source' => 'upload']));
+            $m->shouldReceive('originalBinary')->andReturn('not an image');
+            $m->shouldReceive('optimise')->andThrow(new \RuntimeException('Unable to decode image'));
+        });
+        Livewire::test(ProductEditor::class, ['product' => $product])
+            ->set('uploads', [UploadedFile::fake()->createWithContent('a.png', $this->png())])
+            ->call('uploadImages')->assertHasErrors('images');
+
+        $image = ProductImage::query()->sole();
+        $this->assertSame('failed', $image->status);
+        $this->assertStringContainsString('Unable to decode image', $image->provider_notes);
+    }
+
+    public function test_view_is_optional(): void
+    {
+        $product = Product::factory()->create(['name' => 'Tote']);
+        Livewire::test(ProductEditor::class, ['product' => $product])
+            ->set('uploads', [UploadedFile::fake()->createWithContent('any.png', $this->png())])
+            ->call('uploadImages')->assertHasNoErrors();
+
+        $image = ProductImage::query()->sole();
+        $this->assertNull($image->view_type);
+        $this->assertSame('Tote', $image->alt);
+        $this->assertSame('approved', $image->status);
+
+        Livewire::test(ProductEditor::class, ['product' => $product])->assertOk()
+            ->call('updateImage', $image->id, 'view_type', 'side');
+        $this->assertSame('side', $image->fresh()->view_type->value);
+        Livewire::test(ProductEditor::class, ['product' => $product])->call('updateImage', $image->id, 'view_type', '');
+        $this->assertNull($image->fresh()->view_type);
+        Livewire::test(ProductPurchase::class, ['product' => $product])->assertOk()->assertSee($image->url());
+    }
+
+    public function test_upload_left_in_the_queue_can_be_processed_now(): void
+    {
+        $product = Product::factory()->create();
+        Storage::disk('local')->put('product-originals/1/q.png', $this->png());
+        $image = $product->images()->create(['disk' => 'public', 'original_disk' => 'local', 'original_path' => 'product-originals/1/q.png', 'status' => 'processing', 'source' => 'upload']);
+        $image->forceFill(['updated_at' => now()->subMinutes(5)])->saveQuietly();
+
+        Livewire::test(ProductEditor::class, ['product' => $product])
+            ->assertSee('Process now')
+            ->call('processImageNow', $image->id)->assertHasNoErrors();
+
+        $image->refresh();
+        $this->assertSame('pending_review', $image->status);
+        Storage::disk('local')->assertExists($image->path);
+
+        // A stale queued copy of the job must not reprocess (or orphan files for) a handled image.
+        (new \App\Jobs\OptimizeProductImage($image))->handle(app(\App\Images\ImageStorage::class));
+        $this->assertSame('pending_review', $image->fresh()->status);
+        $this->assertCount(1, Storage::disk('local')->allFiles('product-display'));
+    }
+
+    public function test_processing_failure_is_reported_and_can_be_retried(): void
+    {
+        $product = Product::factory()->create();
+        Storage::disk('local')->put('product-originals/1/bad.png', 'not an image');
+        $image = $product->images()->create(['disk' => 'public', 'original_disk' => 'local', 'original_path' => 'product-originals/1/bad.png', 'status' => 'failed', 'source' => 'upload']);
+
+        Livewire::test(ProductEditor::class, ['product' => $product])
+            ->assertSee('Retry processing')
+            ->call('processImageNow', $image->id)->assertHasErrors('images');
+        $this->assertSame('failed', $image->fresh()->status);
+        $this->assertStringContainsString('Optimisation failed', $image->fresh()->provider_notes);
+
+        Storage::disk('local')->put('product-originals/1/bad.png', $this->png());
+        Livewire::test(ProductEditor::class, ['product' => $product])->call('processImageNow', $image->id)->assertHasNoErrors();
+        $this->assertSame('pending_review', $image->fresh()->status);
     }
 
     public function test_non_images_and_tiny_images_are_rejected(): void
@@ -108,7 +197,7 @@ class ProductImageTest extends TestCase
         $this->assertSame('pending_review', $draft->status);
         $this->assertSame('processed', $draft->source);
         $this->assertSame('removebg', $draft->provider);
-        Storage::disk('public')->assertExists($draft->path);
+        Storage::disk('local')->assertExists($draft->path);
         Storage::disk('local')->assertExists('product-originals/1/o.png');
         Http::assertSent(fn ($r) => $r->hasHeader('X-Api-Key', 'test-key'));
     }

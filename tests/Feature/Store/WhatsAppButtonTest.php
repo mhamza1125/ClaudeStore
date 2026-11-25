@@ -13,7 +13,7 @@ class WhatsAppButtonTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const DEFAULT_LINK = 'https://api.whatsapp.com/send/?phone=923110012233&text=Hello%21+I+want+to+know+more+about+your+services.&type=phone_number&app_absent=0';
+    private const DEFAULT_LINK = 'https://api.whatsapp.com/send/?phone=923314657496&text=Hello%21+I+want+to+know+more+about+your+services.&type=phone_number&app_absent=0';
 
     public function test_default_configuration_produces_the_specified_link(): void
     {

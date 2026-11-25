@@ -12,11 +12,22 @@ abstract class TestCase extends BaseTestCase
 {
     protected bool $seedRoles = true;
 
+    /**
+     * B2B price access is on by default (guests must register to see prices). Suites that
+     * cover the underlying pricing rules for guests (public vs trade-only, tiers in
+     * listings) set this to false to test them as they apply with B2B pricing switched off.
+     */
+    protected bool $b2bPricing = true;
+
     protected function setUp(): void
     {
         parent::setUp();
-        if ($this->seedRoles && in_array(\Illuminate\Foundation\Testing\RefreshDatabase::class, class_uses_recursive($this), true)) {
+        $usesDatabase = in_array(\Illuminate\Foundation\Testing\RefreshDatabase::class, class_uses_recursive($this), true);
+        if ($this->seedRoles && $usesDatabase) {
             $this->seed([RolesAndPermissionsSeeder::class, CustomerGroupSeeder::class]);
+        }
+        if (! $this->b2bPricing && $usesDatabase) {
+            app(\App\Services\Settings::class)->set(['b2b.enabled' => false]);
         }
     }
 

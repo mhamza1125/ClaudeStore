@@ -6,6 +6,7 @@ use App\Enums\Availability;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Pricing\PriceAccess;
 use App\Services\QuoteBasketService;
 use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,6 +38,10 @@ class Catalog extends Component
 
     #[Url(except: '')]
     public string $priceMax = '';
+
+    /** Raw leather listing (/products?raw=1), linked from the homepage gallery. */
+    #[Url(except: false)]
+    public bool $raw = false;
 
     #[Url(except: 'featured')]
     public string $sort = 'featured';
@@ -113,9 +118,9 @@ class Catalog extends Component
         }
     }
 
-    public function render()
+    public function render(PriceAccess $priceAccess)
     {
-        $base = Product::published();
+        $base = Product::published()->when($this->raw, fn (Builder $q) => $q->where('is_raw_leather', true));
         $query = (clone $base)
             ->with(['approvedImages', 'priceTiers', 'category', 'activeVariants'])
             ->when($this->category, fn (Builder $q) => $q->whereIn('category_id', $this->category->selfAndChildIds()))
@@ -124,17 +129,20 @@ class Catalog extends Component
             ->when($this->color, fn (Builder $q) => $q->whereHas('activeVariants', fn (Builder $v) => $v->whereIn('color', $this->color)))
             ->when($this->availability, fn (Builder $q) => $q->whereIn('availability', $this->availability));
 
-        // Price filter uses public list prices only, so hidden trade prices are never revealed.
-        $min = $this->safeMoney($this->priceMin);
-        $max = $this->safeMoney($this->priceMax);
+        // Price filter and sort use list prices the viewer may see, so hidden prices are never
+        // revealed (not even through result order). With no price access both are ignored.
+        $access = $priceAccess->current();
+        $listed = $access->tradeCatalogue ? 'price_on_request = 0' : 'public_pricing = 1 AND price_on_request = 0';
+        $min = $access->allowed ? $this->safeMoney($this->priceMin) : null;
+        $max = $access->allowed ? $this->safeMoney($this->priceMax) : null;
         if ($min !== null || $max !== null) {
-            $query->where('public_pricing', true)->where('price_on_request', false)->whereNotNull('base_price_cents')
+            $query->whereRaw($listed)->whereNotNull('base_price_cents')
                 ->when($min !== null, fn ($q) => $q->where('base_price_cents', '>=', $min))
                 ->when($max !== null, fn ($q) => $q->where('base_price_cents', '<=', $max));
         }
 
-        $visiblePrice = 'CASE WHEN public_pricing = 1 AND price_on_request = 0 THEN base_price_cents ELSE NULL END';
-        match ($this->sort) {
+        $visiblePrice = "CASE WHEN {$listed} THEN base_price_cents ELSE NULL END";
+        match (! $access->allowed && str_starts_with($this->sort, 'price') ? 'featured' : $this->sort) {
             'newest' => $query->orderByDesc('published_at'),
             'name' => $query->orderBy('name'),
             'price_asc' => $query->orderByRaw("CASE WHEN ({$visiblePrice}) IS NULL THEN 1 ELSE 0 END")->orderByRaw("{$visiblePrice} ASC")->orderBy('name'),
@@ -151,10 +159,15 @@ class Catalog extends Component
             'colors' => ProductVariant::query()->where('is_active', true)->whereNotNull('color')
                 ->whereIn('product_id', (clone $scope)->select('id'))->distinct()->orderBy('color')->pluck('color'),
             'availabilities' => Availability::options(),
+            'access' => $access,
         ])->layout('components.layouts.store', [
-            'title' => $this->category?->name ?? (trim($this->q) !== '' ? 'Search: '.$this->q : 'All products'),
+            'title' => $this->category?->name ?? (trim($this->q) !== '' ? 'Search: '.$this->q : ($this->raw ? 'Raw leather' : 'All products')),
             'description' => $this->category?->description ?? 'Wholesale leather bags, wallets, belts and accessories with volume pricing.',
             'canonical' => $this->category ? route('catalog.category', $this->category) : route('catalog'),
+            // Search results and filtered/sorted views are thin duplicates of the category pages:
+            // keep them out of the index (links are still followed).
+            'noindex' => trim($this->q) !== '' || $this->material || $this->color || $this->availability
+                || trim($this->priceMin) !== '' || trim($this->priceMax) !== '' || $this->sort !== 'featured',
         ]);
     }
 
