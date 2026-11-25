@@ -6,6 +6,15 @@
             </a>
         </x-slot:actions>
     </x-page-header>
+    @if ($tradeOnlyExposed)
+        {{-- Owner decision D3 (docs/DECISIONS.md): warn, do not change behaviour. --}}
+        <div class="mb-6 alert badge-warning" role="alert" data-trade-price-warning>
+            <p><strong>Trade-only prices are visible to anyone who registers.</strong> With instant access (no email
+            verification, no approval), every signed-in customer sees the list prices of products marked “trade only”,
+            not just approved wholesale companies. To limit them to vetted buyers, tick “Require manual admin approval”.
+            Group and negotiated prices are unaffected (approved wholesale companies only). Details: docs/B2B.md.</p>
+        </div>
+    @endif
     @if (session('status'))<div class="mb-4 alert badge-success">{{ session('status') }}</div>@endif
 
     <form wire:submit="save" class="grid gap-6 xl:grid-cols-2">

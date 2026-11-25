@@ -1,8 +1,13 @@
 # Recommendations (for approval — not implemented)
 
 Prepared after the homepage banner, themes, live search, widget, Cloudflare chatbot, page-URL
-and product-carousel work. Nothing in this document has been built. Priorities: **P1** = do next,
-largest effect on enquiries; **P2** = next cycle; **P3** = when content or data exists to support it.
+and product-carousel work. Priorities: **P1** = do next, largest effect on enquiries; **P2** = next
+cycle; **P3** = when content or data exists to support it.
+
+> **Status update (2026-11-25).** Since this list was written, these items were built: the
+> `/contact` page (§1 P1), `sitemap.xml`, Open Graph tags and Organization JSON-LD (§2 item 4),
+> and the one-light-theme design (the theme switcher was removed). docs/STATUS.md is the current
+> record of what exists; the remaining items below are still proposals.
 
 ## 1. Recommended additional pages
 

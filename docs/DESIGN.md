@@ -118,13 +118,29 @@ presented as Leamate products.
 - Unique titles and meta descriptions per page; canonical URLs; Open Graph (product image and
   `og:type=product` on product pages; `summary_large_image` when there is an image).
 - Structured data: Organization + WebSite with SearchAction (home), Product (product pages),
-  BreadcrumbList (catalogue, product and content pages).
-- `/sitemap.xml` (published products, active categories, content and policy pages; cached for 1
-  hour) and `/robots.txt` (generated; points to the sitemap and keeps `/admin`, `/account`, `/q/`
-  and transactional URLs out). The rules are identical in every environment, so a wrong
-  `APP_ENV` can never de-index the site.
-- `noindex, follow` on search results, filtered or sorted catalogue views, auth pages, the portal,
-  secure quotation links and the quote confirmation.
+  BreadcrumbList (catalogue, product and content pages). Product `description` falls back to the
+  meta description; `availability` maps in_stock/low_stock/made_to_order/out_of_stock to
+  schema.org InStock/LimitedAvailability/MadeToOrder/OutOfStock. An `Offer` (price) is output only
+  when anonymous visitors may see the price; under the default B2B settings no product has one,
+  and Google then treats the page as **not eligible** for product snippets (Product needs
+  `offers`, `review` or `aggregateRating`; checked 2026-11-25). Kept on purpose (D3).
+- `/sitemap.xml`: home, catalogue, content pages, contact, policies that have text, active
+  categories that list at least one published non-demo product, and published **non-demo**
+  products. Cached for 1 hour and cleared whenever a product, category or setting changes.
+- `/robots.txt` (generated; points to the sitemap and keeps `/admin`, `/account`, `/q/` and
+  transactional URLs out). The rules are identical in every environment, so a wrong `APP_ENV` can
+  never de-index the site. Pages that must not be indexed use `noindex` rather than a Disallow
+  (a blocked page's noindex is never seen).
+- `noindex, follow` on search results, filtered or sorted catalogue views, the quote basket
+  (`/quote`), auth pages, the portal, secure quotation links, the quote confirmation, policy pages
+  without text and the 404 page.
+- Catalogue pagination: real `<a href="…?page=N">` links (Livewire still updates in place); each
+  page is its own canonical (page 1 without `?page`); page 2+ titles end in "— Page N".
+- Product URLs: a renamed slug answers with a **301** to the current URL (one hop,
+  `product_slug_redirects`); an archived product that was once live gets a 301 to its active
+  category, or **410** if the category is inactive; drafts are never public (404).
+- Custom 404 page (`resources/views/errors/404.blade.php`): real 404 status, noindex, links to the
+  catalogue and home.
 - One `<h1>` per page; sections use `<h2>`/`<h3>` in order.
 
 ## 9. Blog: recommendation

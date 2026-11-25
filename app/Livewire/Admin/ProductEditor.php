@@ -14,6 +14,7 @@ use App\Models\PriceTier;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Services\AuditLogger;
+use App\Services\PriceTierSync;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -120,8 +121,20 @@ class ProductEditor extends Component
         $this->variants['new'.Str::random(6)] = ['id' => null, 'sku' => '', 'name' => '', 'color' => '', 'size' => '', 'finish' => '', 'price' => '', 'moq' => null, 'stock_quantity' => null, 'availability' => '', 'is_active' => true];
     }
 
+    /**
+     * A saved variant is deactivated (kept with its tiers and negotiated prices, owner decision
+     * D4); only a new, never-saved variant is discarded from the form.
+     */
     public function removeVariant(string $key): void
     {
+        if (! isset($this->variants[$key])) {
+            return;
+        }
+        if ($this->variants[$key]['id']) {
+            $this->variants[$key]['is_active'] = false;
+
+            return;
+        }
         unset($this->variants[$key]);
         $this->tiers = array_values(array_filter($this->tiers, fn ($t) => $t['variant'] !== $key));
     }
@@ -275,19 +288,16 @@ class ProductEditor extends Component
                 $keyToId[$key] = $variant->id;
                 $keep[] = $variant->id;
             }
-            $product->variants()->whereNotIn('id', $keep ?: [0])->delete();
+            // Variants are never deleted here (D4): a removed variant arrives as is_active = false.
 
-            // Price tiers: replace the full set, recording old/new for the audit log.
+            // Price tiers: updated in place; only tiers the user removed from the form go.
             $oldTiers = $product->priceTiers()->get(['variant_id', 'customer_group_id', 'min_qty', 'unit_price_cents'])->toArray();
-            $product->priceTiers()->delete();
-            foreach ($this->tiers as $t) {
-                $product->priceTiers()->create([
-                    'variant_id' => $t['variant'] !== '' ? ($keyToId[$t['variant']] ?? null) : null,
-                    'customer_group_id' => $t['group'] !== '' ? (int) $t['group'] : null,
-                    'min_qty' => (int) $t['min_qty'],
-                    'unit_price_cents' => Money::parse($t['price']),
-                ]);
-            }
+            app(PriceTierSync::class)->sync($product, collect($this->tiers)->map(fn ($t) => [
+                'variant_id' => $t['variant'] !== '' ? ($keyToId[$t['variant']] ?? null) : null,
+                'customer_group_id' => $t['group'] !== '' ? (int) $t['group'] : null,
+                'min_qty' => (int) $t['min_qty'],
+                'unit_price_cents' => Money::parse($t['price']),
+            ])->all());
             $newTiers = $product->priceTiers()->get(['variant_id', 'customer_group_id', 'min_qty', 'unit_price_cents'])->toArray();
             if ($oldTiers != $newTiers) {
                 $changes['price_tiers'] = ['from' => $oldTiers, 'to' => $newTiers];

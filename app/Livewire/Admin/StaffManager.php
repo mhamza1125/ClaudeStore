@@ -13,7 +13,12 @@ class StaffManager extends Component
 {
     public array $form = ['name' => '', 'email' => '', 'role' => 'sales-rep'];
 
-    public ?string $createdPassword = null;
+    /**
+     * Protected on purpose (audit F-25): Livewire never puts protected properties in the
+     * browser-side snapshot, and they do not survive to the next request, so the temporary
+     * password is rendered exactly once.
+     */
+    protected ?string $createdPassword = null;
 
     public function create(): void
     {
@@ -54,6 +59,7 @@ class StaffManager extends Component
         return view('livewire.admin.staff-manager', [
             'staff' => User::staff()->with('roles')->orderBy('name')->get(),
             'roles' => collect(User::STAFF_ROLES)->mapWithKeys(fn ($r) => [$r => Str::headline($r)])->all(),
+            'createdPassword' => $this->createdPassword,
         ])->layout('components.layouts.admin', ['title' => 'Staff']);
     }
 }

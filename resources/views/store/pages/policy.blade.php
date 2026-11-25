@@ -1,4 +1,4 @@
-<x-layouts.store :canonical="$canonical" :title="$title" :description="$title.' for trade customers of '.$brand['name'].': quotations, orders, delivery and claims.'">
+<x-layouts.store :canonical="$canonical" :title="$title" :noindex="$noindex ?? false" :description="$title.' for trade customers of '.$brand['name'].': quotations, orders, delivery and claims.'">
     <section class="border-b border-border bg-elevated">
         <div class="container-page pb-10 pt-8 sm:pb-14 sm:pt-10">
             <x-breadcrumbs :items="[['Home', route('home')], [$title, $canonical]]" class="mb-8"/>

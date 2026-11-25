@@ -24,6 +24,13 @@ class QuoteWorkspace extends Component
     #[Locked]
     public int $quoteId;
 
+    /**
+     * The quote's lock_version when this screen last loaded it. Refreshed only after this
+     * screen's own successful actions, so a save from a stale screen is refused (audit F-12).
+     */
+    #[Locked]
+    public int $lockVersion = 0;
+
     /** itemId => [quantity, unit_price (decimal string), discount (percent string)] */
     public array $lines = [];
 
@@ -50,7 +57,8 @@ class QuoteWorkspace extends Component
     private function fillForm(Quote $quote): void
     {
         $quote->load('items');
-        $fresh = $quote->version === 0 && in_array($quote->status, [QuoteStatus::Pending, QuoteStatus::UnderReview], true) && $quote->valid_until === null;
+        $this->lockVersion = (int) $quote->lock_version;
+        $fresh =$quote->version === 0 && in_array($quote->status, [QuoteStatus::Pending, QuoteStatus::UnderReview], true) && $quote->valid_until === null;
 
         $this->lines = $quote->items->mapWithKeys(fn (QuoteItem $i) => [$i->id => [
             'quantity' => $i->quantity,
@@ -83,6 +91,7 @@ class QuoteWorkspace extends Component
         $quote = $this->quote();
         $this->authorize('update', $quote);
         $workflow->startReview($quote, auth()->user());
+        $this->lockVersion = (int) $quote->fresh()->lock_version;
     }
 
     public function assign(QuoteWorkflow $workflow): void
@@ -139,7 +148,7 @@ class QuoteWorkspace extends Component
         }
 
         return $this->runSafely(function () use ($workflow, $quote) {
-            $workflow->saveCommercials($quote, $this->parsedLines(), $this->parsedTerms(), auth()->user());
+            $workflow->saveCommercials($quote, $this->parsedLines(), $this->parsedTerms(), auth()->user(), $this->lockVersion);
             $this->fillForm($quote->refresh());
         }, 'Quote saved.');
     }
@@ -181,6 +190,11 @@ class QuoteWorkspace extends Component
 
             return;
         }
+        if ($variant && ! $variant->is_active) {
+            $this->addError('newSku', 'That option is inactive.');
+
+            return;
+        }
         $this->runSafely(function () use ($workflow, $quote, $product, $variant) {
             $workflow->addLine($quote, $product, $variant, (int) $this->newQty, auth()->user());
             $this->reset('newSku', 'newQty');
@@ -203,7 +217,9 @@ class QuoteWorkspace extends Component
     {
         $quote = $this->quote();
         $this->authorize('update', $quote);
-        $this->runSafely(fn () => $workflow->reopen($quote, auth()->user()), 'Quote reopened for revision.');
+        if ($this->runSafely(fn () => $workflow->reopen($quote, auth()->user()), 'Quote reopened for revision.')) {
+            $this->lockVersion = (int) $quote->fresh()->lock_version;
+        }
     }
 
     public function convert(QuoteWorkflow $workflow)

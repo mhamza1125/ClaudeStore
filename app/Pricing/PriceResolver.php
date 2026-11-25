@@ -7,6 +7,7 @@ use App\Models\CustomerPrice;
 use App\Models\PriceTier;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Support\BusinessTime;
 use App\Support\Money;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -56,10 +57,17 @@ class PriceResolver
             if ($negotiated) {
                 [$price, $source] = $negotiated;
 
+                // The ladder shows what the buyer would pay without the negotiated price: group
+                // tiers at their own prices, or standard tiers with the group discount (audit F-20).
+                [$groupLadder] = $groupId ? $this->pickTierSet($tiers->where('customer_group_id', $groupId), $variant) : [collect()];
+                $ladder = $groupLadder->isNotEmpty()
+                    ? $this->ladder($groupLadder, $quantity)
+                    : $this->ladder($this->pickTierSet($tiers->whereNull('customer_group_id'), $variant)[0], $quantity, $groupDiscount);
+
                 return new PriceResult(
                     $price->unit_price_cents, $source, true, $quantity, $moq, $multiple,
                     tierMinQty: $price->min_qty,
-                    ladder: $this->ladder($this->standardTiers($tiers, $variant, $groupId), $quantity, $groupDiscount),
+                    ladder: $ladder,
                     errors: $errors,
                 );
             }
@@ -126,12 +134,14 @@ class PriceResolver
 
     private function negotiated(Company $company, Product $product, ?ProductVariant $variant, int $qty, Carbon $on): ?array
     {
+        // valid_from / valid_until are business dates, inclusive (audit F-13).
+        $day = BusinessTime::today($on);
         $rows = CustomerPrice::query()
             ->where('company_id', $company->id)
             ->where('product_id', $product->id)
             ->where('min_qty', '<=', max(1, $qty))
-            ->where(fn ($q) => $q->whereNull('valid_from')->orWhereDate('valid_from', '<=', $on))
-            ->where(fn ($q) => $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', $on))
+            ->where(fn ($q) => $q->whereNull('valid_from')->orWhereDate('valid_from', '<=', $day))
+            ->where(fn ($q) => $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', $day))
             ->orderByDesc('min_qty')
             ->get();
 
@@ -160,18 +170,6 @@ class PriceResolver
         }
 
         return [$tiers->whereNull('variant_id')->sortBy('min_qty')->values(), false];
-    }
-
-    private function standardTiers(Collection $tiers, ?ProductVariant $variant, ?int $groupId): Collection
-    {
-        if ($groupId) {
-            [$group] = $this->pickTierSet($tiers->where('customer_group_id', $groupId), $variant);
-            if ($group->isNotEmpty()) {
-                return $group;
-            }
-        }
-
-        return $this->pickTierSet($tiers->whereNull('customer_group_id'), $variant)[0];
     }
 
     private function matchTier(Collection $tiers, int $qty): ?PriceTier

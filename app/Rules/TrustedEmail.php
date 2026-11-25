@@ -5,6 +5,7 @@ namespace App\Rules;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Accepts only real, permanent mailbox addresses:
@@ -109,27 +110,76 @@ class TrustedEmail implements ValidationRule
         self::$blocklist = null;
     }
 
+    /** @var (Closure(string, int): (array|false))|null test seam; null = dns_get_record */
+    private static ?Closure $dnsResolver = null;
+
+    /** Replace the DNS resolver (tests). The closure returns records, or false when the lookup failed. */
+    public static function resolveDnsUsing(?Closure $resolver): void
+    {
+        self::$dnsResolver = $resolver;
+    }
+
+    /**
+     * Rejects only on a definitive "no mail records" answer. If DNS is unavailable on the
+     * server or the lookup fails, the address is accepted and a warning logged, so a hosting
+     * DNS problem never blocks quote requests or registrations (audit F-33).
+     */
     private static function hasMailServer(string $domain): bool
     {
-        // If DNS itself is unavailable on the server, do not lock every customer out.
-        if (! self::lookupMx('gmail.com')) {
+        $result = self::lookupMx($domain);
+        if ($result === null) {
+            Log::warning('Email domain check skipped: DNS lookup failed', ['domain' => $domain]);
+
             return true;
         }
 
-        return self::lookupMx($domain);
+        return $result;
     }
 
-    private static function lookupMx(string $domain): bool
+    /** true = can receive mail; false = definitively cannot; null = lookup failed (never cached). */
+    private static function lookupMx(string $domain): ?bool
     {
-        return Cache::remember('email-mx:'.$domain, now()->addDay(), function () use ($domain) {
-            $records = @dns_get_record($domain.'.', DNS_MX) ?: [];
-            if ($records !== []) {
-                // RFC 7505 "null MX" (target ".") means the domain accepts no mail.
-                return collect($records)->contains(fn ($r) => trim((string) ($r['target'] ?? ''), '. ') !== '');
+        $key = 'email-mx:'.$domain;
+        if (Cache::has($key)) {
+            return (bool) Cache::get($key);
+        }
+
+        $mx = self::dns($domain.'.', DNS_MX);
+        if ($mx === false) {
+            return null;
+        }
+        if ($mx !== []) {
+            // RFC 7505 "null MX" (target ".") means the domain accepts no mail.
+            $answer = collect($mx)->contains(fn ($r) => trim((string) ($r['target'] ?? ''), '. ') !== '');
+        } else {
+            // No MX at all: mail is delivered to the domain's own address (implicit MX).
+            $a = self::dns($domain.'.', DNS_A);
+            $aaaa = $a === [] ? self::dns($domain.'.', DNS_AAAA) : [];
+            if ($a === false || $aaaa === false) {
+                return null;
+            }
+            $answer = $a !== [] || $aaaa !== [];
+        }
+
+        Cache::put($key, $answer, now()->addDay()); // only definitive answers are cached
+
+        return $answer;
+    }
+
+    /** @return array<int, array<string, mixed>>|false */
+    private static function dns(string $host, int $type): array|false
+    {
+        try {
+            if (self::$dnsResolver) {
+                return (self::$dnsResolver)($host, $type);
+            }
+            if (! function_exists('dns_get_record')) {
+                return false;
             }
 
-            // No MX at all: mail is delivered to the domain's own address (implicit MX).
-            return (@dns_get_record($domain.'.', DNS_A) ?: @dns_get_record($domain.'.', DNS_AAAA) ?: []) !== [];
-        });
+            return @dns_get_record($host, $type);
+        } catch (\Throwable) {
+            return false;
+        }
     }
 }

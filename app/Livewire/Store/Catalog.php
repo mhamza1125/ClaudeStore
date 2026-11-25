@@ -152,8 +152,20 @@ class Catalog extends Component
 
         $scope = (clone $base)->when($this->category, fn (Builder $q) => $q->whereIn('category_id', $this->category->selfAndChildIds()));
 
+        // Real, crawlable page URLs (audit F-05): the page's own path plus the active filters,
+        // also during Livewire updates (where the request path is /livewire/update).
+        $baseUrl = $this->category ? route('catalog.category', $this->category) : route('catalog');
+        $products = $query->paginate(12)->withPath($baseUrl)->appends(array_filter([
+            'q' => trim($this->q) ?: null, 'material' => $this->material ?: null, 'color' => $this->color ?: null,
+            'availability' => $this->availability ?: null, 'priceMin' => trim($this->priceMin) ?: null, 'priceMax' => trim($this->priceMax) ?: null,
+            'raw' => $this->raw ?: null, 'sort' => $this->sort !== 'featured' ? $this->sort : null, 'view' => $this->view !== 'grid' ? $this->view : null,
+        ]));
+        $page = $products->currentPage();
+        $title = $this->category?->name ?? (trim($this->q) !== '' ? 'Search: '.$this->q : ($this->raw ? 'Raw leather' : 'All products'));
+        $description = $this->category?->description ?? 'Wholesale leather bags, wallets, belts and accessories with volume pricing.';
+
         return view('livewire.store.catalog', [
-            'products' => $query->paginate(12),
+            'products' => $products,
             'categories' => Category::active()->roots()->orderBy('sort_order')->with(['children' => fn ($q) => $q->where('is_active', true)])->get(),
             'materials' => (clone $scope)->whereNotNull('material')->distinct()->orderBy('material')->pluck('material'),
             'colors' => ProductVariant::query()->where('is_active', true)->whereNotNull('color')
@@ -161,9 +173,11 @@ class Catalog extends Component
             'availabilities' => Availability::options(),
             'access' => $access,
         ])->layout('components.layouts.store', [
-            'title' => $this->category?->name ?? (trim($this->q) !== '' ? 'Search: '.$this->q : ($this->raw ? 'Raw leather' : 'All products')),
-            'description' => $this->category?->description ?? 'Wholesale leather bags, wallets, belts and accessories with volume pricing.',
-            'canonical' => $this->category ? route('catalog.category', $this->category) : route('catalog'),
+            'title' => $page > 1 ? "{$title} — Page {$page}" : $title,
+            'description' => $page > 1 ? "Page {$page}. {$description}" : $description,
+            // Each page is its own canonical; page 1 has no page parameter (Google: don't point
+            // paginated pages at page 1).
+            'canonical' => $page > 1 ? $baseUrl.'?page='.$page : $baseUrl,
             // Search results and filtered/sorted views are thin duplicates of the category pages:
             // keep them out of the index (links are still followed).
             'noindex' => trim($this->q) !== '' || $this->material || $this->color || $this->availability

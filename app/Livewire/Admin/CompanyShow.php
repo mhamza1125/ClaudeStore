@@ -110,6 +110,11 @@ class CompanyShow extends Component
 
             return;
         }
+        if ($variant && ! $variant->is_active) {
+            $this->addError('price.sku', 'That option is inactive.');
+
+            return;
+        }
         $row = CustomerPrice::create([
             'company_id' => $this->companyId, 'product_id' => $product->id, 'variant_id' => $variant?->id,
             'min_qty' => (int) $this->price['min_qty'], 'unit_price_cents' => Money::parse($this->price['unit_price']),

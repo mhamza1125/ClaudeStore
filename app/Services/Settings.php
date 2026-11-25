@@ -127,6 +127,8 @@ class Settings
     public function flush(): void
     {
         Cache::forget(self::CACHE_KEY);
+        // Policy text and brand settings appear in the sitemap (audit F-23).
+        Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE_KEY);
         $this->forgetLoaded();
     }
 

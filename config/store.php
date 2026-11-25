@@ -15,6 +15,9 @@ return [
     'shipping_flat_cents' => (int) env('STORE_SHIPPING_FLAT_CENTS', 0),
     'min_order_value_cents' => (int) env('STORE_MIN_ORDER_VALUE_CENTS', 0),
     'quote_validity_days' => 30,
+    // Calendar used for quote validity, expiry and negotiated-price windows (owner decision D7).
+    // app.timezone stays UTC: stored timestamps are UTC and must not shift.
+    'business_timezone' => env('BUSINESS_TIMEZONE', 'Asia/Karachi'),
     'sales_notification_email' => env('SALES_NOTIFICATION_EMAIL', 'info@leamate.com'),
     'quote_rate_limit_per_hour' => (int) env('QUOTE_RATE_LIMIT_PER_HOUR', 5),
 

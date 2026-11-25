@@ -18,8 +18,10 @@ class ReferenceGenerator
         $value = DB::transaction(function () use ($type, $year) {
             $row = ReferenceSequence::query()->where('name', $type)->where('year', $year)->lockForUpdate()->first();
             if (! $row) {
-                $row = ReferenceSequence::query()->create(['name' => $type, 'year' => $year, 'last_value' => 0]);
-                $row = ReferenceSequence::query()->whereKey($row->id)->lockForUpdate()->first();
+                // First reference of the year: two requests may get here together. insertOrIgnore
+                // lets exactly one create the row (unique name+year); both then lock it (audit F-28).
+                DB::table('reference_sequences')->insertOrIgnore(['name' => $type, 'year' => $year, 'last_value' => 0, 'created_at' => now(), 'updated_at' => now()]);
+                $row = ReferenceSequence::query()->where('name', $type)->where('year', $year)->lockForUpdate()->firstOrFail();
             }
             $row->increment('last_value');
 

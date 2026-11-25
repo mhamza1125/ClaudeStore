@@ -19,6 +19,12 @@ class Category extends Model
         return ['is_active' => 'boolean', 'is_featured' => 'boolean'];
     }
 
+    protected static function booted(): void
+    {
+        // Categories are listed in the cached sitemap (audit F-23).
+        static::saved(fn () => \Illuminate\Support\Facades\Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE_KEY));
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');

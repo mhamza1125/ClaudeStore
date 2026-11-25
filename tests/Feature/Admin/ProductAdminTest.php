@@ -111,7 +111,11 @@ class ProductAdminTest extends TestCase
         $this->assertSame('archived', $p->fresh()->status);
         $this->get('/products/'.$p->slug)->assertOk(); // staff preview
         auth()->logout();
-        $this->get('/products/'.$p->slug)->assertNotFound();
+        // Changed by the F-11 requirement (2026-11-25): an archived product that was live now
+        // sends visitors to its active category with a 301 instead of a 404.
+        $this->get('/products/'.$p->slug)->assertStatus(301)->assertRedirect(route('catalog.category', $p->category));
+        // Drafts (the copy) are still never public.
+        $this->get('/products/'.$copy->slug)->assertNotFound();
     }
 
     public function test_category_tree_is_limited_to_two_levels(): void

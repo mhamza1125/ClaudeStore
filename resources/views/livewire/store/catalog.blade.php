@@ -230,7 +230,7 @@
                     @endforeach
                 </div>
             @endif
-            <div class="mt-12">{{ $products->links() }}</div>
+            <div class="mt-12">{{ $products->links('livewire.store.pagination-links') }}</div>
         </div>
     </div>
 </div>

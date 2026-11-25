@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\QuoteStatus;
+use App\Support\BusinessTime;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,7 +21,7 @@ class Quote extends Model
         'target_delivery_date', 'preferred_currency', 'specifications', 'message', 'po_reference', 'currency',
         'subtotal_cents', 'discount_cents', 'shipping_cents', 'additional_charges_cents',
         'additional_charges_label', 'tax_rate_bps', 'tax_cents', 'total_cents', 'valid_until', 'payment_terms',
-        'delivery_terms', 'customer_notes', 'version', 'has_unsent_changes', 'access_token_hash', 'submitted_at',
+        'delivery_terms', 'customer_notes', 'version', 'has_unsent_changes', 'lock_version', 'access_token_hash', 'submitted_at',
         'sent_at', 'responded_at', 'accepted_by_name', 'rejection_reason', 'submitted_ip',
     ];
 
@@ -36,6 +37,7 @@ class Quote extends Model
             'sent_at' => 'datetime',
             'responded_at' => 'datetime',
             'has_unsent_changes' => 'boolean',
+            'lock_version' => 'integer',
             'subtotal_cents' => 'integer',
             'discount_cents' => 'integer',
             'shipping_cents' => 'integer',
@@ -86,9 +88,16 @@ class Quote extends Model
         return $this->hasOne(SalesOrder::class);
     }
 
+    /** The version the customer can currently see and act on (null until the first send). */
+    public function sentVersion(): ?QuoteVersion
+    {
+        return $this->version > 0 ? $this->versions()->where('version', $this->version)->first() : null;
+    }
+
+    /** Valid through the end of valid_until in business time (Asia/Karachi), audit F-13. */
     public function isExpired(): bool
     {
-        return $this->valid_until !== null && $this->valid_until->endOfDay()->isPast();
+        return $this->valid_until !== null && BusinessTime::endOfDay($this->valid_until)->isPast();
     }
 
     /** Customer may respond only to a sent, current, unexpired quotation. */

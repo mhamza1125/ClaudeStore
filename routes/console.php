@@ -9,6 +9,8 @@ use App\Models\HeroSlide;
 use App\Models\ProductImage;
 use App\Rules\TrustedEmail;
 use App\Services\QuoteWorkflow;
+use App\Services\SystemHealth;
+use App\Support\BusinessTime;
 use Database\Seeders\CategorySeeder;
 use Database\Seeders\DemoCatalogSeeder;
 use Database\Seeders\DemoHeroSlideSeeder;
@@ -24,7 +26,11 @@ Artisan::command('quotes:expire', function (QuoteWorkflow $workflow) {
     $this->info("{$count} quotation(s) marked as expired.");
 })->purpose('Mark sent quotations past their validity date as expired');
 
-Schedule::command('quotes:expire')->dailyAt('00:15');
+// 00:15 on the business calendar (Asia/Karachi), right after a validity date ends there (audit F-13).
+Schedule::command('quotes:expire')->dailyAt('00:15')->timezone(BusinessTime::zone());
+
+// Heartbeat for the admin health warning (audit F-06): proves the cron job runs schedule:run.
+Schedule::call(fn () => SystemHealth::beat())->everyMinute()->name('scheduler-heartbeat');
 
 // Product image protection (docs/IMAGES.md). Run once after upgrading: display copies written
 // to the public disk by earlier versions are moved to the private disk, so their old

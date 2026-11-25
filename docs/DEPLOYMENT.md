@@ -1,7 +1,8 @@
 # Deployment
 
 Targets a single VPS (Ubuntu 22.04/24.04) or managed Laravel hosting (Forge, Ploi, Laravel Cloud,
-etc.). The application is a standard Laravel monolith: web server + PHP-FPM, MySQL, one queue
+etc.). **Production on Hostinger shared hosting (no Supervisor, no Node): follow
+docs/HOSTINGER.md instead.** The application is a standard Laravel monolith: web server + PHP-FPM, MySQL, one queue
 worker and the scheduler.
 
 ## Requirements
@@ -88,29 +89,32 @@ Emails, image optimisation and image-provider calls are queued on the `database`
 Run a supervised worker, for example with Supervisor:
 
 ```ini
-[program:atelier-worker]
-command=php /var/www/atelier/artisan queue:work --sleep=3 --tries=3 --max-time=3600
+[program:leamate-worker]
+command=php /var/www/leamate/artisan queue:work --sleep=3 --tries=3 --max-time=3600
 user=www-data
 autostart=true
 autorestart=true
 stopwaitsecs=120
 redirect_stderr=true
-stdout_logfile=/var/www/atelier/storage/logs/worker.log
+stdout_logfile=/var/www/leamate/storage/logs/worker.log
 ```
 
 **Failure handling.** Mail jobs retry 3 times (back-off 1 and 5 minutes). If a quote email
 ultimately fails, an `email_failed` entry appears on that quote's activity timeline so staff can
 re-send. Failed jobs are kept in `failed_jobs`: inspect them with `php artisan queue:failed` and
-retry with `php artisan queue:retry all`. Failed jobs older than 30 days are pruned daily.
+retry with `php artisan queue:retry all`. Failed jobs are kept (never pruned automatically); admins see
+a warning while any exist.
 
 ## Scheduler (required)
 
 ```cron
-* * * * * cd /var/www/atelier && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd /var/www/leamate && php artisan schedule:run >> /dev/null 2>&1
 ```
 
 Scheduled tasks: `quotes:expire` (00:15 daily; marks sent quotations past their validity date as
-expired) and `queue:prune-failed`.
+expired; 00:15 **Asia/Karachi**), `images:prune-cache`, `emails:update-blocklist` and a
+scheduler heartbeat for the admin health warning. Failed jobs are **not** pruned automatically
+(no-delete rule); review them with `php artisan queue:failed`.
 
 ## Email (SMTP)
 
@@ -145,7 +149,7 @@ Back up both the **database** and the **private storage** (attachments, original
 # nightly database dump (keep at least 14 days, store off-server)
 mysqldump --single-transaction --routines --triggers -u backup -p claudestore | gzip > /backups/db-$(date +%F).sql.gz
 # files
-rsync -a /var/www/atelier/storage/app/ /backups/storage/
+rsync -a /var/www/leamate/storage/app/ /backups/storage/
 ```
 
 Recovery:

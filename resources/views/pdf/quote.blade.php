@@ -1,8 +1,9 @@
+{{-- Renders a QuotationDocument ($doc): the sent snapshot for customers, live data (labelled draft) for staff. --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Quotation {{ $quote->reference }}</title>
+<title>Quotation {{ $doc->reference }}</title>
 <style>
     @page { margin: 36px 40px 60px; }
     body { font-family: 'DejaVu Sans', sans-serif; font-size: 10px; color: #221710; line-height: 1.45; }
@@ -19,10 +20,15 @@
     .grand td { border-top: 2px solid #221710; font-size: 13px; padding-top: 8px; }
     .box { border: 1px solid #e7dfd3; background: #ffffff; padding: 10px 12px; }
     .footer { position: fixed; bottom: -40px; left: 0; right: 0; font-size: 8px; color: #6b5d52; border-top: 1px solid #e7dfd3; padding-top: 6px; }
+    .draft { border: 2px solid #9a3b2a; color: #9a3b2a; padding: 6px 10px; margin-bottom: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
 </style>
 </head>
 <body>
-<div class="footer">{{ setting('brand.name') }} · {{ setting('brand.email') }} · {{ setting('brand.phone') }} · {{ setting('brand.address') }} — Quotation {{ $quote->reference }} v{{ max(1, $quote->version) }}</div>
+<div class="footer">{{ setting('brand.name') }} · {{ setting('brand.email') }} · {{ setting('brand.phone') }} · {{ setting('brand.address') }} — Quotation {{ $doc->reference }} v{{ $doc->version }}@if ($doc->isDraft) · {{ $doc->draftLabel }}@endif</div>
+
+@if ($doc->isDraft)
+    <div class="draft">{{ $doc->draftLabel }} — internal copy, not the quotation sent to the customer</div>
+@endif
 
 <table>
     <tr>
@@ -32,9 +38,9 @@
         </td>
         <td class="right">
             <div class="eyebrow">Quotation</div>
-            <h1>{{ $quote->reference }}</h1>
-            <div class="muted">Version {{ max(1, $quote->version) }} · Issued {{ ($quote->sent_at ?? now())->format('j M Y') }}</div>
-            @if ($quote->valid_until)<div><strong>Valid until {{ $quote->valid_until->format('j M Y') }}</strong></div>@endif
+            <h1>{{ $doc->reference }}</h1>
+            <div class="muted">Version {{ $doc->version }}@if ($doc->issuedAt) · Issued {{ $doc->issuedAt->format('j M Y') }}@endif</div>
+            @if ($doc->validUntil)<div><strong>Valid until {{ $doc->validUntil->format('j M Y') }}</strong></div>@endif
         </td>
     </tr>
 </table>
@@ -43,18 +49,18 @@
     <tr>
         <td style="width:50%;vertical-align:top;" class="box">
             <div class="eyebrow">Prepared for</div>
-            <strong>{{ $quote->company_name }}</strong><br>
-            {{ $quote->contact_name }}<br>{{ $quote->email }} · {{ $quote->phone }}<br>
-            {{ countries()[$quote->country] ?? $quote->country }}
-            @if ($quote->company?->vat_number)<br>VAT/Tax ID: {{ $quote->company->vat_number }}@endif
+            <strong>{{ $doc->customer['company_name'] }}</strong><br>
+            {{ $doc->customer['contact_name'] }}<br>{{ $doc->customer['email'] }} · {{ $doc->customer['phone'] }}<br>
+            {{ countries()[$doc->customer['country']] ?? $doc->customer['country'] }}
+            @if ($doc->customer['vat_number'])<br>VAT/Tax ID: {{ $doc->customer['vat_number'] }}@endif
         </td>
         <td style="width:4%;"></td>
         <td style="width:46%;vertical-align:top;" class="box">
             <div class="eyebrow">Delivery</div>
-            {{ $quote->delivery_destination }}<br>
-            @if ($quote->target_delivery_date)Target date: {{ $quote->target_delivery_date->format('j M Y') }}<br>@endif
-            @if ($quote->po_reference)PO reference: {{ $quote->po_reference }}<br>@endif
-            Currency: {{ $quote->currency }}
+            {{ $doc->customer['delivery_destination'] }}<br>
+            @if ($doc->customer['target_delivery_date'])Target date: {{ $doc->customer['target_delivery_date']->format('j M Y') }}<br>@endif
+            @if ($doc->customer['po_reference'])PO reference: {{ $doc->customer['po_reference'] }}<br>@endif
+            Currency: {{ $doc->currency }}
         </td>
     </tr>
 </table>
@@ -62,15 +68,15 @@
 <table class="items" style="margin-top:22px;">
     <thead><tr><th style="width:34%;">Product</th><th>SKU</th><th class="right">Qty</th><th class="right">Unit price</th><th class="right">Discount</th><th class="right">Line total</th></tr></thead>
     <tbody>
-    @foreach ($quote->items as $item)
+    @foreach ($doc->items as $item)
         <tr>
             <td><strong>{{ $item->product_name }}</strong>@if ($item->variant_name)<br><span class="muted">{{ $item->variant_name }}</span>@endif
                 @if ($item->customization)<br><span class="muted">Customisation: {{ $item->customization }}</span>@endif</td>
             <td style="white-space:nowrap;font-size:8.5px;">{{ $item->sku }}</td>
             <td class="right">{{ number_format($item->quantity) }}</td>
-            <td class="right">{{ money($item->unit_price_cents, $quote->currency) }}</td>
+            <td class="right">{{ money($item->unit_price_cents, $doc->currency) }}</td>
             <td class="right">{{ $item->discount_bps ? \App\Support\Money::bpsToPercentString($item->discount_bps).'%' : '—' }}</td>
-            <td class="right">{{ money($item->line_total_cents, $quote->currency) }}</td>
+            <td class="right">{{ money($item->line_total_cents, $doc->currency) }}</td>
         </tr>
     @endforeach
     </tbody>
@@ -81,12 +87,12 @@
         <td style="width:55%;"></td>
         <td style="width:45%;">
             <table class="totals">
-                <tr><td>Subtotal</td><td class="right">{{ money($quote->subtotal_cents, $quote->currency) }}</td></tr>
-                @if ($quote->discount_cents)<tr><td>Discount</td><td class="right">−{{ money($quote->discount_cents, $quote->currency) }}</td></tr>@endif
-                <tr><td>Shipping</td><td class="right">{{ money($quote->shipping_cents, $quote->currency) }}</td></tr>
-                @if ($quote->additional_charges_cents)<tr><td>{{ $quote->additional_charges_label ?: 'Additional charges' }}</td><td class="right">{{ money($quote->additional_charges_cents, $quote->currency) }}</td></tr>@endif
-                <tr><td>{{ setting('tax.label', 'Tax') }} ({{ \App\Support\Money::bpsToPercentString($quote->tax_rate_bps) }}%)</td><td class="right">{{ money($quote->tax_cents, $quote->currency) }}</td></tr>
-                <tr class="grand"><td><strong>Grand total ({{ $quote->currency }})</strong></td><td class="right"><strong>{{ money($quote->total_cents, $quote->currency) }}</strong></td></tr>
+                <tr><td>Subtotal</td><td class="right">{{ money($doc->totals['subtotal_cents'], $doc->currency) }}</td></tr>
+                @if ($doc->totals['discount_cents'])<tr><td>Discount</td><td class="right">−{{ money($doc->totals['discount_cents'], $doc->currency) }}</td></tr>@endif
+                <tr><td>Shipping</td><td class="right">{{ money($doc->totals['shipping_cents'], $doc->currency) }}</td></tr>
+                @if ($doc->totals['additional_charges_cents'])<tr><td>{{ $doc->totals['additional_charges_label'] ?: 'Additional charges' }}</td><td class="right">{{ money($doc->totals['additional_charges_cents'], $doc->currency) }}</td></tr>@endif
+                <tr><td>{{ $doc->taxLabel }} ({{ \App\Support\Money::bpsToPercentString($doc->totals['tax_rate_bps']) }}%)</td><td class="right">{{ money($doc->totals['tax_cents'], $doc->currency) }}</td></tr>
+                <tr class="grand"><td><strong>Grand total ({{ $doc->currency }})</strong></td><td class="right"><strong>{{ money($doc->totals['total_cents'], $doc->currency) }}</strong></td></tr>
             </table>
         </td>
     </tr>
@@ -95,15 +101,12 @@
 <table style="margin-top:24px;">
     <tr>
         <td style="width:50%;vertical-align:top;padding-right:10px;">
-            <div class="eyebrow">Payment terms</div>
-            <p>{{ $quote->payment_terms ?: setting('quote.payment_terms') }}</p>
-            <div class="eyebrow">Delivery terms</div>
-            <p>{{ $quote->delivery_terms ?: setting('quote.delivery_terms') }}</p>
+            @if ($doc->paymentTerms)<div class="eyebrow">Payment terms</div><p>{{ $doc->paymentTerms }}</p>@endif
+            @if ($doc->deliveryTerms)<div class="eyebrow">Delivery terms</div><p>{{ $doc->deliveryTerms }}</p>@endif
         </td>
         <td style="width:50%;vertical-align:top;padding-left:10px;">
-            @if ($quote->customer_notes)<div class="eyebrow">Notes</div><p>{{ $quote->customer_notes }}</p>@endif
-            <div class="eyebrow">How to accept</div>
-            <p>{{ setting('quote.acceptance_instructions') }}</p>
+            @if ($doc->customerNotes)<div class="eyebrow">Notes</div><p>{{ $doc->customerNotes }}</p>@endif
+            @if ($doc->acceptanceInstructions)<div class="eyebrow">How to accept</div><p>{{ $doc->acceptanceInstructions }}</p>@endif
         </td>
     </tr>
 </table>

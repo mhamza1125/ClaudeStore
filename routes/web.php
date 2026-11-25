@@ -28,7 +28,9 @@ Route::get('/sitemap.xml', [SeoController::class, 'sitemap'])->name('seo.sitemap
 Route::get('/robots.txt', [SeoController::class, 'robots'])->name('seo.robots');
 Route::get('/products', Livewire\Store\Catalog::class)->name('catalog');
 Route::get('/categories/{category:slug}', Livewire\Store\Catalog::class)->name('catalog.category');
-Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show');
+Route::get('/products/{product:slug}', [ProductController::class, 'show'])->name('products.show')
+    // A former slug: 301 to the current URL (audit F-11).
+    ->missing(fn (\Illuminate\Http\Request $request) => app(ProductController::class)->legacySlug((string) $request->route()->originalParameter('product')));
 Route::get('/search/suggest', [SearchController::class, 'suggest'])->middleware('throttle:search')->name('search.suggest');
 Route::get('/products/{product:slug}/spec-sheet', [ProductController::class, 'specSheet'])->name('products.spec-sheet');
 // Watermarked product image renditions (signed URLs; originals are never public).

@@ -21,7 +21,10 @@ For a product, optional variant, quantity and buyer company:
 0. **Price on request** products have no price at any level.
 1. **Negotiated company price** — `customer_prices` for the company: a row for the **variant**
    first, then a product-level row. Only rows whose `min_qty ≤ quantity` and whose validity window
-   (`valid_from`/`valid_until`) includes today; the highest qualifying `min_qty` wins.
+   (`valid_from`/`valid_until`, both inclusive **business dates** in Asia/Karachi, owner decision
+   D7) includes today; the highest qualifying `min_qty` wins. The tier ladder shown next to a
+   negotiated price lists the group tiers at their own prices, or the standard tiers with the
+   group discount.
 2. **Customer-group tier price** — `price_tiers` with the company's `customer_group_id`:
    variant-specific group tiers if the variant has any, otherwise product-level group tiers.
    If the quantity is below the first group threshold, evaluation falls through to level 3.
@@ -59,9 +62,11 @@ A tier applies from its `min_qty` up to (next tier's `min_qty` − 1).
 
 ## Visibility
 
-- `public_pricing = false`: prices are shown only to approved wholesale accounts. Guests see
-  "Trade pricing". Hidden prices are never rendered, never used for catalogue sorting/price
-  filters, and not written into JSON-LD.
+- `public_pricing = false` ("trade only"): who sees these list prices depends on Admin → B2B
+  settings. With B2B pricing **off**, only approved wholesale companies; with B2B pricing **on**,
+  every signed-in customer who has price access (by default anyone who registers). The full
+  matrix is in docs/B2B.md (the single reference). Others see "Trade pricing". Hidden prices are
+  never rendered, never used for catalogue sorting/price filters, and not written into JSON-LD.
 - Negotiated and group prices are shown only to members of that company.
 - Indicative prices are stored on quote lines only if the buyer could see them.
 
@@ -82,4 +87,10 @@ total      = subtotal − discount + shipping + additional + tax
 Tax rate and shipping default from Admin → Settings (flat rates) and can be overridden per quote.
 Each send stores an immutable **version snapshot**; acceptance is tied to a version, and
 conversion to a sales order copies the accepted snapshot, so later catalogue edits never change
-historical quotes or orders.
+historical quotes or orders. Everything the customer sees (secure-link page, portal page, PDF,
+quotation email and its PDF) is rendered **only from the snapshot of the sent version**
+(`App\Quotes\QuotationDocument`); staff's unsent edits never reach the customer. Staff screens and
+the staff PDF show the live figures, labelled "Draft - unsent changes" when they differ from the
+sent version. Snapshots written from 2026-11-25 on (schema 2) also store the customer block,
+issue date, tax label and the printed terms text; older ones render with what they contain and
+never fall back to live data.

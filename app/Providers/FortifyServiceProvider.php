@@ -22,6 +22,8 @@ class FortifyServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+        // Same answer whether or not the email has an account (audit F-17).
+        $this->app->bind(\Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse::class, \App\Http\Responses\GenericPasswordResetLinkResponse::class);
     }
 
     public function boot(): void

@@ -11,7 +11,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->web(append: [\App\Http\Middleware\EnsureAccountIsActive::class]);
+        $middleware->web(append: [\App\Http\Middleware\EnsureAccountIsActive::class, \App\Http\Middleware\SecurityHeaders::class]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Expired CSRF token (419 "Page Expired"), e.g. signing out from a tab left open past the

@@ -132,10 +132,12 @@ class ProductCsv
                     $updated++;
                 }
                 if ($r['tiers'] !== null) {
-                    $product->priceTiers()->whereNull('variant_id')->whereNull('customer_group_id')->delete();
-                    foreach ($r['tiers'] as $min => $cents) {
-                        $product->priceTiers()->create(['min_qty' => $min, 'unit_price_cents' => $cents]);
-                    }
+                    // Product-level standard tiers only, updated in place (audit F-04).
+                    app(PriceTierSync::class)->sync(
+                        $product,
+                        collect($r['tiers'])->map(fn ($cents, $min) => ['variant_id' => null, 'customer_group_id' => null, 'min_qty' => (int) $min, 'unit_price_cents' => $cents])->values()->all(),
+                        fn ($q) => $q->whereNull('variant_id')->whereNull('customer_group_id'),
+                    );
                 }
             }
             if ($dryRun) {

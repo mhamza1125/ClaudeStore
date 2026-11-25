@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Product extends Model
 {
@@ -54,6 +55,27 @@ class Product extends Model
                 $product->quote_enabled = true;
             }
         });
+
+        // Remember the old slug so its URL keeps working with a 301 (audit F-11). Covers the
+        // editor and the CSV import alike. Existing redirect rows are re-pointed, never deleted.
+        static::updated(function (Product $product) {
+            if ($product->wasChanged('slug') && filled($old = $product->getOriginal('slug'))) {
+                ProductSlugRedirect::query()->updateOrInsert(['old_slug' => $old], ['product_id' => $product->id, 'updated_at' => now(), 'created_at' => now()]);
+            }
+            Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE_KEY);
+        });
+        static::created(fn () => Cache::forget(\App\Http\Controllers\SeoController::SITEMAP_CACHE_KEY));
+    }
+
+    public function slugRedirects(): HasMany
+    {
+        return $this->hasMany(ProductSlugRedirect::class);
+    }
+
+    /** Was this product ever live? (archived products that were never published stay private) */
+    public function wasEverPublished(): bool
+    {
+        return $this->published_at !== null;
     }
 
     public function category(): BelongsTo
@@ -106,7 +128,8 @@ class Product extends Model
 
         return $q->where(fn (Builder $w) => $w->where('name', 'like', $like)->orWhere('sku', 'like', $like)
             ->orWhere('product_code', 'like', $like)
-            ->orWhereHas('variants', fn (Builder $v) => $v->where('sku', 'like', $like)));
+            // Inactive variants are not offered, so their SKUs do not match (owner decision D4).
+            ->orWhereHas('activeVariants', fn (Builder $v) => $v->where('sku', 'like', $like)));
     }
 
     public function isPublished(): bool

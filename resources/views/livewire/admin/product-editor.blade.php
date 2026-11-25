@@ -68,7 +68,12 @@
                             <x-select-field :name="'variants.'.$key.'.availability'" :model="'variants.'.$key.'.availability'" label="Availability" :options="$availabilities" placeholder="As product"/>
                             <div class="flex items-end justify-between gap-2">
                                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" wire:model="variants.{{ $key }}.is_active"> Active</label>
-                                <button type="button" wire:click="removeVariant('{{ $key }}')" wire:confirm="Remove this variant? Its tiers are removed too." class="btn btn-ghost btn-sm text-danger" aria-label="Remove variant"><x-icon name="trash" class="h-4 w-4"/></button>
+                                @if ($v['id'])
+                                    {{-- Saved variants are never deleted (D4): this only unticks Active; prices and tiers are kept. --}}
+                                    <button type="button" wire:click="removeVariant('{{ $key }}')" wire:confirm="Deactivate this variant? It is hidden from the catalogue and quote list; its prices and negotiated prices are kept." class="btn btn-ghost btn-sm" aria-label="Deactivate variant" @disabled(! $v['is_active'])>Deactivate</button>
+                                @else
+                                    <button type="button" wire:click="removeVariant('{{ $key }}')" class="btn btn-ghost btn-sm text-danger" aria-label="Discard new variant"><x-icon name="trash" class="h-4 w-4"/></button>
+                                @endif
                             </div>
                         </div>
                     @empty

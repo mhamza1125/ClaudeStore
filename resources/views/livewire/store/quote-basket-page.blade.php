@@ -34,6 +34,7 @@
                             <div>
                                 <h3 class="font-serif text-xl"><a href="{{ route('products.show', $item->product) }}" class="hover:text-accent">{{ $item->product->name }}</a></h3>
                                 <p class="mt-0.5 text-xs text-muted tabular-nums">SKU {{ $item->variant?->sku ?? $item->product->sku }}@if ($item->variant) · {{ $item->variant->name }}@endif</p>
+                                @if ($item->variant && ! $item->variant->is_active)<p class="mt-1 text-xs font-medium text-danger">This option is no longer available. Please remove it.</p>@endif
                             </div>
                             <div class="text-right text-sm">
                                 @if ($price->displayUnitCents() !== null)

@@ -108,6 +108,12 @@
         </header>
         <main class="flex-1 px-4 py-8 sm:px-6 lg:px-10" id="main">
             <x-flash/>
+            @if (auth()->user()?->hasAnyRole(['admin', 'super-admin']))
+                {{-- Background processing health (audit F-06); see docs/HOSTINGER.md. --}}
+                @foreach (app(\App\Services\SystemHealth::class)->warnings() as $key => $message)
+                    <div class="mb-4 alert badge-warning" role="alert" data-health-warning="{{ $key }}">{{ $message }}</div>
+                @endforeach
+            @endif
             {{ $slot }}
         </main>
     </div>

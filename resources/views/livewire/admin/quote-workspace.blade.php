@@ -20,7 +20,7 @@
         </x-slot:actions>
     </x-page-header>
 
-    @foreach (['convert', 'send', 'status', 'response', 'assignee'] as $key)
+    @foreach (['stale', 'convert', 'send', 'status', 'response', 'assignee'] as $key)
         @error($key)<div class="mb-4 alert badge-danger" role="alert">{{ $message }}</div>@enderror
     @endforeach
     @if (session('status'))<div class="mb-4 alert badge-success" role="status">{{ session('status') }}</div>@endif

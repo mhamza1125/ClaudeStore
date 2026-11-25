@@ -1,15 +1,17 @@
-# Atelier Hide — B2B leather goods store & wholesale quotation platform
+# Leamate — B2B leather goods store & wholesale quotation platform
 
 A Laravel 12 monolith for a leather goods manufacturer/wholesaler: a premium storefront, a
 server-side quantity pricing engine, a request-for-quotation (RFQ) workflow, a custom
-Livewire admin, and a B2B customer portal.
+Livewire admin, and a B2B customer portal. Brand defaults are Leamate (`config/brand.php`);
+"Atelier Hide" was the earlier demo brand and survives only in seeded demo accounts
+(`admin@atelierhide.test`, `sales@atelierhide.test`).
 
-> **"Atelier Hide" is a demo brand.** All seeded products, prices, specifications and images are
-> illustrative placeholders, flagged `is_demo` and labelled "Demo product" on the storefront.
+> All seeded demo products, prices, specifications and images are illustrative placeholders,
+> flagged `is_demo`, labelled "Demo product" on the storefront and left out of the sitemap.
 
 ## Stack
 
-Laravel 12 · PHP 8.2+ · MySQL 8 (tests also run on SQLite in-memory) · Livewire 3 + Alpine.js ·
+Laravel 12 · PHP 8.3+ (required by the locked `spatie/laravel-permission`) · MySQL 8 / MariaDB (tests run on SQLite in-memory) · Livewire 3 + Alpine.js ·
 Tailwind CSS v4 (Vite) · Laravel Fortify (auth) · spatie/laravel-permission (roles) ·
 barryvdh/laravel-dompdf (quotation PDFs) · Intervention Image 3 (optimisation) · database queue ·
 local/public disks with optional S3. No Filament, no payment gateway.
@@ -42,7 +44,7 @@ php artisan test                                        # SQLite in-memory (phpu
 DB_CONNECTION=mysql DB_DATABASE=claudestore_test php vendor/bin/phpunit   # against MySQL
 ```
 
-170 tests cover the pricing precedence and tier boundaries, integer money maths, the
+The current test count and result are recorded in [docs/STATUS.md](docs/STATUS.md). The tests cover the pricing precedence and tier boundaries, integer money maths, the
 basket, RFQ submission (validation, spam protection, rate limits, attachments, price
 snapshots), the full quote lifecycle (pricing, versions, secure links, expiry, acceptance,
 conversion), authorisation boundaries, the portal, product/category/CSV/image administration,
@@ -81,17 +83,24 @@ shape via a mocked transport).
 
 1. **Browse** → catalogue filters/search → product page with live server-side tier pricing.
 2. **Add to Quote** (MOQ and order multiples enforced on the server) → `/quote` basket.
-3. **Submit RFQ** (guests allowed) → reference `AH-Q-YYYY-000123`, confirmation page, emails.
+3. **Submit RFQ** (guests allowed) → reference `LM-Q-YYYY-000123` (prefix `BRAND_REFERENCE_PREFIX`,
+   default `LM`), confirmation page, emails.
 4. **Admin** → quote workspace: set negotiated prices/discounts, shipping/tax/charges, validity
-   and terms → **Save & send** (PDF + secure link, new version).
-5. **Customer accepts/rejects** via the secure link or portal, with explicit confirmation.
-   Expired or revised quotes cannot be accepted.
-6. **Convert to sales order** (`AH-SO-YYYY-000123`) from the accepted version snapshot.
+   and terms → **Save & send** (PDF + secure link, new version snapshot). A save from a stale
+   screen (someone else changed the quote) is refused without writing.
+5. **Customer accepts/rejects** via the secure link or portal, with explicit confirmation. The
+   customer always sees the sent version's snapshot, never unsent edits. Expired or revised quotes
+   cannot be accepted; "valid until D" means through the end of D in Asia/Karachi.
+6. **Convert to sales order** (`LM-SO-YYYY-000123`) from the accepted version snapshot.
    Payment is handled offline.
 
 ## Documentation
 
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — server setup, queue, scheduler, storage, mail, backups
+- [CLAUDE.md](CLAUDE.md) — commands, the no-delete rule, working agreement, where things are
+- [docs/HOSTINGER.md](docs/HOSTINGER.md) — production on Hostinger shared hosting (cron, PHP settings, deploy, smoke test)
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) — VPS/managed hosting setup, queue, scheduler, storage, mail, backups
+- [docs/B2B.md](docs/B2B.md) — who sees which price under every B2B setting
+- [docs/DECISIONS.md](docs/DECISIONS.md) / [docs/OWNER_ACTIONS.md](docs/OWNER_ACTIONS.md) — settled decisions; owner to-dos
 - [docs/ENV.md](docs/ENV.md) — every environment variable
 - [docs/PRICING.md](docs/PRICING.md) — pricing precedence and maths
 - [docs/IMAGES.md](docs/IMAGES.md) — image workflow and provider integration

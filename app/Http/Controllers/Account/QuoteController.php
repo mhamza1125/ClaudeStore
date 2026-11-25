@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Account;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\QuoteResponseRequest;
 use App\Models\Quote;
+use App\Quotes\QuotationDocument;
 use App\Services\QuotePdf;
 use App\Services\QuoteWorkflow;
 
@@ -21,9 +22,12 @@ class QuoteController extends Controller
     {
         $this->authorize('view', $quote);
         $canRespond = auth()->user()->can('respond', $quote);
+        $version = $quote->sentVersion();
 
         return view('store.quote-view', [
             'quote' => $quote->load('items'),
+            // Customer-facing figures come only from the sent snapshot (audit F-02).
+            'doc' => $version ? QuotationDocument::fromVersion($quote, $version) : null,
             'acceptUrl' => $canRespond ? route('account.quotes.accept', $quote) : null,
             'rejectUrl' => $canRespond ? route('account.quotes.reject', $quote) : null,
             'pdfUrl' => route('account.quotes.pdf', $quote),
@@ -35,9 +39,10 @@ class QuoteController extends Controller
     public function pdf(Quote $quote, QuotePdf $pdf)
     {
         $this->authorize('view', $quote);
-        abort_if($quote->version === 0, 404);
+        $version = $quote->sentVersion();
+        abort_if($version === null, 404);
 
-        return $pdf->download($quote);
+        return $pdf->download(QuotationDocument::fromVersion($quote, $version));
     }
 
     public function accept(QuoteResponseRequest $request, Quote $quote, QuoteWorkflow $workflow)

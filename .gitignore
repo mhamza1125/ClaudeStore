@@ -21,3 +21,8 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+# Private notes and confidential audit output (never deploy: the site is deployed by git pull)
+Notes.txt
+Notes.md
+*.local.md
+docs/AUDIT*.md

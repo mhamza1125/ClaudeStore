@@ -121,6 +121,9 @@ class QuoteSubmissionService
             if (! $item->product->canBeQuoted()) {
                 throw ValidationException::withMessages(['items' => "“{$item->product->name}” is no longer available for quotation. Please remove it from your list."]);
             }
+            if ($item->variant && ! $item->variant->is_active) {
+                throw ValidationException::withMessages(['items' => "“{$item->product->name}” ({$item->variant->name}) is no longer available. Please remove it from your list."]);
+            }
             if (! $price->isValidQuantity()) {
                 throw ValidationException::withMessages(['items' => "{$item->product->name}: {$price->errors[0]}"]);
             }

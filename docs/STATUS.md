@@ -1,13 +1,57 @@
 # Status: implemented, pending, limitations
 
-Last verified: `php artisan test`, 139 tests and 712 assertions, passing on SQLite in-memory and on
-MariaDB 10.11. `npm run build` succeeds. A browser walkthrough (Chromium/Playwright, demo data)
-covered: tier pricing at 10/50/150/300 units, MOQ/multiple messages, a guest RFQ, admin pricing
-and send, the secure link from the mail log, explicit acceptance, conversion to a sales order,
-dark-theme persistence, and mobile layout without horizontal overflow. No JS errors were seen.
+Last verified **2026-11-25**: `php artisan test` on SQLite in-memory: **352 tests, 1885 assertions,
+all passing** (0 failed, 0 skipped, 0 incomplete). This is the single place for the test count.
+New migrations were rehearsed on an empty MariaDB scratch database (`leamate_scratch`); the local
+server is MariaDB (XAMPP), not MySQL 8. Front-end build, browser walkthrough and MySQL 8 were not
+re-run in this round.
 
-MySQL 8 itself was **not** available in the build environment. The suite was run on MariaDB 10.11
-and SQLite. Run it once on your MySQL 8 server.
+An earlier round (before the redesign) also ran a Chromium walkthrough of pricing, a guest RFQ,
+sending, the secure link, acceptance and conversion; it predates the current single light theme.
+
+## Fixed on 2026-11-25 (audit docs/AUDIT_2026-11-25.md)
+
+- **F-02** Customers see only the sent version: secure-link page, portal page, PDF and the
+  quotation email (which now carries the version) render from the version snapshot; staff PDF is
+  live and labelled "Draft - unsent changes".
+- **F-04** Variants are deactivated, never deleted; negotiated prices and variant tiers survive;
+  tiers are updated in place (editor and CSV); inactive variants are ignored everywhere.
+- **F-12** Quote workspace: row lock plus `lock_version`, so a save from a stale screen is refused
+  without writing; saves after acceptance are refused.
+- **F-13** Quote validity, the expiry job (00:15) and negotiated-price windows use the business
+  calendar, Asia/Karachi; stored timestamps stay UTC.
+- **F-06 / F-16 / F-33 / F-08 / F-18** Admin health warning (queue, scheduler heartbeat, failed
+  jobs); `retry_after` 180 s; email-domain checks fail open on DNS errors; security headers
+  (no-referrer and no-store on secure links; HSTS opt-in); trusted proxies from `.env`.
+  Hosting recipe in docs/HOSTINGER.md.
+- **F-05 / F-09 / F-10 / F-11 / F-23** Crawlable catalogue pagination with per-page canonicals;
+  schema.org availability mapping; `/quote` noindex; 301s for renamed slugs, 301/410 for archived
+  products; sitemap without demo products or empty categories, refreshed on change; custom 404.
+- **F-17 / F-20 / F-25 / F-28** Generic password-reset answer; correct tier ladder next to
+  negotiated prices; temporary staff password never kept in component state; first reference
+  of a year race-safe. (F-26 needed no change: Fortify already lowercases emails.)
+- **D3** Admin → B2B settings warns while anyone who registers can see trade-only prices.
+- **F-07** Dependencies patched (D10): laravel/framework 12.74.0, laravel/fortify 1.44.0,
+  symfony/* 7.4.22–7.4.23, web-auth/webauthn-lib 5.3.17 (29 minor/patch updates). `composer audit`:
+  0 advisories (was 18 in 8 packages). The suite passes on PHP 8.2.12 (local XAMPP).
+
+## Open after 2026-11-25
+
+- npm: 1 high advisory (`follow-redirects`, build-time dev dependency), not changed.
+- Questions Q11, Q13–Q15 in docs/AUDIT_QUESTIONS.md (FK restrict, Composer pin, blank CSV tier cell,
+  old snapshots, address edits by members).
+- Owner actions in docs/OWNER_ACTIONS.md (token rotation, cron, backups, demo data, seeded admin
+  email, trade-price setting, "genuine leather" text, privacy review, Search Console).
+- Other times still shown/compared in UTC (not changed, findings only): admin date filters on the
+  quote list, the workspace's default validity date, the reference-number year at the new year,
+  the RFQ "target delivery date after today" rule, and displayed timestamps in admin, portal and
+  emails.
+
+## Accepted risks
+
+- **Seeded demo accounts** (`admin@atelierhide.test`, `sales@atelierhide.test`): kept for now;
+  rename or deactivate them before wider exposure (docs/OWNER_ACTIONS.md item 5).
+- **Trade-only prices with instant access** (D3): kept by decision; an admin warning explains it.
 
 ## Implemented
 
@@ -88,7 +132,6 @@ with stored messages, email alert and Admin → Messages, single centred image w
 | Background removal | `IMAGE_PROVIDER=removebg` + `REMOVEBG_API_KEY`. Only tested with faked HTTP |
 | AI image generation | No provider bundled. Implement `ImageProvider::generateView` for a chosen service |
 | Error monitoring | Choose a service (Sentry/Flare/…) and install its package |
-| Fonts | Loaded from Google Fonts (Cormorant Garamond, Inter). Self-host them if required for privacy/GDPR |
 
 ## Business decisions / content still required
 
@@ -115,8 +158,8 @@ with stored messages, email alert and Admin → Messages, single centred image w
 - **Category tree:** two levels (category → subcategory).
 - **Product duplication** copies variants and tiers but not images.
 - **Quote versions:** snapshots are stored and listed with totals. There is no visual diff
-  between versions, and PDFs always render the current state (which equals the last sent version
-  unless there are unsent changes).
+  between versions. Customer PDFs, pages and emails render the sent version's snapshot; the staff
+  PDF shows the live state, labelled "Draft - unsent changes" when it differs.
 - **Two-factor authentication** is disabled (Fortify supports it; it needs UI screens). Email
   verification is enabled; whether it gates prices is a B2B setting (docs/B2B.md).
 - **Newsletter:** subscribers are stored only. There is no export UI or email-provider sync, and

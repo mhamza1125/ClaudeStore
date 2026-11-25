@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\QuoteResponseRequest;
 use App\Models\Quote;
+use App\Quotes\QuotationDocument;
 use App\Services\QuotePdf;
 use App\Services\QuoteWorkflow;
 
@@ -18,6 +19,7 @@ class CustomerQuoteController extends Controller
 
         return view('store.quote-view', [
             'quote' => $quote->load('items'),
+            'doc' => $this->sentDocument($quote),
             'acceptUrl' => route('quotes.public.accept', [$quote, $token]),
             'rejectUrl' => route('quotes.public.reject', [$quote, $token]),
             'pdfUrl' => route('quotes.public.pdf', [$quote, $token]),
@@ -28,8 +30,10 @@ class CustomerQuoteController extends Controller
     public function pdf(Quote $quote, string $token, QuotePdf $pdf)
     {
         $this->authorizeToken($quote, $token);
+        $doc = $this->sentDocument($quote);
+        abort_if($doc === null, 404);
 
-        return $pdf->download($quote);
+        return $pdf->download($doc);
     }
 
     public function accept(QuoteResponseRequest $request, Quote $quote, string $token)
@@ -46,6 +50,14 @@ class CustomerQuoteController extends Controller
         $this->workflow->respond($quote, false, (int) $request->input('version'), null, $request->input('reason'), $request->user());
 
         return back()->with('status', 'The quotation has been declined. Thank you for letting us know.');
+    }
+
+    /** Customers only ever see the snapshot of the last sent version (audit F-02). */
+    private function sentDocument(Quote $quote): ?QuotationDocument
+    {
+        $version = $quote->sentVersion();
+
+        return $version ? QuotationDocument::fromVersion($quote, $version) : null;
     }
 
     private function authorizeToken(Quote $quote, string $token): void

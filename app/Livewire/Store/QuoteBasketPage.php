@@ -72,6 +72,7 @@ class QuoteBasketPage extends Component
             'user' => $user,
             'company' => $user?->company,
             'guestInquiries' => app(\App\Pricing\PriceAccess::class)->guestInquiriesAllowed(),
-        ])->layout('components.layouts.store', ['title' => 'Quote list']);
+        // noindex, not a robots.txt Disallow: a blocked page's noindex is never seen (audit F-10).
+        ])->layout('components.layouts.store', ['title' => 'Quote list', 'noindex' => true]);
     }
 }

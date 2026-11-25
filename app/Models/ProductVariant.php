@@ -17,6 +17,17 @@ class ProductVariant extends Model
         'availability', 'is_active', 'sort_order',
     ];
 
+    /**
+     * Variants are deactivated, never deleted (owner decision D4): a delete would also remove
+     * negotiated customer prices and price tiers through their foreign keys.
+     */
+    protected static function booted(): void
+    {
+        static::deleting(function () {
+            throw new \LogicException('Product variants are never deleted. Set is_active = false instead.');
+        });
+    }
+
     protected function casts(): array
     {
         return [

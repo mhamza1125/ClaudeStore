@@ -13,6 +13,7 @@ use App\Services\Settings;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Http\Request;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +42,12 @@ class AppServiceProvider extends ServiceProvider
         // reset / rollback, db:wipe) refuse to run in every environment. The test suite uses its
         // own throwaway database; DB_ALLOW_DESTRUCTIVE_COMMANDS=true is a deliberate local override.
         DB::prohibitDestructiveCommands(! $this->app->runningUnitTests() && ! config('database.allow_destructive_commands'));
+
+        // Trusted proxies from TRUSTED_PROXIES (audit F-18). Empty = trust none (Laravel's default).
+        // Set here, not in bootstrap/app.php, because .env is not loaded when that runs.
+        if (filled($proxies = config('security.trusted_proxies'))) {
+            TrustProxies::at($proxies === '*' ? '*' : array_values(array_filter(array_map('trim', explode(',', (string) $proxies)))));
+        }
 
         // Super-admins pass every permission and policy check.
         Gate::before(fn (User $user) => $user->hasRole('super-admin') ? true : null);

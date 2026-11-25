@@ -15,6 +15,8 @@ use App\Models\SalesOrder;
 use App\Models\User;
 use App\Pricing\PriceResolver;
 use App\Pricing\QuoteTotals;
+use App\Quotes\QuotationDocument;
+use App\Support\BusinessTime;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -27,6 +29,8 @@ use Illuminate\Validation\ValidationException;
  */
 class QuoteWorkflow
 {
+    public const STALE_MESSAGE = 'This quote was changed by someone else (or in another tab) after you opened it. Nothing was saved: reload the page to see the latest version.';
+
     public function __construct(private PriceResolver $resolver, private ReferenceGenerator $references) {}
 
     public function log(Quote $quote, ?User $user, string $type, ?string $body = null, array $meta = [], bool $internal = true): QuoteActivity
@@ -43,7 +47,8 @@ class QuoteWorkflow
             return;
         }
         $from = $quote->status;
-        $quote->update(['status' => $status]);
+        // Any status change makes open workspace screens stale (audit F-12).
+        $quote->update(['status' => $status, 'lock_version' => (int) $quote->lock_version + 1]);
         $this->log($quote, $user, 'status', $note ?? "Status changed from {$from->label()} to {$status->label()}.", ['from' => $from->value, 'to' => $status->value]);
     }
 
@@ -74,11 +79,16 @@ class QuoteWorkflow
      * @param  array<int, array{quantity:int, unit_price_cents:?int, discount_bps:int}>  $lines  keyed by quote item id
      * @param  array{discount_cents:int, shipping_cents:int, additional_charges_cents:int, additional_charges_label:?string, tax_rate_bps:int, valid_until:?string, payment_terms:?string, delivery_terms:?string, customer_notes:?string, po_reference?:?string}  $terms
      */
-    public function saveCommercials(Quote $quote, array $lines, array $terms, User $user): void
+    public function saveCommercials(Quote $quote, array $lines, array $terms, User $user, ?int $expectedLockVersion = null): void
     {
-        $this->assertEditable($quote);
+        DB::transaction(function () use ($quote, $lines, $terms, $user, $expectedLockVersion) {
+            // Lock the row so the status check, the stale check and the write see one state (audit F-12).
+            $quote = Quote::query()->whereKey($quote->id)->lockForUpdate()->firstOrFail();
+            $this->assertEditable($quote);
+            if ($expectedLockVersion !== null && $quote->lock_version !== $expectedLockVersion) {
+                throw ValidationException::withMessages(['stale' => self::STALE_MESSAGE]);
+            }
 
-        DB::transaction(function () use ($quote, $lines, $terms, $user) {
             $priceChanges = [];
             foreach ($quote->items as $item) {
                 if (! array_key_exists($item->id, $lines)) {
@@ -119,6 +129,7 @@ class QuoteWorkflow
             if ($quote->status === QuoteStatus::AwaitingResponse || $quote->status === QuoteStatus::Expired) {
                 $quote->has_unsent_changes = true;
             }
+            $quote->lock_version = $quote->lock_version + 1;
             $quote->save();
 
             if (in_array($quote->status, [QuoteStatus::Pending, QuoteStatus::UnderReview], true) && $this->fullyPriced($quote)) {
@@ -132,6 +143,7 @@ class QuoteWorkflow
                 $this->log($quote, $user, 'price_change', 'Pricing or terms updated.', ['lines' => $priceChanges, 'terms' => $termChanges]);
             }
         });
+        $quote->refresh();
     }
 
     public function addLine(Quote $quote, Product $product, ?ProductVariant $variant, int $quantity, User $user): QuoteItem
@@ -211,22 +223,26 @@ class QuoteWorkflow
         }
 
         $token = Str::random(48);
-        DB::transaction(function () use ($quote, $user, $token) {
+        $sent = DB::transaction(function () use ($quote, $user, $token) {
             $version = $quote->version + 1;
-            $quote->versions()->create(['version' => $version, 'snapshot' => $this->snapshot($quote), 'created_by' => $user->id]);
+            $sent = $quote->versions()->create(['version' => $version, 'snapshot' => $this->snapshot($quote), 'created_by' => $user->id]);
             $quote->update([
                 'version' => $version,
                 'access_token_hash' => hash('sha256', $token),
                 'sent_at' => now(),
                 'has_unsent_changes' => false,
+                'lock_version' => (int) $quote->lock_version + 1,
             ]);
             $this->setStatus($quote, QuoteStatus::AwaitingResponse, $user);
             $this->log($quote, $user, 'sent', "Quotation version {$version} sent to {$quote->email}.", ['version' => $version], internal: false);
+
+            return $sent;
         });
 
         $link = route('quotes.public.show', [$quote, $token]);
         try {
-            Mail::to($quote->email, $quote->contact_name)->queue(new QuotationSent($quote, $link));
+            // The mail carries the version, so a delayed worker cannot render later draft figures.
+            Mail::to($quote->email, $quote->contact_name)->queue(new QuotationSent($quote, $sent, $link));
         } catch (\Throwable $e) {
             Log::error('Quotation email dispatch failed', ['quote' => $quote->reference, 'error' => $e->getMessage()]);
             $this->log($quote, $user, 'email_failed', 'Quotation email could not be queued: '.$e->getMessage());
@@ -334,7 +350,8 @@ class QuoteWorkflow
     public function expireOverdue(): int
     {
         $count = 0;
-        Quote::query()->where('status', QuoteStatus::AwaitingResponse)->whereDate('valid_until', '<', today())
+        // valid_until is a business date: expired once that date has ended in Asia/Karachi (audit F-13).
+        Quote::query()->where('status', QuoteStatus::AwaitingResponse)->whereDate('valid_until', '<', BusinessTime::today())
             ->each(function (Quote $quote) use (&$count) {
                 $this->setStatus($quote, QuoteStatus::Expired, null, 'Quotation validity date passed.');
                 $count++;
@@ -374,6 +391,7 @@ class QuoteWorkflow
         if (in_array($quote->status, [QuoteStatus::AwaitingResponse, QuoteStatus::Expired], true)) {
             $quote->has_unsent_changes = true;
         }
+        $quote->lock_version = (int) $quote->lock_version + 1;
         $quote->save();
         $this->log($quote, $user, 'price_change', $message);
     }
@@ -397,6 +415,8 @@ class QuoteWorkflow
             'payment_terms' => $quote->payment_terms,
             'delivery_terms' => $quote->delivery_terms,
             'customer_notes' => $quote->customer_notes,
+            // Schema 2 (additive): what the customer document prints, so it never reads live data.
+            ...QuotationDocument::snapshotExtras($quote),
         ];
     }
 }

@@ -83,7 +83,13 @@ class B2bSettings extends Component
             default => 'instant',
         };
 
+        // Owner decision D3: behaviour unchanged, but say plainly when anyone who registers (or,
+        // without required registration, any signed-in customer) sees trade-only list prices.
+        $tradeOnlyExposed = $s['enabled'] && $method === 'instant'
+            && \App\Models\Product::published()->where('public_pricing', false)->where('price_on_request', false)->exists();
+
         return view('livewire.admin.b2b-settings', [
+            'tradeOnlyExposed' => $tradeOnlyExposed,
             'method' => PriceAccess::METHODS[$method],
             'pending' => User::query()->role('customer')->where('approval_status', 'pending')->count(),
             'brandName' => setting('brand.name'),

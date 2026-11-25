@@ -26,10 +26,14 @@ class PageController extends Controller
         $canonical = route('pages.show', $page);
 
         if (array_key_exists($page, self::POLICIES)) {
+            $content = \App\Support\Policies::html($page);
+
             return view('store.pages.policy', [
                 'title' => self::POLICIES[$page],
-                'content' => \App\Support\Policies::html($page),
+                'content' => $content,
                 'canonical' => $canonical,
+                // "Not yet published" placeholder pages stay out of the index (audit F-23).
+                'noindex' => blank($content),
             ]);
         }
 

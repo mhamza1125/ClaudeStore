@@ -21,8 +21,8 @@ Everything is stored in the `settings` table and takes effect immediately. Admin
 B2B pricing is **on by default**: visitors must register to see prices. (Before, with nothing
 saved in Admin → B2B settings, it defaulted to off, so products marked "public pricing", which
 is most of the demo catalogue, showed their list price to every visitor.) With B2B pricing
-switched **off**, the original rules apply (docs/PRICING.md): public products show list prices
-to everyone, trade-only products to approved wholesale companies.
+switched **off**, public products show list prices to everyone and trade-only products only to
+approved wholesale companies. The full matrix is below.
 
 ## Access methods (registration required)
 
@@ -41,9 +41,32 @@ The two checkboxes combine into four methods:
 - Verification emails are sent on registration and when the email address changes. Links are
   signed and expire after `auth.verification.expire` minutes (60). Customers can resend from the
   price box, their dashboard or their profile; staff can resend or mark an address verified.
-- When B2B pricing is on and registration is required, a customer with access also sees prices of
-  products marked "trade only". Group and negotiated prices still require an approved wholesale
-  company, as before.
+- When B2B pricing is on, **any signed-in customer with access also sees list prices of products
+  marked "trade only"**, not only approved wholesale companies. With the default "Register and
+  access" method that means anyone who registers, immediately. Group and negotiated prices still
+  require an approved wholesale company. Owner decision D3 (docs/DECISIONS.md): this behaviour is
+  kept; Admin → B2B settings shows a warning while instant access is combined with trade-only
+  products. To limit trade-only prices to vetted buyers, tick "Require manual admin approval".
+
+## Who sees which list price (every setting combination)
+
+This table is the single reference for price visibility; it is executed by
+`tests/Feature/B2b/PriceVisibilityMatrixTest.php`. "Registrant" = signed in, email not verified,
+approval pending, no company. "Wholesale" = verified, approved, member of a wholesale-approved
+company. Price-on-request products never show a price to anyone; staff always see prices;
+suspended accounts and "Never show prices" overrides see none.
+
+| B2B pricing | Registration required | Guest prices | Verify email | Approval | Guest: public / trade | Registrant: public / trade | Wholesale: public / trade |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| off | – | – | – | – | yes / no | yes / no | yes / yes |
+| on | yes | – | off | off (default) | no / no | **yes / yes** | yes / yes |
+| on | yes | – | on | off | no / no | no / no | yes / yes |
+| on | yes | – | off | on | no / no | no / no | yes / yes |
+| on | yes | – | on | on | no / no | no / no | yes / yes |
+| on | no | on | any | any | yes / no | **yes / yes** | yes / yes |
+| on | no | off | any | any | no / no | **yes / yes** | yes / yes |
+
+Verification and approval only gate prices while registration is required.
 - Guests can always browse every product and build a quote list. With guest inquiries off, they
   must sign in to submit it (the list is kept and merged on sign-in).
 - While B2B pricing is on, each registration emails the sales notification address (a lead), with

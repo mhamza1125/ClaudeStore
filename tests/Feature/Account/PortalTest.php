@@ -93,6 +93,8 @@ class PortalTest extends TestCase
     {
         $user = $this->customer();
         $quote = Quote::factory()->create(['user_id' => $user->id, 'status' => QuoteStatus::AwaitingResponse, 'version' => 1, 'valid_until' => now()->addWeek(), 'total_cents' => 1000]);
+        // Fixture: a sent quote always has its version snapshot (QuoteWorkflow::send writes both atomically).
+        $quote->versions()->create(['version' => 1, 'snapshot' => ['items' => [], 'totals' => ['total_cents' => 1000, 'currency' => 'USD'], 'valid_until' => now()->addWeek()->toDateString()]]);
         $this->actingAs($user)->get('/account/quotes/'.$quote->reference)->assertSee('Accept quotation');
         $this->post('/account/quotes/'.$quote->reference.'/accept', ['version' => 1, 'name' => 'Me', 'confirm' => 1])->assertSessionHasNoErrors();
         $this->assertSame(QuoteStatus::Accepted, $quote->fresh()->status);
