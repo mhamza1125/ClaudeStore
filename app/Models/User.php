@@ -22,7 +22,7 @@ class User extends Authenticatable implements MustVerifyEmail
     public const PRICE_ACCESS = ['default' => 'Follow B2B rules', 'allow' => 'Always show prices', 'deny' => 'Never show prices'];
 
     protected $fillable = [
-        'name', 'email', 'password', 'phone', 'job_title', 'company_id', 'company_role', 'theme', 'is_active',
+        'name', 'email', 'password', 'phone', 'job_title', 'company_id', 'company_role', 'is_active',
         'approval_status', 'approved_at', 'approved_by', 'price_access',
     ];
 

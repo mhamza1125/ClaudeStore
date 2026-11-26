@@ -17,13 +17,13 @@
                  hours are shown because none are configured. --}}
             <aside class="lg:col-span-4 lg:col-start-9" aria-label="Quick contact">
                 <div class="card overflow-hidden shadow-md"
-                     x-data="{ time: @js(now('Asia/Karachi')->format('g:i a')), tick() { this.time = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Karachi', hour: 'numeric', minute: '2-digit' }).format(new Date()).toLowerCase() } }"
+                     x-data="{ time: @js(now(\App\Support\BusinessTime::zone())->format('g:i a')), tick() { this.time = new Intl.DateTimeFormat('en-US', { timeZone: @js(\App\Support\BusinessTime::zone()), hour: 'numeric', minute: '2-digit' }).format(new Date()).toLowerCase() } }"
                      x-init="tick(); setInterval(() => tick(), 30000)">
                     <div class="flex items-center gap-4 bg-band px-6 py-5 text-on-band">
                         <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-band-2 text-thread"><x-icon name="clock" class="h-5 w-5"/></span>
                         <div>
                             <p class="text-xs font-semibold uppercase tracking-[0.14em] text-hide">Local time in Sialkot</p>
-                            <p class="mt-0.5 font-serif text-2xl leading-tight tabular-nums"><span x-text="time">{{ now('Asia/Karachi')->format('g:i a') }}</span> <span class="font-sans text-sm text-on-band/60">PKT · UTC+5</span></p>
+                            <p class="mt-0.5 font-serif text-2xl leading-tight tabular-nums"><span x-text="time">{{ now(\App\Support\BusinessTime::zone())->format('g:i a') }}</span> <span class="font-sans text-sm text-on-band/60">PKT · UTC+5</span></p>
                         </div>
                     </div>
                     <div class="px-6 py-5">

@@ -3,7 +3,6 @@
 namespace Tests\Feature\Assistant;
 
 use App\Assistant\AssistantUnavailable;
-use App\Assistant\BusinessContext;
 use App\Assistant\Contracts\ChatProvider;
 use App\Assistant\Providers\NullChatProvider;
 use App\Livewire\Admin\SettingsForm;

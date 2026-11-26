@@ -6,7 +6,6 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Pricing\PriceAccess;
 use App\Pricing\PriceResolver;
-use App\Pricing\PriceResult;
 use App\Services\QuoteBasketService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Locked;

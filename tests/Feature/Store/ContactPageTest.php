@@ -88,4 +88,16 @@ class ContactPageTest extends TestCase
 
         $this->actingAs($this->customer())->get('/admin/messages')->assertForbidden();
     }
+
+    public function test_local_time_card_follows_the_configured_business_time_zone(): void
+    {
+        // 12:00 UTC on 10 March 2026 is 5:00 pm in Asia/Karachi and 8:00 am in New York (EDT).
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-03-10 12:00:00', 'UTC'));
+        config(['store.business_timezone' => 'America/New_York']);
+
+        $html = $this->get('/contact')->assertOk()->getContent();
+        $this->assertStringContainsString('<span x-text="time">8:00 am</span>', $html);
+        $this->assertStringNotContainsString('Asia/Karachi', str_replace('\/', '/', $html));
+        $this->assertStringContainsString('America/New_York', str_replace('\/', '/', $html));
+    }
 }

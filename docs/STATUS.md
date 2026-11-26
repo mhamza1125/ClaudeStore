@@ -1,10 +1,28 @@
 # Status: implemented, pending, limitations
 
-Last verified **2026-11-25**: `php artisan test` on SQLite in-memory: **352 tests, 1885 assertions,
+Last verified **2026-11-26**: `php artisan test` on SQLite in-memory: **354 tests, 1896 assertions,
 all passing** (0 failed, 0 skipped, 0 incomplete). This is the single place for the test count.
-New migrations were rehearsed on an empty MariaDB scratch database (`leamate_scratch`); the local
-server is MariaDB (XAMPP), not MySQL 8. Front-end build, browser walkthrough and MySQL 8 were not
-re-run in this round.
+`npm run build` succeeded (2026-11-26). Migrations were last rehearsed on an empty MariaDB scratch
+database (`leamate_scratch`) on 2026-11-25 (no new migrations since); the local server is MariaDB
+(XAMPP), not MySQL 8. Browser walkthrough and MySQL 8 were not re-run.
+
+## Cleanup on 2026-11-26 (owner-approved items from the cleanup audit)
+
+- **Removed (unused):** `resources/views/welcome.blade.php` (Laravel scaffold),
+  `resources/views/components/modal.blade.php`; CSS `.tabular`, `.container-wide`, `.section-y-sm`,
+  `.link-quiet`, `.brass-rule`, `.skeleton` (with its keyframes), `.badge-clay` and the
+  `--color-on-overlay` token; `PriceResult::formatted()`; five unused imports; `VITE_APP_NAME` from
+  `.env.example`; `'theme'` from `User::$fillable` (the `users.theme` column and old `theme.*`
+  settings rows stay, never deleted).
+- **Behaviour change (D-020):** Portal → Account pricing now lists only negotiated prices valid
+  today (`valid_from` ≤ today ≤ `valid_until`, business dates), the same rule as the price engine,
+  via the shared `CustomerPrice::scopeValidOn`. Before, prices starting in the future were listed.
+  Showing upcoming prices would be a new feature.
+- **Merged (D-021):** the Contact page's local-time card uses the configured business time zone
+  (`BUSINESS_TIMEZONE`) instead of a hard-coded `Asia/Karachi`. Its labels "Local time in Sialkot"
+  and "PKT · UTC+5" are still fixed text.
+- **Docs:** README test and seeding notes, documentation list; ENV.md (`app.timezone` is not an env
+  variable); DESIGN.md; PRICING.md; composer.json description.
 
 An earlier round (before the redesign) also ran a Chromium walkthrough of pricing, a guest RFQ,
 sending, the secure link, acceptance and conversion; it predates the current single light theme.

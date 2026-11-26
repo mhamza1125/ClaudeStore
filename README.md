@@ -24,6 +24,7 @@ npm install
 cp .env.example .env
 php artisan key:generate
 # MySQL: create the database "claudestore" (root, no password by default)
+# Only on a brand-new, empty database: never re-run seeders on one that holds data (CLAUDE.md)
 php artisan migrate --seed          # prints the dev admin/sales/buyer passwords
 php artisan storage:link
 npm run build                       # or: npm run dev
@@ -41,8 +42,9 @@ With `MAIL_MAILER=log`, emails (including the customer's secure quotation link) 
 
 ```bash
 php artisan test                                        # SQLite in-memory (phpunit.xml)
-DB_CONNECTION=mysql DB_DATABASE=claudestore_test php vendor/bin/phpunit   # against MySQL
 ```
+
+Tests always run on SQLite in memory. Never point them at `claudestore` or any database that holds data.
 
 The current test count and result are recorded in [docs/STATUS.md](docs/STATUS.md). The tests cover the pricing precedence and tier boundaries, integer money maths, the
 basket, RFQ submission (validation, spam protection, rate limits, attachments, price
@@ -106,3 +108,4 @@ shape via a mocked transport).
 - [docs/IMAGES.md](docs/IMAGES.md) — image workflow and provider integration
 - [docs/CHATBOT.md](docs/CHATBOT.md) — AI chatbot setup, privacy and costs
 - [docs/STATUS.md](docs/STATUS.md) — implemented features, pending integrations, known limitations
+- [docs/RECOMMENDATIONS.md](docs/RECOMMENDATIONS.md) — proposed improvements awaiting approval (not implemented)

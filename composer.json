@@ -2,7 +2,7 @@
     "$schema": "https://getcomposer.org/schema.json",
     "name": "atelier-hide/b2b-store",
     "type": "project",
-    "description": "Atelier Hide — B2B leather goods storefront and wholesale quotation platform (Laravel 12).",
+    "description": "Leamate — B2B leather goods storefront and wholesale quotation platform (Laravel 12).",
     "keywords": [
         "laravel",
         "framework"

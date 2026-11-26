@@ -67,7 +67,10 @@ A tier applies from its `min_qty` up to (next tier's `min_qty` − 1).
   every signed-in customer who has price access (by default anyone who registers). The full
   matrix is in docs/B2B.md (the single reference). Others see "Trade pricing". Hidden prices are
   never rendered, never used for catalogue sorting/price filters, and not written into JSON-LD.
-- Negotiated and group prices are shown only to members of that company.
+- Negotiated and group prices are shown only to members of that company. Portal → Account pricing
+  lists only the negotiated prices valid today, by the same window rule as step 1
+  (`CustomerPrice::scopeValidOn`, shared with `PriceResolver`); upcoming or expired rows are not
+  listed.
 - Indicative prices are stored on quote lines only if the buyer could see them.
 
 ## Quotations and orders

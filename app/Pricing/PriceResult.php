@@ -2,8 +2,6 @@
 
 namespace App\Pricing;
 
-use App\Support\Money;
-
 /**
  * Immutable outcome of a price resolution for one product/variant/quantity/buyer.
  */
@@ -62,10 +60,5 @@ final class PriceResult
         }
 
         return null;
-    }
-
-    public function formatted(string $currency = 'USD'): string
-    {
-        return Money::format($this->displayUnitCents(), $currency);
     }
 }

@@ -8,7 +8,6 @@ use App\Models\PriceTier;
 use App\Models\Product;
 use App\Services\ProductCsv;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 use Tests\TestCase;
 

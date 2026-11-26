@@ -6,7 +6,6 @@ use App\Enums\QuoteStatus;
 use App\Models\Quote;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Middleware\TrustProxies;
-use Illuminate\Http\Request;
 use Tests\TestCase;
 
 /**

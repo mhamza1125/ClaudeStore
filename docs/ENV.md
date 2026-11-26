@@ -71,7 +71,7 @@ runtime in Admin → Settings, which takes precedence over the env default.
 | `STORE_SHIPPING_FLAT_CENTS` | 0 | *Settings.* Default shipping per quote, in cents |
 | `STORE_MIN_ORDER_VALUE_CENTS` | 0 | *Settings.* 0 disables |
 | `QUOTE_RATE_LIMIT_PER_HOUR` | 5 | RFQ submissions per IP per hour (plus 2 per minute) |
-| `BUSINESS_TIMEZONE` | Asia/Karachi | Calendar for quote validity ("valid until D" = through the end of D here), the 00:15 expiry job and negotiated-price windows. `APP_TIMEZONE` stays UTC (stored timestamps) |
+| `BUSINESS_TIMEZONE` | Asia/Karachi | Calendar for quote validity ("valid until D" = through the end of D here), the 00:15 expiry job and negotiated-price windows. `app.timezone` (hard-coded in config/app.php, not an env variable) stays UTC (stored timestamps) |
 
 ## Image provider
 

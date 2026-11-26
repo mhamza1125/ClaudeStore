@@ -92,7 +92,6 @@
 
     --color-focus: #684333;
     --color-overlay: rgb(24 16 11 / 0.55);
-    --color-on-overlay: #fbf6ec;
     --color-transparent: transparent;
     --color-current: currentColor;
     --color-white: #ffffff;
@@ -133,7 +132,6 @@
     ::selection { background: var(--color-accent-soft); color: var(--color-text); }
     [x-cloak] { display: none !important; }
     input[type='number']::-webkit-inner-spin-button { opacity: 1; }
-    .tabular { font-variant-numeric: tabular-nums; }
 }
 
 /*
@@ -162,10 +160,8 @@
 @layer components {
     /* ---------- Layout & rhythm ---------- */
     .container-page { @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8; }
-    .container-wide { @apply mx-auto w-full max-w-[88rem] px-4 sm:px-6 lg:px-8; }
     /* Vertical rhythm: 56–96px on phones, 96–128px on desktop. */
     .section-y { @apply py-16 sm:py-20 lg:py-28; }
-    .section-y-sm { @apply py-12 sm:py-14 lg:py-18; }
 
     /* ---------- Typography ---------- */
     .h-hero { @apply text-[2.75rem] leading-[1.02] sm:text-6xl lg:text-[5.25rem]; letter-spacing: -0.035em; font-weight: 420; }
@@ -177,7 +173,6 @@
     /* Eyebrow with a short stitched lead-in. */
     .eyebrow-stitch::before { content: ''; width: 1.75rem; height: 2px; background: repeating-linear-gradient(90deg, currentColor 0 5px, transparent 5px 9px); }
     .link { @apply font-medium text-accent underline decoration-accent/30 decoration-1 underline-offset-4 transition-colors hover:decoration-accent; }
-    .link-quiet { @apply underline decoration-border-strong underline-offset-4 transition-colors hover:text-accent hover:decoration-accent; }
     /* "Text + arrow" call to action; the arrow nudges on hover. */
     .link-arrow { @apply inline-flex items-center gap-1.5 text-sm font-semibold text-accent; }
     .link-arrow svg { transition: transform 200ms var(--ease-out-soft); }
@@ -192,8 +187,6 @@
     .stitch-frame { position: relative; }
     .stitch-frame::after { content: ''; position: absolute; inset: var(--stitch-inset, 10px); pointer-events: none; z-index: 2;
         border: 1.5px dashed var(--stitch-color, rgb(255 255 255 / 0.55)); border-radius: calc(var(--stitch-radius, 16px) - var(--stitch-inset, 10px) + 2px); }
-    .brass-rule { @apply block w-12 text-clay; height: 2px;
-        background: repeating-linear-gradient(90deg, currentColor 0 var(--stitch-dash), transparent var(--stitch-dash) calc(var(--stitch-dash) + var(--stitch-gap))); }
 
     /* Fine leather-like grain for dark bands (decorative; sits behind content). */
     .grain { position: relative; isolation: isolate; }
@@ -201,7 +194,7 @@
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
     .band { @apply bg-band text-on-band; }
     .band .eyebrow { color: var(--color-hide); }
-    .band .stitch, .band .stitch-v, .band .brass-rule { color: color-mix(in srgb, var(--color-thread) 70%, transparent); }
+    .band .stitch, .band .stitch-v { color: color-mix(in srgb, var(--color-thread) 70%, transparent); }
     .band .link { @apply text-thread decoration-thread/40 hover:decoration-thread; }
     .band .btn-primary { @apply border-tan bg-tan text-text hover:border-tan-hover hover:bg-tan-hover; }
     .band .btn-primary:hover:not(:disabled) { box-shadow: 0 10px 24px -10px rgb(217 154 99 / 0.5); }
@@ -348,8 +341,6 @@
     .load-bar { height: 2px; overflow: hidden; background: var(--color-border); }
     .load-bar::after { content: ''; display: block; height: 100%; width: 35%; background: var(--color-accent); animation: load-bar 1s ease-in-out infinite; }
     @keyframes load-bar { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
-    .skeleton { @apply rounded-md bg-elevated; animation: skeleton 1.4s ease-in-out infinite; }
-    @keyframes skeleton { 50% { opacity: 0.55; } }
 
     /* Product images: no drag-to-save, selection or iOS long-press "Save image" (deterrents). */
     .protected-img, [data-protected] img { -webkit-user-drag: none; user-select: none; -webkit-touch-callout: none; }
@@ -393,7 +384,6 @@
     .badge { @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap; }
     .badge-neutral { @apply bg-elevated text-muted; }
     .badge-accent { @apply bg-accent-soft text-accent; }
-    .badge-clay { @apply bg-clay-soft text-clay; }
     .badge-success { @apply bg-success-soft text-success; }
     .badge-warning { @apply bg-warning-soft text-warning; }
     .badge-danger { @apply bg-danger-soft text-danger; }

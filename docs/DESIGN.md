@@ -71,7 +71,7 @@ Self-hosted variable fonts (`resources/fonts/web`, SIL OFL; preloaded in `partia
 | `<x-breadcrumbs :items>` | Visible trail + BreadcrumbList JSON-LD. |
 | `<x-empty>` | Dashed "stitched patch" empty state with one next step. |
 
-Spacing: sections use `.section-y` (64→112px) or `.section-y-sm`; content width `.container-page`
+Spacing: sections use `.section-y` (64→112px); content width `.container-page`
 (1280px). Radii: 6 / 10 / 16 / 24px. Shadows are soft and warm-tinted (`shadow-sm/md/lg`), plus
 `shadow-cta` (walnut glow) on primary hover only.
 

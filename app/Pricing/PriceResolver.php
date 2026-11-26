@@ -140,8 +140,7 @@ class PriceResolver
             ->where('company_id', $company->id)
             ->where('product_id', $product->id)
             ->where('min_qty', '<=', max(1, $qty))
-            ->where(fn ($q) => $q->whereNull('valid_from')->orWhereDate('valid_from', '<=', $day))
-            ->where(fn ($q) => $q->whereNull('valid_until')->orWhereDate('valid_until', '>=', $day))
+            ->validOn($day)
             ->orderByDesc('min_qty')
             ->get();
 
