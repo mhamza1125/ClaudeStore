@@ -6,6 +6,7 @@ use App\Assistant\AssistantUnavailable;
 use App\Assistant\Contracts\ChatProvider;
 use App\Assistant\Providers\NullChatProvider;
 use App\Livewire\Admin\SettingsForm;
+use App\Models\Category;
 use App\Models\Company;
 use App\Models\CustomerPrice;
 use App\Models\PriceTier;
@@ -218,6 +219,59 @@ class ChatbotTest extends TestCase
         $this->assertStringContainsString('/quote', $system);
     }
 
+    public function test_business_context_covers_services_terms_and_honesty_rules(): void
+    {
+        $fake = $this->fakeProvider();
+        $this->enable(['company.intro' => 'Family-run tannery and workshop.', 'quote.validity_days' => 21]);
+        $belts = Category::factory()->create(['name' => 'Leather Belts', 'slug' => 'leather-belts']);
+        Category::factory()->create(['name' => 'Leather Wallets', 'slug' => 'leather-wallets']);
+        Product::factory()->create(['name' => 'Classic Belt', 'category_id' => $belts->id]);
+        Product::factory()->create(['name' => 'Cow Hide Lot', 'category_id' => $belts->id, 'is_raw_leather' => true]);
+
+        $this->postJson('/assistant/messages', ['message' => 'What do you make?'])->assertOk();
+        $system = $fake->calls[0]['system'];
+
+        // Company profile, services and private-label content as shown on the website.
+        $this->assertStringContainsString('Family-run tannery and workshop.', $system);
+        foreach (config('store.services') as [$title, $text]) {
+            $this->assertStringContainsString("{$title}: {$text}", $system);
+        }
+        $this->assertStringContainsString(config('store.manufacturing.capabilities')[0], $system);
+        $this->assertStringContainsString(config('store.manufacturing.process')[1][0], $system);
+        $this->assertStringContainsString(config('store.trade_terms')[3][1], $system);
+        // Ordering facts.
+        $this->assertStringContainsString('valid for 21 days', $system);
+        $this->assertStringContainsString('PDF, JPG, PNG or WebP', $system);
+        // Catalogue coverage: categories without listed products are flagged, raw leather is quote-only.
+        $this->assertStringContainsString('Leather Belts (/categories/leather-belts) — 2 products listed', $system);
+        $this->assertStringContainsString('Leather Wallets (/categories/leather-wallets) — no products listed yet', $system);
+        $this->assertMatchesRegularExpression('/Cow Hide Lot.*raw leather, quoted by lot/', $system);
+        // Honesty rules for facts the website does not state.
+        $this->assertStringContainsString('certifications', $system);
+        $this->assertStringContainsString('Never invent', $system);
+    }
+
+    public function test_business_context_explains_price_visibility_for_guests(): void
+    {
+        $fake = $this->fakeProvider();
+        $this->enable(['b2b.enabled' => true, 'b2b.require_registration' => true]);
+        $this->postJson('/assistant/messages', ['message' => 'Price?'])->assertOk();
+        $this->assertStringContainsString('Visitors must open a trade account at /register to see prices', $fake->calls[0]['system']);
+    }
+
+    public function test_teaser_is_a_short_message_separate_from_the_intro(): void
+    {
+        $this->fakeProvider();
+        $this->enable(['chatbot.intro_message' => 'A long welcome message for the chat window itself.', 'chatbot.teaser_message' => 'Bulk order? Ask us']);
+
+        $this->get('/')->assertSee('data-testid="chat-teaser"', false)
+            ->assertSeeInOrder(['data-testid="chat-teaser"', 'Bulk order? Ask us', 'id="chat-panel"'], false);
+        // The intro stays inside the panel only.
+        $html = $this->get('/')->getContent();
+        $teaser = substr($html, strpos($html, 'data-testid="chat-teaser"'), strpos($html, 'id="chat-panel"') - strpos($html, 'data-testid="chat-teaser"'));
+        $this->assertStringNotContainsString('A long welcome message', $teaser);
+    }
+
     public function test_api_key_is_never_sent_to_the_browser(): void
     {
         config(['services.anthropic.key' => 'sk-ant-super-secret-value', 'store.assistant.provider' => 'anthropic']);
@@ -239,13 +293,14 @@ class ChatbotTest extends TestCase
             ->assertSee('AI provider not configured')
             ->set('s.chatbot_enabled', true)->set('s.chatbot_intro', '')->call('save')->assertHasErrors('s.chatbot_intro')
             ->set('s.chatbot_intro', 'Need a hand? Ask away.')->set('s.chatbot_name', 'Hide Helper')
-            ->set('s.chatbot_teaser', false)->set('s.chatbot_teaser_delay', 2)
+            ->set('s.chatbot_teaser', false)->set('s.chatbot_teaser_delay', 2)->set('s.chatbot_teaser_message', 'Bulk order? Ask us')
             ->set('s.whatsapp_enabled', false)
             ->call('save')->assertHasNoErrors();
 
         app(Settings::class)->flush();
         $this->assertTrue(setting('chatbot.enabled'));
         $this->assertFalse(setting('whatsapp.enabled'));
+        $this->assertSame('Bulk order? Ask us', setting('chatbot.teaser_message'));
         $this->get('/')->assertSee('Need a hand? Ask away.')->assertSee('Hide Helper')
             ->assertSee('data-testid="chat-widget"', false)->assertDontSee('data-testid="whatsapp-button"', false);
 

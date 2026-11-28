@@ -77,6 +77,7 @@ class Settings
             'chatbot.assistant_name' => null, // defaults to "<brand> assistant"
             'chatbot.intro_message' => 'Hi! Ask me about our leather goods, minimum orders or custom work — or I can help you request a quote.',
             'chatbot.show_teaser' => true,
+            'chatbot.teaser_message' => 'Wholesale or custom order? Ask us', // one short line above the closed launcher
             'chatbot.teaser_delay_seconds' => 5,
             'chatbot.knowledge' => null, // extra facts/FAQ the assistant may use
             'policies.terms' => null,

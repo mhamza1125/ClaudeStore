@@ -255,12 +255,14 @@
     /* Back to top: smaller, centred over the WhatsApp button (or in its place when WhatsApp is off). */
     .back-to-top { --btt-size: 2.75rem; height: var(--btt-size); min-width: var(--btt-size); left: calc(var(--float-left) + (var(--float-size) - var(--btt-size)) / 2); }
     .back-to-top.above-whatsapp { bottom: calc(var(--float-bottom) + var(--float-size) + var(--float-gap)); }
+    /* A single-line pill above the closed launcher; never wider than the space beside the left-hand buttons. */
     .chat-teaser {
         position: fixed;
         z-index: var(--z-float);
         right: var(--float-right);
-        bottom: calc(var(--float-bottom) + var(--float-size) + var(--float-gap));
-        width: min(18rem, calc(100vw - var(--float-left) - var(--float-right) - var(--float-size) - var(--float-gap)));
+        bottom: calc(var(--float-bottom) + var(--float-size) + 0.5rem);
+        max-width: min(17rem, calc(100vw - var(--float-left) - var(--float-right) - var(--float-size) - var(--float-gap)));
+        @apply flex items-center gap-0.5 rounded-full border border-border bg-surface pr-1 text-[13px] font-medium text-text shadow-md;
     }
     .chat-panel {
         position: fixed;

@@ -40,12 +40,14 @@
     <section class="container-page pb-4 pt-2" aria-labelledby="services-heading">
         <h2 id="services-heading" class="sr-only">Ways to work with {{ $brand['name'] }}</h2>
         <ul class="reveal card grid grid-cols-2 overflow-hidden lg:grid-cols-4" role="list">
+            {{-- Titles and descriptions: config/store.php → services (shared with the chatbot). --}}
             @foreach ([
-                ['box', 'Wholesale supply', 'Catalogue styles with volume price breaks.', route('catalog'), 'Browse products'],
-                ['tag', 'Private label', 'Your logo, colours and packaging.', route('pages.show', 'custom-manufacturing'), 'How it works'],
-                ['scissors', 'Custom manufacturing', 'Bespoke patterns from your tech pack.', route('quote.basket'), 'Start a request'],
-                ['layers', 'Raw leather', 'Hides and skins, quoted by lot.', route('catalog', ['raw' => 1]), 'See leathers'],
-            ] as [$icon, $title, $text, $url, $cta])
+                'wholesale' => ['box', route('catalog'), 'Browse products'],
+                'private_label' => ['tag', route('pages.show', 'custom-manufacturing'), 'How it works'],
+                'custom' => ['scissors', route('quote.basket'), 'Start a request'],
+                'raw_leather' => ['layers', route('catalog', ['raw' => 1]), 'See leathers'],
+            ] as $key => [$icon, $url, $cta])
+                @php [$title, $text] = config('store.services.'.$key); @endphp
                 <li class="relative border-border p-4 transition-colors hover:bg-bg sm:p-7 [&:nth-child(-n+2)]:border-b [&:nth-child(odd)]:border-r lg:[&:nth-child(-n+2)]:border-b-0 lg:[&:not(:last-child)]:border-r">
                     <span class="stat-icon mb-4 rounded-full bg-clay-soft sm:mb-5"><x-icon :name="$icon" class="h-[18px] w-[18px]"/></span>
                     <h3 class="font-sans text-[15px] font-semibold tracking-normal sm:text-base">{{ $title }}</h3>
@@ -164,13 +166,8 @@
                     <span class="text-xs text-muted">Trade terms at a glance</span>
                 </div>
                 <dl class="divide-y divide-border">
-                    @foreach ([
-                        ['Made in Sialkot', 'Bags, wallets, belts and accessories made in our workshops, from existing styles to bespoke patterns.'],
-                        ['Pricing you can see', 'Every product shows its minimum order quantity and price breaks. Approved trade accounts see their own group and negotiated pricing.'],
-                        ['Materials stated plainly', 'Each product page lists the leather type, hardware, finishing and packaging we have verified for that item.'],
-                        ['Samples before volume', 'Samples are available on request before you commit to a volume order, with specification sheets for catalogue products.'],
-                        ['Checked before dispatch', 'Goods are quality-checked before they leave us and shipped on the terms in your quotation.'],
-                    ] as $i => [$heading, $text])
+                    {{-- config/store.php → trade_terms (shared with the chatbot) --}}
+                    @foreach (config('store.trade_terms') as $i => [$heading, $text])
                         <div class="grid gap-2 px-6 py-5 sm:grid-cols-[3rem_13rem_1fr] sm:gap-6 sm:px-8">
                             <span class="font-serif text-lg text-clay tabular-nums">0{{ $i + 1 }}</span>
                             <dt class="font-serif text-xl leading-snug">{{ $heading }}</dt>

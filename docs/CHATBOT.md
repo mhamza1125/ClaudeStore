@@ -18,15 +18,26 @@ browser (Alpine widget) ──POST /assistant/messages (CSRF, rate limited)─�
 - **Server-side only.** The browser talks to our own endpoint. `CLOUDFLARE_API_TOKEN`,
   `CLOUDFLARE_ACCOUNT_ID` and `ANTHROPIC_API_KEY` are read from `.env` (via `config/services.php`)
   and are never rendered into pages, JavaScript, JSON responses or logs (covered by tests).
-- **Business knowledge** (`app/Assistant/BusinessContext.php`): brand and contact settings, active
-  categories, up to 150 published products (description, material, options, MOQ, availability,
-  lead time, **guest-visible prices only**), published policies, and the "Additional knowledge"
-  text from Admin → Settings. Trade-only, customer-group and negotiated prices are never included,
+- **Business knowledge** (`app/Assistant/BusinessContext.php`): the company introduction and story
+  (Admin → Settings, else the brand description), location, time zone and contact routes; the
+  website's own service, private-label and trade-term copy (`config/store.php` → `services`,
+  `manufacturing`, `trade_terms`, the same lists the homepage and /custom-manufacturing show);
+  the ordering steps, quote validity, accepted attachment types and the current price-visibility
+  rule (from Admin → B2B settings); active categories **with published product counts** (empty
+  ones are marked "no products listed yet"); up to 150 published products (description, material,
+  options, MOQ, availability, lead time, raw-leather flag, **guest-visible prices only**);
+  published policies; and the "Additional knowledge" text from Admin → Settings. Trade-only, customer-group and negotiated prices are never included,
   even for signed-in buyers, so they cannot leak through the chatbot. The prompt is cached for five
   minutes and rebuilt when settings are saved (the Anthropic provider also uses prompt caching).
-- **Behaviour:** short plain-text answers. It states only the facts it is given, says when it
-  doesn't know and suggests a quote request or contact, never offers discounts, can't see
-  accounts or orders, and links to pages such as `/quote`.
+- **Behaviour:** a B2B sales assistant. It answers first, asks one or two qualifying questions
+  when useful (business type, products, quantities, branding, destination, timing), routes the
+  visitor to catalogue pages, /custom-manufacturing or raw leather, and once the need is clear
+  offers a short brief to paste into the /quote form. It does not collect contact details in the
+  chat. It states only the facts it is given and explicitly does not invent capacity,
+  certifications, years in business, sample fees, lead times, shipping costs or client names; it
+  says empty categories have no listed styles and can be quoted as custom work; it never offers
+  discounts, can't see accounts or orders, replies in the visitor's language, and links only to
+  paths in its business information.
 - **Conversation storage:** the last 20 messages live in the visitor's server session (not the
   database) and are sent with each new question. "New chat" clears them.
 - **Safety:** empty and control-character-only messages are rejected; messages are capped at 1,000
@@ -45,9 +56,9 @@ browser (Alpine widget) ──POST /assistant/messages (CSRF, rate limited)─�
 | --- | --- |
 | Show the chatbot | On/off, independent of the WhatsApp button (off by default) |
 | Assistant name | Shown in the widget (defaults to "<brand> assistant") |
-| Introductory message | Teaser bubble and first message in the chat |
-| Pop up the introductory message / delay | Whether and after how many seconds the teaser appears (once per browser session after dismissal) |
-| Additional knowledge | Extra facts and FAQs the assistant may use (shipping regions, sampling, certifications…) |
+| Introductory message | First message at the top of the chat window |
+| Short prompt above the closed button / prompt text / delay | A one-line pill above the launcher (default "Wholesale or custom order? Ask us", max 48 characters). It appears after the delay at most once per browser session and hides itself after 10 seconds, or when dismissed or the chat opens |
+| Additional knowledge | Extra facts and FAQs the assistant may use. **This is the only way to give it facts the website does not state** (countries served, sample fees and timing, typical lead times, capacity, certifications). Without them it says it doesn't know |
 
 The settings page shows whether the AI provider is connected.
 

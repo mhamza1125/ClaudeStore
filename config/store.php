@@ -38,6 +38,22 @@ return [
     | Edit these lists if the business process or services differ; nothing here is a claim about
     | capacity, certification or history.
     */
+    // Ways to work with the business (homepage strip) and the trade terms at a glance (homepage
+    // "standard" list). The chatbot reads the same lists, so edit them here only.
+    'services' => [
+        'wholesale' => ['Wholesale supply', 'Catalogue styles with volume price breaks.'],
+        'private_label' => ['Private label', 'Your logo, colours and packaging.'],
+        'custom' => ['Custom manufacturing', 'Bespoke patterns from your tech pack.'],
+        'raw_leather' => ['Raw leather', 'Hides and skins, quoted by lot.'],
+    ],
+    'trade_terms' => [
+        ['Made in Sialkot', 'Bags, wallets, belts and accessories made in our workshops, from existing styles to bespoke patterns.'],
+        ['Pricing you can see', 'Every product shows its minimum order quantity and price breaks. Approved trade accounts see their own group and negotiated pricing.'],
+        ['Materials stated plainly', 'Each product page lists the leather type, hardware, finishing and packaging we have verified for that item.'],
+        ['Samples before volume', 'Samples are available on request before you commit to a volume order, with specification sheets for catalogue products.'],
+        ['Checked before dispatch', 'Goods are quality-checked before they leave us and shipped on the terms in your quotation.'],
+    ],
+
     'manufacturing' => [
         'capabilities' => [
             'Logo embossing or debossing (blind or foil)',

@@ -2,7 +2,8 @@
 // the AI provider and its key are server-side. Model output is rendered as text
 // nodes; only same-site paths and a short list of https hosts become links.
 const SAFE_HOSTS = ['api.whatsapp.com', 'wa.me'];
-const TOKEN = /(https?:\/\/[^\s<>()"']+|(?<![\w/])\/(?:products|categories|quote|account|register|login|about|custom-manufacturing|terms|privacy|shipping|returns)(?:\/[\w\-./]*)?)/g;
+const TEASER_SECONDS = 10;
+const TOKEN = /(https?:\/\/[^\s<>()"']+|(?<![\w/])\/(?:products|categories|quote|account|register|login|about|contact|custom-manufacturing|terms|privacy|shipping|returns)(?:\/[\w\-./]*)?)/g;
 
 function store(key, value) {
     try { sessionStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }
@@ -31,9 +32,16 @@ export function registerChat(Alpine) {
         draft: '',
         sending: false,
         error: '',
+        // The teaser appears at most once per browser session and hides itself after a few
+        // seconds, so it never sits over page content.
         init() {
             if (this.teaser && !read('ah-chat-teaser-dismissed')) {
-                setTimeout(() => { if (!this.open) this.showTeaser = true; }, Math.max(0, this.teaserDelay) * 1000);
+                setTimeout(() => {
+                    if (this.open || this.navOpen) return;
+                    this.showTeaser = true;
+                    store('ah-chat-teaser-dismissed', '1');
+                    setTimeout(() => { this.showTeaser = false; }, TEASER_SECONDS * 1000);
+                }, Math.max(0, this.teaserDelay) * 1000);
             }
         },
         toggle() { this.open ? this.close() : this.openPanel(); },

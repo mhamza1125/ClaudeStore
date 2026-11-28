@@ -16,3 +16,5 @@ Things only the owner can do. Tick them off here.
 | 8 | **Have privacy and erasure handling reviewed** by a qualified person (retention, erasure requests vs. the no-delete rule) | — | D5 |
 | 9 | **Submit the sitemap** `https://<your-domain>/sitemap.xml` and check indexing | Google Search Console (and Bing Webmaster Tools) | Pagination and redirects changed; confirm Google sees them |
 | 10 | Answer the open questions Q11–Q15 | docs/AUDIT_QUESTIONS.md | Dependency patch (Q12) and FK guarantee (Q11) wait on them |
+| 11 | **Give the chatbot the facts buyers ask for**: company introduction/story, and in "Additional knowledge" the countries you ship to, sample policy (fee, timing), typical production lead times, MOQs for private label, certifications, capacity. Only verified facts | Admin → Settings → Company and → Chatbot | The assistant only states what it is given; today it must answer "I don't know" to these |
+| 12 | **Publish products in Bags, Wallets and Accessories** (or hide those categories) | Admin → Products / Categories | The live catalogue lists only rugs and belts; the assistant tells visitors those categories have no listed styles yet |

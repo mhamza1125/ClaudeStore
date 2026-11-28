@@ -82,10 +82,11 @@
             </div>
             <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" wire:model.live="s.chatbot_enabled"> Show the chatbot</label>
             <x-field name="s.chatbot_name" model="s.chatbot_name" label="Assistant name" :placeholder="$s['brand_name'].' assistant'"/>
-            <x-textarea-field name="s.chatbot_intro" model="s.chatbot_intro" label="Introductory message" rows="2" required help="Shown in the teaser bubble and at the top of the chat."/>
+            <x-textarea-field name="s.chatbot_intro" model="s.chatbot_intro" label="Introductory message" rows="2" required help="The first message at the top of the chat window."/>
             <div class="grid gap-4 sm:grid-cols-2">
-                <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" wire:model="s.chatbot_teaser"> Pop up the introductory message</label>
-                <x-field name="s.chatbot_teaser_delay" model="s.chatbot_teaser_delay" type="number" min="0" max="120" label="Pop-up delay (seconds)"/>
+                <label class="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" class="checkbox" wire:model="s.chatbot_teaser"> Show a short prompt above the closed chat button</label>
+                <x-field name="s.chatbot_teaser_message" model="s.chatbot_teaser_message" label="Prompt text" maxlength="48" :placeholder="\App\Services\Settings::defaults()['chatbot.teaser_message']" help="One short line, at most 48 characters. Shown once per visit and hidden after a few seconds."/>
+                <x-field name="s.chatbot_teaser_delay" model="s.chatbot_teaser_delay" type="number" min="0" max="120" label="Prompt delay (seconds)"/>
             </div>
             <x-textarea-field name="s.chatbot_knowledge" model="s.chatbot_knowledge" label="Additional knowledge for the assistant" rows="5" help="Optional facts and FAQs (e.g. shipping regions, sampling fees, certifications). The assistant only states facts it is given; keep this accurate."/>
         </section>

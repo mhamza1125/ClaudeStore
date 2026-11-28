@@ -1,8 +1,8 @@
 # Status: implemented, pending, limitations
 
-Last verified **2026-11-26**: `php artisan test` on SQLite in-memory: **354 tests, 1896 assertions,
+Last verified **2026-11-28**: `php artisan test` on SQLite in-memory: **357 tests, 1918 assertions,
 all passing** (0 failed, 0 skipped, 0 incomplete). This is the single place for the test count.
-`npm run build` succeeded (2026-11-26). Migrations were last rehearsed on an empty MariaDB scratch
+`npm run build` succeeded (2026-11-28). Migrations were last rehearsed on an empty MariaDB scratch
 database (`leamate_scratch`) on 2026-11-25 (no new migrations since); the local server is MariaDB
 (XAMPP), not MySQL 8. Browser walkthrough and MySQL 8 were not re-run.
 

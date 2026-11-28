@@ -10,6 +10,7 @@
     $assistantName = setting('chatbot.assistant_name') ?: $brand['name'].' assistant';
     $initials = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($brand['name'], 0, 2));
     $intro = (string) setting('chatbot.intro_message');
+    $teaser = setting('chatbot.teaser_message') ?: \App\Services\Settings::defaults()['chatbot.teaser_message'];
     $whatsapp = \App\Support\WhatsApp::configuredLink();
     $config = [
         'online' => $online,
@@ -27,13 +28,11 @@
          .chat-teaser / .chat-panel / .floating-btn components; the wrapper has no box. --}}
     <div x-data="chatWidget(@js($config))" x-on:keydown.escape.window="open && close()" data-testid="chat-widget" class="contents" x-on:mobile-nav.window="navOpen = $event.detail.open; if (navOpen) showTeaser = false">
 
-        {{-- Teaser bubble with the introductory message --}}
+        {{-- Teaser: one short line above the closed launcher, once per visit, hides itself. --}}
         <div x-show="showTeaser && !open" x-cloak x-transition.opacity.duration.300ms
-             class="chat-teaser rounded-md border border-border bg-surface p-4 pr-9 text-sm shadow-lg" role="status">
-            <button type="button" @click="dismissTeaser()" class="absolute right-2 top-2 text-muted hover:text-text" aria-label="Dismiss message"><x-icon name="x" class="h-4 w-4"/></button>
-            <p class="font-medium">{{ $assistantName }}</p>
-            <p class="mt-1 text-muted">{{ $intro }}</p>
-            <button type="button" @click="toggle()" class="link mt-2 text-xs text-accent">{{ $online ? 'Ask a question' : 'Contact us' }}</button>
+             class="chat-teaser" role="status" data-testid="chat-teaser">
+            <button type="button" @click="toggle()" class="min-w-0 truncate py-1.5 pl-3.5 text-left">{{ $teaser }}</button>
+            <button type="button" @click="dismissTeaser()" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted hover:bg-elevated hover:text-text" aria-label="Dismiss"><x-icon name="x" class="h-3.5 w-3.5"/></button>
         </div>
 
         {{-- Panel --}}
