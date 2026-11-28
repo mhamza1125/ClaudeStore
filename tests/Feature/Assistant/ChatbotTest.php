@@ -251,6 +251,22 @@ class ChatbotTest extends TestCase
         $this->assertStringContainsString('Never invent', $system);
     }
 
+    public function test_assistant_is_told_to_answer_in_a_short_structured_format(): void
+    {
+        $fake = $this->fakeProvider();
+        $this->enable();
+        $this->postJson('/assistant/messages', ['message' => 'Hi'])->assertOk();
+        $system = $fake->calls[0]['system'];
+
+        // The widget renders exactly these constructs (resources/js/chat.js → parseReply).
+        $this->assertStringContainsString('Start with one short sentence', $system);
+        $this->assertStringContainsString('"- " at the start of the line', $system);
+        $this->assertStringContainsString('numbered steps ("1. ", "2. ")', $system);
+        $this->assertStringContainsString('**bold**', $system);
+        $this->assertStringContainsString('under about 90 words', $system);
+        $this->assertStringNotContainsString('without markdown headings, tables or bold text', $system);
+    }
+
     public function test_business_context_explains_price_visibility_for_guests(): void
     {
         $fake = $this->fakeProvider();

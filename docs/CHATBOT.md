@@ -38,14 +38,20 @@ browser (Alpine widget) ──POST /assistant/messages (CSRF, rate limited)─�
   says empty categories have no listed styles and can be quoted as custom work; it never offers
   discounts, can't see accounts or orders, replies in the visitor's language, and links only to
   paths in its business information.
+- **Reply format:** structured for a small window, under about 90 words: one direct opening
+  sentence, then 2–5 short "- " bullets (or "1. " steps for a process), **bold** for a few key
+  words, and one closing next step, usually a link. Greetings and yes/no answers stay one or two
+  sentences. The widget (`parseReply` in `resources/js/chat.js`) renders exactly these: paragraphs,
+  bullet and numbered lists, bold, and headings shown as bold lines. Everything else stays text.
 - **Conversation storage:** the last 20 messages live in the visitor's server session (not the
   database) and are sent with each new question. "New chat" clears them.
 - **Safety:** empty and control-character-only messages are rejected; messages are capped at 1,000
   characters; the endpoint is limited per IP (8/minute and 80/day by default). Only one AI request
   per visitor session runs at a time (a cache lock; a second one gets HTTP 409), and resubmitting
   the same text within 15 seconds returns the previous answer without a new API call. The widget
-  also disables sending while a reply is pending. Replies are rendered
-  as text (no HTML); only site paths and WhatsApp links become clickable. Visitor message content
+  also disables sending while a reply is pending. Replies are built from
+  DOM text nodes and list/bold elements, never `innerHTML`, so model output cannot inject HTML;
+  only site paths and WhatsApp links become clickable. Visitor message content
   is not written to logs.
 
 ## Configuration

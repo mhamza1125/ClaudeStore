@@ -61,8 +61,9 @@
                 <div class="mr-8 rounded-md bg-elevated px-3 py-2">{{ $intro }}</div>
                 @if ($online)
                     <template x-for="(m, i) in messages" :key="i">
-                        <div :class="m.role === 'user' ? 'ml-8 bg-primary text-on-primary' : 'mr-8 bg-elevated'" class="whitespace-pre-line break-words rounded-md px-3 py-2"
-                             x-effect="render($el, m.content)"></div>
+                        {{-- Replies: paragraphs, lists and bold built as DOM nodes (chat.js → render) --}}
+                        <div :class="m.role === 'user' ? 'ml-8 bg-primary text-on-primary' : 'mr-8 space-y-2 bg-elevated leading-relaxed'" class="break-words rounded-md px-3 py-2"
+                             x-effect="render($el, m.content, m.role)"></div>
                     </template>
                     <div x-show="sending" class="mr-8 inline-flex items-center gap-1 rounded-md bg-elevated px-3 py-2 text-muted" aria-label="Assistant is typing">
                         <span class="animate-pulse">•</span><span class="animate-pulse [animation-delay:150ms]">•</span><span class="animate-pulse [animation-delay:300ms]">•</span>

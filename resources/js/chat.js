@@ -1,9 +1,47 @@
 // Website chatbot widget. Talks only to our own Laravel endpoint (CSRF-protected);
-// the AI provider and its key are server-side. Model output is rendered as text
-// nodes; only same-site paths and a short list of https hosts become links.
+// the AI provider and its key are server-side. Model output is rendered with DOM nodes,
+// never innerHTML: paragraphs, "- " lists, "1. " steps and **bold** (the format the system
+// prompt asks for, app/Assistant/BusinessContext.php); only same-site paths and a short
+// list of https hosts become links.
 const SAFE_HOSTS = ['api.whatsapp.com', 'wa.me'];
 const TEASER_SECONDS = 10;
 const TOKEN = /(https?:\/\/[^\s<>()"']+|(?<![\w/])\/(?:products|categories|quote|account|register|login|about|contact|custom-manufacturing|terms|privacy|shipping|returns)(?:\/[\w\-./]*)?)/g;
+
+const BULLET = /^\s*[-*•]\s+(.*)$/;
+const NUMBERED = /^\s*\d{1,2}[.)]\s+(.*)$/;
+const HEADING = /^\s*#{1,6}\s+(.*)$/;
+
+/**
+ * Splits a reply into blocks: {type: 'p', lines}, {type: 'ul' | 'ol', items}. A blank line
+ * ends a block; list items continue until a non-list line. Headings become bold paragraphs.
+ */
+export function parseReply(text) {
+    const blocks = [];
+    let current = null;
+    const flush = () => { if (current) blocks.push(current); current = null; };
+    for (const raw of String(text).replace(/\r\n?/g, '\n').split('\n')) {
+        const line = raw.trimEnd();
+        let m;
+        if (line.trim() === '') { flush(); continue; }
+        if ((m = line.match(BULLET)) || (m = line.match(NUMBERED))) {
+            const type = BULLET.test(line) ? 'ul' : 'ol';
+            if (current?.type !== type) { flush(); current = { type, items: [] }; }
+            current.items.push(m[1].trim());
+            continue;
+        }
+        if ((m = line.match(HEADING))) { flush(); blocks.push({ type: 'p', lines: [`**${m[1].replace(/\*\*/g, '').trim()}**`] }); continue; }
+        if (current?.type !== 'p') { flush(); current = { type: 'p', lines: [] }; }
+        current.lines.push(line.trim());
+    }
+    flush();
+    return blocks;
+}
+
+/** Inline segments of one line: [{text, bold}]. Unpaired ** markers stay as text. */
+export function parseInline(line) {
+    const parts = String(line).split(/\*\*(.+?)\*\*/g);
+    return parts.map((text, i) => ({ text, bold: i % 2 === 1 })).filter((p) => p.text !== '');
+}
 
 function store(key, value) {
     try { sessionStorage.setItem(key, value); } catch (e) { /* storage unavailable */ }
@@ -20,6 +58,37 @@ function safeHref(token) {
         if (url.host === location.host) return url.href;
     } catch (e) { /* not a URL */ }
     return null;
+}
+
+function appendInline(el, line) {
+    for (const part of parseInline(line)) {
+        if (!part.bold) { appendLinked(el, part.text); continue; }
+        const strong = document.createElement('strong');
+        strong.className = 'font-semibold';
+        appendLinked(strong, part.text);
+        el.append(strong);
+    }
+}
+
+/** Text nodes, with same-site paths and allowed https hosts turned into links. */
+function appendLinked(el, text) {
+    let last = 0;
+    for (const match of text.matchAll(TOKEN)) {
+        const href = safeHref(match[0]);
+        if (!href) continue;
+        el.append(document.createTextNode(text.slice(last, match.index)));
+        const a = document.createElement('a');
+        a.href = href;
+        a.textContent = match[0].replace(/[.,]+$/, '');
+        a.className = 'underline underline-offset-2';
+        if (!href.startsWith('/') && new URL(href).host !== location.host) {
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+        }
+        el.append(a);
+        last = match.index + a.textContent.length;
+    }
+    el.append(document.createTextNode(text.slice(last)));
 }
 
 export function registerChat(Alpine) {
@@ -91,26 +160,31 @@ export function registerChat(Alpine) {
         scroll() {
             this.$nextTick(() => { const log = this.$refs.log; if (log) log.scrollTop = log.scrollHeight; });
         },
-        // Render text safely: text nodes plus vetted links, never innerHTML.
-        render(el, text) {
+        // Visitor messages: plain text plus vetted links. Assistant replies: blocks, bold
+        // and vetted links. Never innerHTML.
+        render(el, text, role = 'assistant') {
             el.replaceChildren();
-            let last = 0;
-            for (const match of text.matchAll(TOKEN)) {
-                const href = safeHref(match[0]);
-                if (!href) continue;
-                el.append(document.createTextNode(text.slice(last, match.index)));
-                const a = document.createElement('a');
-                a.href = href;
-                a.textContent = match[0].replace(/[.,]+$/, '');
-                a.className = 'underline underline-offset-2';
-                if (!href.startsWith('/') && new URL(href).host !== location.host) {
-                    a.target = '_blank';
-                    a.rel = 'noopener noreferrer';
-                }
-                el.append(a);
-                last = match.index + a.textContent.length;
+            if (role === 'user') {
+                el.classList.add('whitespace-pre-line');
+                appendLinked(el, text);
+                return;
             }
-            el.append(document.createTextNode(text.slice(last)));
+            for (const block of parseReply(text)) {
+                if (block.type === 'p') {
+                    const p = document.createElement('p');
+                    block.lines.forEach((line, i) => { if (i) p.append(document.createElement('br')); appendInline(p, line); });
+                    el.append(p);
+                } else {
+                    const list = document.createElement(block.type);
+                    list.className = block.type === 'ul' ? 'list-disc space-y-1 pl-5 marker:text-accent' : 'list-decimal space-y-1 pl-5 marker:text-muted';
+                    for (const item of block.items) {
+                        const li = document.createElement('li');
+                        appendInline(li, item);
+                        list.append(li);
+                    }
+                    el.append(list);
+                }
+            }
         },
     }));
 }

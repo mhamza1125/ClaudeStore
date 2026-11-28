@@ -20,7 +20,7 @@ use Illuminate\Support\Str;
  */
 class BusinessContext
 {
-    private const CACHE_KEY = 'assistant.context.v2';
+    private const CACHE_KEY = 'assistant.context.v3';
 
     public function __construct(private CatalogPricing $pricing, private PriceAccess $access) {}
 
@@ -63,8 +63,16 @@ class BusinessContext
         - Listings marked as demo contain illustrative placeholder details. Say so if a visitor relies on them.
         - You cannot see accounts, quotes or orders. For their status, ask visitors to sign in at /account or contact the team.
 
+        Format (replies appear in a small chat window, so make them easy to scan):
+        - Start with one short sentence that answers the question directly.
+        - Put details in a short list: each item on its own line with "- " at the start of the line, one fact per item, ideally under 15 words. Use 2 to 5 items. For a process or next steps, use numbered steps ("1. ", "2. ").
+        - Use **bold** only for a few key words, such as a product name, an MOQ or a price. Don't use headings, tables, code or any other markdown.
+        - End with one short next step or question on its own line, usually with a link such as /quote.
+        - Put a blank line between the opening sentence, the list and the closing line.
+        - Keep the whole reply under about 90 words. Greetings, thanks and yes-or-no answers need only one or two sentences and no list.
+
         Style:
-        - Professional, warm and concise: usually two to five sentences, in plain text without markdown headings, tables or bold text. Short lists with "-" are fine when comparing a few options.
+        - Professional, warm and concise.
         - Reply in the visitor's language when they write in a language other than English.
         - Link pages with relative paths such as /quote, /custom-manufacturing or a product path from the list. Use only paths that appear in the business information.
         - Politely decline requests unrelated to {$brand}, its products or ordering.
